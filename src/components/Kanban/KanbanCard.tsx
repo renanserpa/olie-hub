@@ -3,14 +3,16 @@ import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { GripVertical } from 'lucide-react';
 
 interface KanbanCardProps {
   id: string;
   children: React.ReactNode;
   className?: string;
+  onClick?: () => void;
 }
 
-export function KanbanCard({ id, children, className }: KanbanCardProps) {
+export function KanbanCard({ id, children, className, onClick }: KanbanCardProps) {
   const {
     attributes,
     listeners,
@@ -30,15 +32,29 @@ export function KanbanCard({ id, children, className }: KanbanCardProps) {
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className={cn(
-        'cursor-grab active:cursor-grabbing',
-        'hover:shadow-lg transition-shadow',
+        'hover:shadow-lg transition-smooth',
         isDragging && 'opacity-50 shadow-2xl',
         className
       )}
     >
-      {children}
+      <div className="flex items-start gap-2">
+        <div 
+          {...listeners} 
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted/50 rounded-l transition-colors"
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
+        </div>
+        <div 
+          onClick={onClick} 
+          className={cn(
+            "flex-1 pr-2",
+            onClick && "cursor-pointer"
+          )}
+        >
+          {children}
+        </div>
+      </div>
     </Card>
   );
 }

@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Clock, User, AlertTriangle } from 'lucide-react';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Clock, User, AlertTriangle, Package, Shirt, Zap, Type, Sparkles, Maximize2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import {
@@ -24,8 +26,25 @@ import {
   useSortable,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { ViewModeSelector } from '@/components/ViewMode/ViewModeSelector';
+import { PropertySelector, PropertyDefinition } from '@/components/ViewMode/PropertySelector';
+import { TVModeLayout } from '@/components/ViewMode/TVModeLayout';
+import { MetricCard } from '@/components/ViewMode/MetricCard';
+import { getViewPreference, saveViewPreference } from '@/lib/viewPreferences';
+import { GripVertical } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 type ProductionStatus = 'pending' | 'cutting' | 'embroidery' | 'sewing' | 'qa' | 'packing' | 'completed';
+type ViewMode = 'kanban' | 'list' | 'table';
 
 const COLUMNS: { id: ProductionStatus; label: string; color: string }[] = [
   { id: 'pending', label: 'Fila', color: 'bg-muted' },
@@ -37,7 +56,19 @@ const COLUMNS: { id: ProductionStatus; label: string; color: string }[] = [
   { id: 'completed', label: 'Concluído', color: 'bg-success/10' },
 ];
 
-function TaskCard({ task, isOverdue }: { task: any; isOverdue: boolean }) {
+const PRODUCTION_PROPERTIES: PropertyDefinition[] = [
+  { id: 'product_name', label: 'Produto', type: 'text', defaultVisible: true },
+  { id: 'customer', label: 'Cliente', type: 'text', defaultVisible: true },
+  { id: 'quantity', label: 'Quantidade', type: 'number', defaultVisible: true },
+  { id: 'priority', label: 'Prioridade', type: 'badge', defaultVisible: true },
+  { id: 'due_date', label: 'Prazo', type: 'date', defaultVisible: true },
+  { id: 'config', label: 'Configuração', type: 'text', defaultVisible: true },
+  { id: 'assigned_to', label: 'Responsável', type: 'text', defaultVisible: false },
+  { id: 'started_at', label: 'Início', type: 'date', defaultVisible: false },
+  { id: 'notes', label: 'Observações', type: 'text', defaultVisible: false },
+];
+
+function TaskCard({ task, isOverdue, onClick }: { task: any; isOverdue: boolean; onClick?: () => void }) {
   const {
     attributes,
     listeners,
@@ -52,60 +83,114 @@ function TaskCard({ task, isOverdue }: { task: any; isOverdue: boolean }) {
     transition,
   };
 
+  const config = task.config_json || {};
+
   return (
     <Card
       ref={setNodeRef}
       style={style}
       {...attributes}
-      {...listeners}
       className={cn(
-        'p-3 cursor-grab active:cursor-grabbing hover:shadow-lg transition-smooth',
+        'hover:shadow-lg transition-smooth',
         isDragging && 'opacity-50 shadow-2xl'
       )}
     >
-      <div className="space-y-2">
-        <div className="flex items-start justify-between gap-2">
-          <div className="flex-1 min-w-0">
-            <p className="font-medium text-sm truncate">{task.product_name}</p>
-            <p className="text-xs text-muted-foreground truncate">
-              {task.orders?.contacts?.name || 'Cliente'}
-            </p>
-          </div>
-          {task.priority > 0 && (
-            <Badge variant="destructive" className="text-xs">
-              P{task.priority}
-            </Badge>
-          )}
+      <div className="flex items-start gap-2">
+        <div 
+          {...listeners} 
+          className="cursor-grab active:cursor-grabbing p-2 hover:bg-muted/50 rounded-l transition-colors"
+        >
+          <GripVertical className="w-4 h-4 text-muted-foreground" />
         </div>
+        <div 
+          onClick={onClick} 
+          className="flex-1 pr-3 py-2 cursor-pointer"
+        >
+          <div className="space-y-2">
+            <div className="flex items-start justify-between gap-2">
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-sm truncate">{task.product_name}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {task.orders?.contacts?.name || 'Cliente'}
+                </p>
+              </div>
+              {task.priority > 0 && (
+                <Badge variant="destructive" className="text-xs">
+                  P{task.priority}
+                </Badge>
+              )}
+            </div>
 
-        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-          <Clock className="w-3 h-3" />
-          <span>Qtd: {task.quantity}</span>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <Clock className="w-3 h-3" />
+              <span>Qtd: {task.quantity}</span>
+            </div>
+
+            {isOverdue && (
+              <div className="flex items-center gap-1 text-xs text-destructive">
+                <AlertTriangle className="w-3 h-3" />
+                <span>Atrasado</span>
+              </div>
+            )}
+
+            {/* NOVO: Configurações do produto */}
+            {Object.keys(config).length > 0 && (
+              <div className="text-xs bg-muted/50 rounded p-2 space-y-1">
+                {config.material && (
+                  <div className="flex items-center gap-1">
+                    <Shirt className="w-3 h-3" />
+                    <span>Tecido: {config.material}</span>
+                  </div>
+                )}
+                {config.zipper && (
+                  <div className="flex items-center gap-1">
+                    <Zap className="w-3 h-3" />
+                    <span>Zíper: {config.zipper}</span>
+                  </div>
+                )}
+                {config.color && (
+                  <div className="flex items-center gap-1">
+                    <div 
+                      className="w-3 h-3 rounded-full border" 
+                      style={{ backgroundColor: config.color }}
+                    />
+                    <span>Cor personalizada</span>
+                  </div>
+                )}
+                {config.text && (
+                  <div className="flex items-center gap-1">
+                    <Type className="w-3 h-3" />
+                    <span>"{config.text}"</span>
+                  </div>
+                )}
+                {config.embroidery && (
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="w-3 h-3" />
+                    <span>Bordado: {config.embroidery}</span>
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
         </div>
-
-        {isOverdue && (
-          <div className="flex items-center gap-1 text-xs text-destructive">
-            <AlertTriangle className="w-3 h-3" />
-            <span>Atrasado</span>
-          </div>
-        )}
-
-        {task.assigned_to && (
-          <div className="flex items-center gap-1 text-xs">
-            <User className="w-3 h-3" />
-            <span className="truncate">Responsável</span>
-          </div>
-        )}
       </div>
     </Card>
   );
 }
 
 export default function Production() {
+  const navigate = useNavigate();
   const [tasks, setTasks] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [tvMode, setTvMode] = useState(false);
   const [activeId, setActiveId] = useState<string | null>(null);
+  const [confirmDialog, setConfirmDialog] = useState<{ open: boolean; task?: any; newStatus?: string }>({ open: false });
+
+  const prefs = getViewPreference('production');
+  const [viewMode, setViewMode] = useState<ViewMode>(prefs.mode || 'kanban');
+  const [visibleProperties, setVisibleProperties] = useState<string[]>(
+    prefs.properties || PRODUCTION_PROPERTIES.filter(p => p.defaultVisible).map(p => p.id)
+  );
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -125,6 +210,10 @@ export default function Production() {
   useEffect(() => {
     loadTasks();
   }, []);
+
+  useEffect(() => {
+    saveViewPreference('production', { mode: viewMode, properties: visibleProperties });
+  }, [viewMode, visibleProperties]);
 
   async function loadTasks() {
     try {
@@ -146,6 +235,12 @@ export default function Production() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function shouldConfirmBackwardMove(currentStatus: string, newStatus: string): boolean {
+    const currentIndex = COLUMNS.findIndex(col => col.id === currentStatus);
+    const newIndex = COLUMNS.findIndex(col => col.id === newStatus);
+    return newIndex < currentIndex;
   }
 
   async function moveTask(taskId: string, newStatus: ProductionStatus) {
@@ -189,12 +284,20 @@ export default function Production() {
     const taskId = active.id as string;
     const overId = over.id as string;
 
-    // Check if dropped on a column
     const targetColumn = COLUMNS.find(col => col.id === overId);
     if (targetColumn) {
       const task = tasks.find(t => t.id === taskId);
       if (task && task.status !== targetColumn.id) {
-        await moveTask(taskId, targetColumn.id);
+        // Check if it's a backward move
+        if (shouldConfirmBackwardMove(task.status, targetColumn.id)) {
+          setConfirmDialog({
+            open: true,
+            task,
+            newStatus: targetColumn.id
+          });
+        } else {
+          await moveTask(taskId, targetColumn.id);
+        }
       }
     }
   }
@@ -208,85 +311,293 @@ export default function Production() {
     return new Date(task.due_date) < new Date();
   }
 
+  const overdueCount = tasks.filter(isOverdue).length;
+
   if (loading) {
     return <div className="flex items-center justify-center h-64">Carregando...</div>;
   }
 
+  if (tvMode) {
+    return (
+      <TVModeLayout
+        title="Produção"
+        onExit={() => setTvMode(false)}
+        dashboard={
+          <div className="space-y-4">
+            <MetricCard
+              title="Total em Produção"
+              value={tasks.length}
+              icon={Package}
+              trend={`${tasks.filter(t => new Date(t.created_at).toDateString() === new Date().toDateString()).length} novos hoje`}
+            />
+            {COLUMNS.map(col => (
+              <MetricCard
+                key={col.id}
+                title={col.label}
+                value={getTasksForColumn(col.id).length}
+                color={col.color}
+              />
+            ))}
+            {overdueCount > 0 && (
+              <MetricCard
+                title="Atrasadas"
+                value={overdueCount}
+                icon={AlertTriangle}
+                color="bg-destructive/10"
+              />
+            )}
+          </div>
+        }
+      >
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {COLUMNS.map(column => {
+              const columnTasks = getTasksForColumn(column.id);
+              
+              return (
+                <div key={column.id} className="flex flex-col flex-shrink-0 w-80">
+                  <div className={cn('p-3 rounded-t-lg', column.color)}>
+                    <h3 className="font-semibold text-sm">{column.label}</h3>
+                    <p className="text-xs text-muted-foreground">{columnTasks.length} tarefas</p>
+                  </div>
+                  
+                  <SortableContext
+                    id={column.id}
+                    items={columnTasks.map(t => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="flex-1 bg-muted/30 rounded-b-lg p-2 space-y-2 min-h-[400px]">
+                      {columnTasks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                          <p className="text-sm">Nenhuma tarefa</p>
+                        </div>
+                      ) : (
+                        columnTasks.map(task => (
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            isOverdue={isOverdue(task)}
+                            onClick={() => navigate(`/production/${task.id}`)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </SortableContext>
+                </div>
+              );
+            })}
+          </div>
+
+          <DragOverlay>
+            {activeId ? (
+              <div className="rotate-3 scale-105 opacity-90">
+                <TaskCard
+                  task={tasks.find(t => t.id === activeId)!}
+                  isOverdue={isOverdue(tasks.find(t => t.id === activeId)!)}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      </TVModeLayout>
+    );
+  }
+
   return (
     <div className="space-y-6">
+      <AlertDialog open={confirmDialog.open} onOpenChange={(open) => setConfirmDialog({ open })}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Mover para etapa anterior?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Tem certeza que deseja mover "{confirmDialog.task?.product_name}" de "{COLUMNS.find(c => c.id === confirmDialog.task?.status)?.label}" para "{COLUMNS.find(c => c.id === confirmDialog.newStatus)?.label}"?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (confirmDialog.task && confirmDialog.newStatus) {
+                moveTask(confirmDialog.task.id, confirmDialog.newStatus as ProductionStatus);
+              }
+              setConfirmDialog({ open: false });
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Produção</h1>
           <p className="text-muted-foreground mt-1">Kanban de produção com SLA</p>
         </div>
-        <Button
-          variant={tvMode ? 'default' : 'outline'}
-          onClick={() => setTvMode(!tvMode)}
-        >
-          Modo TV
-        </Button>
+        <div className="flex gap-2">
+          <PropertySelector
+            availableProperties={PRODUCTION_PROPERTIES}
+            selectedProperties={visibleProperties}
+            onChange={setVisibleProperties}
+          />
+          <ViewModeSelector
+            value={viewMode}
+            onChange={(mode) => setViewMode(mode as ViewMode)}
+            availableModes={['kanban', 'list', 'table']}
+          />
+          <Button
+            variant="outline"
+            onClick={() => setTvMode(true)}
+          >
+            <Maximize2 className="w-4 h-4 mr-2" />
+            Modo TV
+          </Button>
+        </div>
       </div>
 
-      <DndContext
-        sensors={sensors}
-        collisionDetection={closestCorners}
-        onDragStart={handleDragStart}
-        onDragEnd={handleDragEnd}
-      >
-        <div className={cn(
-          'flex gap-4 overflow-x-auto pb-4',
-          tvMode && 'grid grid-cols-7 overflow-x-visible'
-        )}>
-          {COLUMNS.map(column => {
-            const columnTasks = getTasksForColumn(column.id);
-            
-            return (
-              <div key={column.id} className={cn('flex flex-col', !tvMode && 'flex-shrink-0 w-80')}>
-                <div className={cn('p-3 rounded-t-lg', column.color)}>
-                  <h3 className="font-semibold text-sm">{column.label}</h3>
-                  <p className="text-xs text-muted-foreground">{columnTasks.length} tarefas</p>
-                </div>
-                
-                <SortableContext
-                  id={column.id}
-                  items={columnTasks.map(t => t.id)}
-                  strategy={verticalListSortingStrategy}
-                >
-                  <div
-                    className="flex-1 bg-muted/30 rounded-b-lg p-2 space-y-2 min-h-[400px]"
-                    onDragOver={(e) => e.preventDefault()}
-                  >
-                    {columnTasks.length === 0 ? (
-                      <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
-                        <p className="text-sm">Nenhuma tarefa</p>
-                      </div>
-                    ) : (
-                      columnTasks.map(task => (
-                        <TaskCard
-                          key={task.id}
-                          task={task}
-                          isOverdue={isOverdue(task)}
-                        />
-                      ))
-                    )}
+      {viewMode === 'kanban' && (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCorners}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex gap-4 overflow-x-auto pb-4">
+            {COLUMNS.map(column => {
+              const columnTasks = getTasksForColumn(column.id);
+              
+              return (
+                <div key={column.id} className="flex flex-col flex-shrink-0 w-80">
+                  <div className={cn('p-3 rounded-t-lg', column.color)}>
+                    <h3 className="font-semibold text-sm">{column.label}</h3>
+                    <p className="text-xs text-muted-foreground">{columnTasks.length} tarefas</p>
                   </div>
-                </SortableContext>
-              </div>
-            );
-          })}
-        </div>
+                  
+                  <SortableContext
+                    id={column.id}
+                    items={columnTasks.map(t => t.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    <div className="flex-1 bg-muted/30 rounded-b-lg p-2 space-y-2 min-h-[400px]">
+                      {columnTasks.length === 0 ? (
+                        <div className="flex flex-col items-center justify-center h-32 text-muted-foreground">
+                          <p className="text-sm">Nenhuma tarefa</p>
+                        </div>
+                      ) : (
+                        columnTasks.map(task => (
+                          <TaskCard
+                            key={task.id}
+                            task={task}
+                            isOverdue={isOverdue(task)}
+                            onClick={() => navigate(`/production/${task.id}`)}
+                          />
+                        ))
+                      )}
+                    </div>
+                  </SortableContext>
+                </div>
+              );
+            })}
+          </div>
 
-        <DragOverlay>
-          {activeId ? (
-            <div className="rotate-3 scale-105 opacity-90">
-              <TaskCard
-                task={tasks.find(t => t.id === activeId)!}
-                isOverdue={isOverdue(tasks.find(t => t.id === activeId)!)}
-              />
-            </div>
-          ) : null}
-        </DragOverlay>
-      </DndContext>
+          <DragOverlay>
+            {activeId ? (
+              <div className="rotate-3 scale-105 opacity-90">
+                <TaskCard
+                  task={tasks.find(t => t.id === activeId)!}
+                  isOverdue={isOverdue(tasks.find(t => t.id === activeId)!)}
+                />
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
+      )}
+
+      {viewMode === 'list' && (
+        <div className="space-y-2">
+          {tasks.map(task => (
+            <Card 
+              key={task.id} 
+              className="p-4 hover:shadow-md cursor-pointer transition-smooth"
+              onClick={() => navigate(`/production/${task.id}`)}
+            >
+              <div className="flex items-center gap-4">
+                {visibleProperties.includes('product_name') && (
+                  <div className="flex-1">
+                    <p className="font-medium">{task.product_name}</p>
+                    <p className="text-sm text-muted-foreground">{task.orders?.contacts?.name}</p>
+                  </div>
+                )}
+                {visibleProperties.includes('quantity') && (
+                  <div className="w-20 text-center">
+                    <Badge variant="secondary">{task.quantity}</Badge>
+                  </div>
+                )}
+                {visibleProperties.includes('priority') && task.priority > 0 && (
+                  <Badge variant="destructive">P{task.priority}</Badge>
+                )}
+                <Badge>{COLUMNS.find(c => c.id === task.status)?.label}</Badge>
+              </div>
+            </Card>
+          ))}
+        </div>
+      )}
+
+      {viewMode === 'table' && (
+        <Card>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                {visibleProperties.map(propId => {
+                  const prop = PRODUCTION_PROPERTIES.find(p => p.id === propId);
+                  return <TableHead key={propId}>{prop?.label}</TableHead>;
+                })}
+                <TableHead>Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {tasks.map(task => (
+                <TableRow 
+                  key={task.id}
+                  className="cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate(`/production/${task.id}`)}
+                >
+                  {visibleProperties.includes('product_name') && (
+                    <TableCell className="font-medium">{task.product_name}</TableCell>
+                  )}
+                  {visibleProperties.includes('customer') && (
+                    <TableCell>{task.orders?.contacts?.name || '-'}</TableCell>
+                  )}
+                  {visibleProperties.includes('quantity') && (
+                    <TableCell>{task.quantity}</TableCell>
+                  )}
+                  {visibleProperties.includes('priority') && (
+                    <TableCell>
+                      {task.priority > 0 ? <Badge variant="destructive">P{task.priority}</Badge> : '-'}
+                    </TableCell>
+                  )}
+                  {visibleProperties.includes('due_date') && (
+                    <TableCell>
+                      {task.due_date ? new Date(task.due_date).toLocaleDateString('pt-BR') : '-'}
+                    </TableCell>
+                  )}
+                  {visibleProperties.includes('config') && (
+                    <TableCell className="text-xs">
+                      {task.config_json ? Object.keys(task.config_json).length + ' configs' : '-'}
+                    </TableCell>
+                  )}
+                  <TableCell>
+                    <Badge>{COLUMNS.find(c => c.id === task.status)?.label}</Badge>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        </Card>
+      )}
     </div>
   );
 }

@@ -545,6 +545,7 @@ export type Database = {
           assigned_to: string | null
           attachments: string[] | null
           completed_at: string | null
+          config_json: Json | null
           created_at: string
           due_date: string | null
           id: string
@@ -552,6 +553,7 @@ export type Database = {
           order_id: string | null
           priority: number | null
           product_name: string
+          product_sku: string | null
           quantity: number
           started_at: string | null
           status: Database["public"]["Enums"]["production_status"] | null
@@ -561,6 +563,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: string[] | null
           completed_at?: string | null
+          config_json?: Json | null
           created_at?: string
           due_date?: string | null
           id?: string
@@ -568,6 +571,7 @@ export type Database = {
           order_id?: string | null
           priority?: number | null
           product_name: string
+          product_sku?: string | null
           quantity: number
           started_at?: string | null
           status?: Database["public"]["Enums"]["production_status"] | null
@@ -577,6 +581,7 @@ export type Database = {
           assigned_to?: string | null
           attachments?: string[] | null
           completed_at?: string | null
+          config_json?: Json | null
           created_at?: string
           due_date?: string | null
           id?: string
@@ -584,6 +589,7 @@ export type Database = {
           order_id?: string | null
           priority?: number | null
           product_name?: string
+          product_sku?: string | null
           quantity?: number
           started_at?: string | null
           status?: Database["public"]["Enums"]["production_status"] | null

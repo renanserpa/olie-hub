@@ -1,14 +1,55 @@
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Truck, Package, MapPin, Clock, CheckCircle2 } from 'lucide-react';
+import { Truck, Package, MapPin, CheckCircle2, LayoutList, LayoutGrid, Eye } from 'lucide-react';
+import { KanbanBoard, KanbanColumn } from '@/components/Kanban/KanbanBoard';
+import { KanbanCard } from '@/components/Kanban/KanbanCard';
+import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
+
+const SHIPPING_COLUMNS: KanbanColumn[] = [
+  { 
+    id: 'pending', 
+    label: 'Aguardando Cotação', 
+    color: 'bg-gray-100',
+    description: 'Precisa cotar frete'
+  },
+  { 
+    id: 'quoted', 
+    label: 'Cotado', 
+    color: 'bg-blue-100',
+    description: 'Frete cotado'
+  },
+  { 
+    id: 'label_created', 
+    label: 'Etiquetado', 
+    color: 'bg-purple-100',
+    description: 'Pronto p/ coleta'
+  },
+  { 
+    id: 'in_transit', 
+    label: 'Em Trânsito', 
+    color: 'bg-yellow-100',
+    description: 'Em rota de entrega'
+  },
+  { 
+    id: 'delivered', 
+    label: 'Entregue', 
+    color: 'bg-green-100',
+    description: 'Entrega confirmada'
+  }
+];
 
 export default function Logistics() {
+  const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
+    return (localStorage.getItem('logistics_view_mode') as 'list' | 'kanban') || 'list';
+  });
 
   useEffect(() => {
     loadOrders();
@@ -47,6 +88,91 @@ export default function Logistics() {
     return orders.filter(o => getShippingStatus(o) === status);
   }
 
+  async function handleStatusChange(orderId: string, newStatus: string) {
+    try {
+      const order = orders.find(o => o.id === orderId);
+      const updatedLogistics = {
+        ...order?.logistics,
+        shipping_status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+
+      const { error } = await supabase
+        .from('orders')
+        .update({ logistics: updatedLogistics })
+        .eq('id', orderId);
+
+      if (error) throw error;
+      
+      await loadOrders();
+      toast.success('Status atualizado com sucesso');
+    } catch (error) {
+      console.error('Error updating status:', error);
+      toast.error('Erro ao atualizar status');
+    }
+  }
+
+  function renderShippingCard(order: any) {
+    const logistics = order.logistics || {};
+
+    return (
+      <KanbanCard id={order.id}>
+        <div className="p-3 space-y-2">
+          <div className="flex items-start justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              <p className="font-semibold text-sm truncate">#{order.order_number}</p>
+              <p className="text-xs text-muted-foreground truncate">
+                {order.contacts?.name || 'Cliente'}
+              </p>
+            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-6 w-6"
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/orders/${order.id}`);
+              }}
+            >
+              <Eye className="w-3 h-3" />
+            </Button>
+          </div>
+
+          {order.contacts?.address && (
+            <div className="flex items-center gap-1 text-xs text-muted-foreground">
+              <MapPin className="w-3 h-3" />
+              <span className="truncate">
+                {order.contacts.address.city}, {order.contacts.address.state}
+              </span>
+            </div>
+          )}
+
+          <div className="flex items-center justify-between text-xs pt-2 border-t">
+            <span className="text-muted-foreground">Valor:</span>
+            <span className="font-semibold">R$ {Number(order.total || 0).toFixed(2)}</span>
+          </div>
+
+          {logistics.tracking && (
+            <div className="text-xs bg-success/10 rounded p-2">
+              <p className="font-medium text-success">Rastreio: {logistics.tracking}</p>
+            </div>
+          )}
+
+          {logistics.carrier && (
+            <div className="flex items-center gap-1 text-xs">
+              <Truck className="w-3 h-3" />
+              <span className="truncate">{logistics.carrier}</span>
+            </div>
+          )}
+        </div>
+      </KanbanCard>
+    );
+  }
+
+  React.useEffect(() => {
+    localStorage.setItem('logistics_view_mode', viewMode);
+  }, [viewMode]);
+
   const pendingOrders = filterOrdersByShipping('pending');
   const quotedOrders = filterOrdersByShipping('quoted');
   const labeledOrders = filterOrdersByShipping('label_created');
@@ -58,52 +184,83 @@ export default function Logistics() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Entregas & Logística</h1>
-        <p className="text-muted-foreground mt-1">
-          Painel de envios e rastreamento (dados locais - integrações desabilitadas)
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Entregas & Logística</h1>
+          <p className="text-muted-foreground mt-1">
+            Painel de envios e rastreamento (dados locais - integrações desabilitadas)
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant={viewMode === 'list' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('list')}
+          >
+            <LayoutList className="w-4 h-4" />
+          </Button>
+          <Button
+            variant={viewMode === 'kanban' ? 'default' : 'outline'}
+            size="icon"
+            onClick={() => setViewMode('kanban')}
+          >
+            <LayoutGrid className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
-      <Tabs defaultValue="all" className="space-y-4">
-        <TabsList>
-          <TabsTrigger value="all">Todos ({orders.length})</TabsTrigger>
-          <TabsTrigger value="pending">Pendentes ({pendingOrders.length})</TabsTrigger>
-          <TabsTrigger value="quoted">Cotados ({quotedOrders.length})</TabsTrigger>
-          <TabsTrigger value="labeled">Etiquetados ({labeledOrders.length})</TabsTrigger>
-          <TabsTrigger value="transit">Em Trânsito ({transitOrders.length})</TabsTrigger>
-        </TabsList>
+      {viewMode === 'kanban' ? (
+        <KanbanBoard
+          columns={SHIPPING_COLUMNS}
+          items={orders.map(order => ({
+            ...order,
+            status: getShippingStatus(order)
+          }))}
+          onStatusChange={handleStatusChange}
+          renderCard={renderShippingCard}
+          loading={loading}
+        />
+      ) : (
+        <Tabs defaultValue="all" className="space-y-4">
+          <TabsList>
+            <TabsTrigger value="all">Todos ({orders.length})</TabsTrigger>
+            <TabsTrigger value="pending">Pendentes ({pendingOrders.length})</TabsTrigger>
+            <TabsTrigger value="quoted">Cotados ({quotedOrders.length})</TabsTrigger>
+            <TabsTrigger value="labeled">Etiquetados ({labeledOrders.length})</TabsTrigger>
+            <TabsTrigger value="transit">Em Trânsito ({transitOrders.length})</TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="all" className="space-y-4">
-          {orders.map(order => (
-            <ShippingCard key={order.id} order={order} />
-          ))}
-        </TabsContent>
+          <TabsContent value="all" className="space-y-4">
+            {orders.map(order => (
+              <ShippingCard key={order.id} order={order} />
+            ))}
+          </TabsContent>
 
-        <TabsContent value="pending" className="space-y-4">
-          {pendingOrders.map(order => (
-            <ShippingCard key={order.id} order={order} />
-          ))}
-        </TabsContent>
+          <TabsContent value="pending" className="space-y-4">
+            {pendingOrders.map(order => (
+              <ShippingCard key={order.id} order={order} />
+            ))}
+          </TabsContent>
 
-        <TabsContent value="quoted" className="space-y-4">
-          {quotedOrders.map(order => (
-            <ShippingCard key={order.id} order={order} />
-          ))}
-        </TabsContent>
+          <TabsContent value="quoted" className="space-y-4">
+            {quotedOrders.map(order => (
+              <ShippingCard key={order.id} order={order} />
+            ))}
+          </TabsContent>
 
-        <TabsContent value="labeled" className="space-y-4">
-          {labeledOrders.map(order => (
-            <ShippingCard key={order.id} order={order} />
-          ))}
-        </TabsContent>
+          <TabsContent value="labeled" className="space-y-4">
+            {labeledOrders.map(order => (
+              <ShippingCard key={order.id} order={order} />
+            ))}
+          </TabsContent>
 
-        <TabsContent value="transit" className="space-y-4">
-          {transitOrders.map(order => (
-            <ShippingCard key={order.id} order={order} />
-          ))}
-        </TabsContent>
-      </Tabs>
+          <TabsContent value="transit" className="space-y-4">
+            {transitOrders.map(order => (
+              <ShippingCard key={order.id} order={order} />
+            ))}
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
   );
 }

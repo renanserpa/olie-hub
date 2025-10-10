@@ -17,16 +17,28 @@ export default function Team() {
 
   async function loadProfiles() {
     try {
-      const { data, error } = await supabase
+      // Load profiles
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
-        .select(`
-          *,
-          user_roles(role)
-        `)
+        .select('*')
         .order('full_name');
 
-      if (error) throw error;
-      setProfiles(data || []);
+      if (profilesError) throw profilesError;
+
+      // Load roles separately
+      const { data: rolesData, error: rolesError } = await supabase
+        .from('user_roles')
+        .select('user_id, role');
+
+      if (rolesError) throw rolesError;
+
+      // Merge roles with profiles
+      const profilesWithRoles = profilesData?.map(profile => ({
+        ...profile,
+        user_roles: rolesData?.filter(r => r.user_id === profile.id) || []
+      })) || [];
+
+      setProfiles(profilesWithRoles);
     } catch (error) {
       console.error('Error loading profiles:', error);
       toast.error('Erro ao carregar equipe');

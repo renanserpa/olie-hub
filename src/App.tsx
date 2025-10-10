@@ -11,6 +11,9 @@ import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Inbox from "./pages/Inbox";
+import Production from "./pages/Production";
+import Inventory from "./pages/Inventory";
+import Logistics from "./pages/Logistics";
 import Auth from "./pages/Auth";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
@@ -175,29 +178,17 @@ const App = () => (
             } />
             <Route path="/production" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Produção"
-                  description="Kanban de produção com etapas, SLAs e alertas em desenvolvimento."
-                  icon={Factory}
-                />
+                <Production />
               </ProtectedRoute>
             } />
             <Route path="/inventory" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Estoque"
-                  description="Gestão de produtos, insumos e movimentações em desenvolvimento."
-                  icon={Package}
-                />
+                <Inventory />
               </ProtectedRoute>
             } />
             <Route path="/logistics" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Entregas & Logística"
-                  description="Painel de tracking integrado com Tiny em desenvolvimento."
-                  icon={Truck}
-                />
+                <Logistics />
               </ProtectedRoute>
             } />
             <Route path="/team" element={

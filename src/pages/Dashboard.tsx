@@ -6,13 +6,74 @@ import {
   DollarSign,
   TrendingUp,
   Package,
-  Clock,
-  CheckCircle 
+  CheckCircle,
+  Clock
 } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
+  const navigate = useNavigate();
+  const [metrics, setMetrics] = useState({
+    todayOrders: 0,
+    inProduction: 0,
+    pendingShipping: 0,
+    todayRevenue: 0,
+    monthRevenue: 0,
+    lowStockCount: 0,
+    completionRate: 0,
+  });
+  const [recentOrders, setRecentOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  async function loadDashboardData() {
+    try {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+      const [todayRes, productionRes, shippingRes, monthRes, stockRes, recentRes] = await Promise.all([
+        supabase.from('orders').select('total').gte('created_at', today.toISOString()),
+        supabase.from('orders').select('id').eq('status', 'in_production'),
+        supabase.from('orders').select('id').eq('status', 'awaiting_shipping'),
+        supabase.from('orders').select('total').gte('created_at', startOfMonth.toISOString()),
+        supabase.from('products').select('id, stock_quantity, min_stock_quantity'),
+        supabase.from('orders').select('*, contacts(name), items').order('created_at', { ascending: false }).limit(4)
+      ]);
+
+      const lowStock = (stockRes.data || []).filter(p => 
+        p.stock_quantity < (p.min_stock_quantity || 5)
+      );
+
+      setMetrics({
+        todayOrders: todayRes.data?.length || 0,
+        inProduction: productionRes.data?.length || 0,
+        pendingShipping: shippingRes.data?.length || 0,
+        todayRevenue: (todayRes.data || []).reduce((sum, o) => sum + Number(o.total || 0), 0),
+        monthRevenue: (monthRes.data || []).reduce((sum, o) => sum + Number(o.total || 0), 0),
+        lowStockCount: lowStock.length,
+        completionRate: 94,
+      });
+
+      setRecentOrders(recentRes.data || []);
+    } catch (error) {
+      console.error('Error loading dashboard:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+  }
   return (
     <div className="space-y-6">
       {/* Header */}

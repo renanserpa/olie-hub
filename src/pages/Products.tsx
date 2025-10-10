@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,12 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Plus, RefreshCw, Package2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ProductDialog } from '@/components/Inventory/ProductDialog';
 
 export default function Products() {
+  const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     loadProducts();
@@ -109,7 +113,7 @@ export default function Products() {
             <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
             Sync (Aplicar)
           </Button>
-          <Button>
+          <Button onClick={() => setDialogOpen(true)}>
             <Plus className="w-4 h-4 mr-2" />
             Novo Produto
           </Button>
@@ -130,7 +134,11 @@ export default function Products() {
       {/* Product Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProducts.map(product => (
-          <Card key={product.id} className="p-4 hover:shadow-lg transition-shadow">
+          <Card 
+            key={product.id} 
+            className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
+            onClick={() => navigate(`/products/${product.id}`)}
+          >
             <div className="flex items-start gap-3">
               <div className="w-16 h-16 bg-muted rounded flex items-center justify-center flex-shrink-0">
                 {product.images?.[0] ? (
@@ -189,6 +197,12 @@ export default function Products() {
           Nenhum produto encontrado
         </div>
       )}
+
+      <ProductDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSuccess={loadProducts}
+      />
     </div>
   );
 }

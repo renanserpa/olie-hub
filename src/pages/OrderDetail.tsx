@@ -146,6 +146,96 @@ export default function OrderDetail() {
         <Badge className="ml-auto">{order.status}</Badge>
       </div>
 
+      {/* Itens do Pedido */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Itens do Pedido</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
+            <div className="space-y-3">
+              {order.items.map((item: any, index: number) => (
+                <div 
+                  key={index} 
+                  className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-smooth"
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold">{item.product_name || item.name}</p>
+                    {item.config_json && (
+                      <div className="text-xs text-muted-foreground mt-2 space-y-1">
+                        {item.config_json.color && (
+                          <div className="flex items-center gap-2">
+                            <span>Cor:</span>
+                            <div 
+                              className="w-4 h-4 rounded border" 
+                              style={{ backgroundColor: item.config_json.color }}
+                            />
+                          </div>
+                        )}
+                        {item.config_json.material && (
+                          <div>Material: {item.config_json.material}</div>
+                        )}
+                        {item.config_json.text && (
+                          <div>Texto: "{item.config_json.text}"</div>
+                        )}
+                        {item.config_json.width && (
+                          <div>
+                            Dimensões: {item.config_json.width}x{item.config_json.height}
+                            {item.config_json.thickness && `x${item.config_json.thickness}`}cm
+                          </div>
+                        )}
+                        {item.config_json.notes && (
+                          <div className="italic">Obs: {item.config_json.notes}</div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+                  <div className="text-right space-y-1 ml-4">
+                    <p className="text-sm text-muted-foreground">
+                      {item.quantity}x R$ {Number(item.unit_price).toFixed(2)}
+                    </p>
+                    <p className="font-bold">
+                      R$ {Number(item.total || item.quantity * item.unit_price).toFixed(2)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+              
+              <Separator className="my-4" />
+              
+              {/* Totais */}
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Subtotal:</span>
+                  <span>R$ {Number(order.subtotal).toFixed(2)}</span>
+                </div>
+                {order.discount > 0 && (
+                  <div className="flex justify-between text-sm text-red-600">
+                    <span>Desconto:</span>
+                    <span>- R$ {Number(order.discount).toFixed(2)}</span>
+                  </div>
+                )}
+                {order.shipping_cost > 0 && (
+                  <div className="flex justify-between text-sm">
+                    <span>Frete:</span>
+                    <span>R$ {Number(order.shipping_cost).toFixed(2)}</span>
+                  </div>
+                )}
+                <Separator />
+                <div className="flex justify-between font-bold text-lg">
+                  <span>Total:</span>
+                  <span>R$ {Number(order.total).toFixed(2)}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <p className="text-muted-foreground text-center py-8">
+              Nenhum item encontrado neste pedido
+            </p>
+          )}
+        </CardContent>
+      </Card>
+
       <Tabs defaultValue="payments" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="payments">

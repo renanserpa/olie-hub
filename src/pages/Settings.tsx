@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CategoryManager } from '@/components/Settings/CategoryManager';
+import { StatusManager } from '@/components/Settings/StatusManager';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -192,26 +193,35 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="integrations" className="space-y-6">
-        <TabsList>
+        <TabsList className="grid grid-cols-3 lg:grid-cols-8">
           <TabsTrigger value="integrations" className="gap-2">
             <Plug className="w-4 h-4" />
-            Integrações
+            <span className="hidden lg:inline">Integrações</span>
           </TabsTrigger>
           <TabsTrigger value="categories" className="gap-2">
             <Layers className="w-4 h-4" />
-            Categorias
+            <span className="hidden lg:inline">Categorias</span>
+          </TabsTrigger>
+          <TabsTrigger value="order-status" className="gap-2 text-xs lg:text-sm">
+            Status Pedidos
+          </TabsTrigger>
+          <TabsTrigger value="production-status" className="gap-2 text-xs lg:text-sm">
+            Status Produção
+          </TabsTrigger>
+          <TabsTrigger value="shipping-status" className="gap-2 text-xs lg:text-sm">
+            Status Entregas
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-2">
             <Palette className="w-4 h-4" />
-            Aparência
+            <span className="hidden lg:inline">Aparência</span>
           </TabsTrigger>
           <TabsTrigger value="notifications" className="gap-2">
             <Bell className="w-4 h-4" />
-            Notificações
+            <span className="hidden lg:inline">Notificações</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2">
             <Shield className="w-4 h-4" />
-            Segurança
+            <span className="hidden lg:inline">Segurança</span>
           </TabsTrigger>
         </TabsList>
 
@@ -413,6 +423,21 @@ export default function Settings() {
         {/* Categorias */}
         <TabsContent value="categories" className="space-y-6">
           <CategoryManager />
+        </TabsContent>
+
+        {/* Status de Pedidos */}
+        <TabsContent value="order-status" className="space-y-6">
+          <StatusManager type="order" />
+        </TabsContent>
+
+        {/* Status de Produção */}
+        <TabsContent value="production-status" className="space-y-6">
+          <StatusManager type="production" />
+        </TabsContent>
+
+        {/* Status de Entregas */}
+        <TabsContent value="shipping-status" className="space-y-6">
+          <StatusManager type="shipping" />
         </TabsContent>
 
         {/* Aparência */}

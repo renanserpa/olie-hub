@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2, Plus, Settings } from 'lucide-react';
 
 interface OrderDialogProps {
   open: boolean;
@@ -21,6 +21,7 @@ interface OrderItem {
   quantity: number;
   unit_price: number;
   total: number;
+  config_json?: any;
 }
 
 export function OrderDialog({ open, onOpenChange, onSuccess }: OrderDialogProps) {
@@ -28,6 +29,9 @@ export function OrderDialog({ open, onOpenChange, onSuccess }: OrderDialogProps)
   const [contacts, setContacts] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [items, setItems] = useState<OrderItem[]>([]);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [currentItemIndex, setCurrentItemIndex] = useState<number | null>(null);
+  const [currentConfig, setCurrentConfig] = useState<any>({});
   const [formData, setFormData] = useState({
     contact_id: '',
     status: 'pending_payment',
@@ -144,10 +148,11 @@ export function OrderDialog({ open, onOpenChange, onSuccess }: OrderDialogProps)
           items: items.map(item => ({
             product_id: item.product_id,
             product_name: item.product_name,
-            quantity: item.quantity,
-            unit_price: item.unit_price,
-            total: item.total,
-          })),
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total: item.total,
+              config_json: item.config_json || null,
+            })),
           subtotal,
           discount: formData.discount,
           shipping_cost: formData.shipping_cost,
@@ -306,7 +311,20 @@ export function OrderDialog({ open, onOpenChange, onSuccess }: OrderDialogProps)
                   <Label>Total</Label>
                   <Input value={item.total.toFixed(2)} disabled />
                 </div>
-                <div className="col-span-1">
+                <div className="col-span-1 flex gap-1">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => {
+                      setCurrentItemIndex(index);
+                      setCurrentConfig(items[index].config_json || {});
+                      setConfigDialogOpen(true);
+                    }}
+                    title="Personalizar"
+                  >
+                    <Settings className="h-4 w-4" />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
@@ -369,6 +387,122 @@ export function OrderDialog({ open, onOpenChange, onSuccess }: OrderDialogProps)
           </DialogFooter>
         </form>
       </DialogContent>
+
+      {/* Dialog de Personalização */}
+      <Dialog open={configDialogOpen} onOpenChange={setConfigDialogOpen}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Personalizar Item</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {/* Cor */}
+            <div>
+              <Label>Cor Principal</Label>
+              <div className="flex gap-2 mt-2 flex-wrap">
+                {['#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#000000', '#FFFFFF'].map(color => (
+                  <button
+                    key={color}
+                    type="button"
+                    className={`w-10 h-10 rounded-full border-2 transition-all ${
+                      currentConfig.color === color ? 'ring-2 ring-primary scale-110' : ''
+                    }`}
+                    style={{ backgroundColor: color }}
+                    onClick={() => setCurrentConfig({ ...currentConfig, color })}
+                  />
+                ))}
+              </div>
+            </div>
+            
+            {/* Material */}
+            <div>
+              <Label>Material</Label>
+              <Select
+                value={currentConfig.material || ''}
+                onValueChange={(v) => setCurrentConfig({ ...currentConfig, material: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione o material" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="acrilico">Acrílico</SelectItem>
+                  <SelectItem value="madeira">Madeira</SelectItem>
+                  <SelectItem value="mdf">MDF</SelectItem>
+                  <SelectItem value="pvc">PVC</SelectItem>
+                  <SelectItem value="tecido">Tecido</SelectItem>
+                  <SelectItem value="metal">Metal</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {/* Texto */}
+            <div>
+              <Label>Texto Personalizado</Label>
+              <Input
+                value={currentConfig.text || ''}
+                onChange={(e) => setCurrentConfig({ ...currentConfig, text: e.target.value })}
+                placeholder="Digite o texto..."
+              />
+            </div>
+            
+            {/* Dimensões */}
+            <div className="grid grid-cols-3 gap-2">
+              <div>
+                <Label>Largura (cm)</Label>
+                <Input
+                  type="number"
+                  value={currentConfig.width || ''}
+                  onChange={(e) => setCurrentConfig({ ...currentConfig, width: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Altura (cm)</Label>
+                <Input
+                  type="number"
+                  value={currentConfig.height || ''}
+                  onChange={(e) => setCurrentConfig({ ...currentConfig, height: e.target.value })}
+                />
+              </div>
+              <div>
+                <Label>Espessura (mm)</Label>
+                <Input
+                  type="number"
+                  value={currentConfig.thickness || ''}
+                  onChange={(e) => setCurrentConfig({ ...currentConfig, thickness: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            {/* Observações */}
+            <div>
+              <Label>Observações</Label>
+              <Textarea
+                rows={2}
+                value={currentConfig.notes || ''}
+                onChange={(e) => setCurrentConfig({ ...currentConfig, notes: e.target.value })}
+                placeholder="Detalhes adicionais..."
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfigDialogOpen(false)}>
+              Cancelar
+            </Button>
+            <Button onClick={() => {
+              if (currentItemIndex !== null) {
+                const newItems = [...items];
+                newItems[currentItemIndex].config_json = currentConfig;
+                setItems(newItems);
+                setConfigDialogOpen(false);
+                toast({ title: 'Personalização salva!' });
+              }
+            }}>
+              Salvar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Dialog>
   );
 }

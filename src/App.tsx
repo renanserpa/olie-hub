@@ -17,6 +17,8 @@ import Logistics from "./pages/Logistics";
 import Catalog from "./pages/Catalog";
 import ProductDetail from "./pages/ProductDetail";
 import Cart from "./pages/Cart";
+import Products from "./pages/Products";
+import Team from "./pages/Team";
 import Auth from "./pages/Auth";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
@@ -209,13 +211,14 @@ const App = () => (
                 <Cart />
               </ProtectedRoute>
             } />
+            <Route path="/products" element={
+              <ProtectedRoute>
+                <Products />
+              </ProtectedRoute>
+            } />
             <Route path="/team" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Equipe"
-                  description="Comunicação interna, chat e tarefas em desenvolvimento."
-                  icon={Users}
-                />
+                <Team />
               </ProtectedRoute>
             } />
             <Route path="/settings" element={

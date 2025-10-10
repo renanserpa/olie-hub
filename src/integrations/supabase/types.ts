@@ -141,6 +141,8 @@ export type Database = {
           phone: string | null
           tags: string[] | null
           tiny_customer_id: string | null
+          tiny_hash: string | null
+          tiny_synced_at: string | null
           updated_at: string
           whatsapp: string | null
         }
@@ -157,6 +159,8 @@ export type Database = {
           phone?: string | null
           tags?: string[] | null
           tiny_customer_id?: string | null
+          tiny_hash?: string | null
+          tiny_synced_at?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -173,6 +177,8 @@ export type Database = {
           phone?: string | null
           tags?: string[] | null
           tiny_customer_id?: string | null
+          tiny_hash?: string | null
+          tiny_synced_at?: string | null
           updated_at?: string
           whatsapp?: string | null
         }
@@ -320,7 +326,9 @@ export type Database = {
           source: string | null
           status: Database["public"]["Enums"]["order_status"] | null
           subtotal: number
+          tiny_hash: string | null
           tiny_order_id: string | null
+          tiny_synced_at: string | null
           total: number
           updated_at: string
         }
@@ -341,7 +349,9 @@ export type Database = {
           source?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           subtotal: number
+          tiny_hash?: string | null
           tiny_order_id?: string | null
+          tiny_synced_at?: string | null
           total: number
           updated_at?: string
         }
@@ -362,7 +372,9 @@ export type Database = {
           source?: string | null
           status?: Database["public"]["Enums"]["order_status"] | null
           subtotal?: number
+          tiny_hash?: string | null
           tiny_order_id?: string | null
+          tiny_synced_at?: string | null
           total?: number
           updated_at?: string
         }
@@ -487,7 +499,9 @@ export type Database = {
           name: string
           sku: string | null
           stock_quantity: number | null
+          tiny_hash: string | null
           tiny_product_id: string | null
+          tiny_synced_at: string | null
           unit_price: number | null
           updated_at: string
         }
@@ -504,7 +518,9 @@ export type Database = {
           name: string
           sku?: string | null
           stock_quantity?: number | null
+          tiny_hash?: string | null
           tiny_product_id?: string | null
+          tiny_synced_at?: string | null
           unit_price?: number | null
           updated_at?: string
         }
@@ -521,7 +537,9 @@ export type Database = {
           name?: string
           sku?: string | null
           stock_quantity?: number | null
+          tiny_hash?: string | null
           tiny_product_id?: string | null
+          tiny_synced_at?: string | null
           unit_price?: number | null
           updated_at?: string
         }
@@ -554,6 +572,54 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      sync_logs: {
+        Row: {
+          api_calls_used: number
+          created_at: string
+          created_by: string | null
+          entity_type: string
+          error_message: string | null
+          id: string
+          items_created: number
+          items_processed: number
+          items_skipped: number
+          items_updated: number
+          operation: string
+          status: string
+          summary: Json | null
+        }
+        Insert: {
+          api_calls_used?: number
+          created_at?: string
+          created_by?: string | null
+          entity_type: string
+          error_message?: string | null
+          id?: string
+          items_created?: number
+          items_processed?: number
+          items_skipped?: number
+          items_updated?: number
+          operation: string
+          status: string
+          summary?: Json | null
+        }
+        Update: {
+          api_calls_used?: number
+          created_at?: string
+          created_by?: string | null
+          entity_type?: string
+          error_message?: string | null
+          id?: string
+          items_created?: number
+          items_processed?: number
+          items_skipped?: number
+          items_updated?: number
+          operation?: string
+          status?: string
+          summary?: Json | null
         }
         Relationships: []
       }

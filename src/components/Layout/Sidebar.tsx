@@ -8,7 +8,8 @@ import {
   Truck, 
   Users, 
   Settings,
-  Store
+  Store,
+  Box
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -19,6 +20,7 @@ const navigation = [
   { name: 'Produção', href: '/production', icon: Factory },
   { name: 'Estoque', href: '/inventory', icon: Package },
   { name: 'Entregas', href: '/logistics', icon: Truck },
+  { name: 'Produtos', href: '/products', icon: Box },
   { name: 'Catálogo', href: '/catalog', icon: Store },
   { name: 'Equipe', href: '/team', icon: Users },
   { name: 'Configurações', href: '/settings', icon: Settings },

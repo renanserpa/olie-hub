@@ -433,8 +433,6 @@ export default function Contacts() {
                 )}
               </>
             )}
-              </div>
-            )}
           </TabsContent>
         </Tabs>
       </div>

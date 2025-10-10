@@ -66,12 +66,12 @@ export function StatusManager({ type }: StatusManagerProps) {
   async function loadStatuses() {
     try {
       const { data, error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .select('*')
         .order('sort_order');
 
       if (error) throw error;
-      setStatuses(data || []);
+      setStatuses((data as unknown as Status[]) || []);
     } catch (error: any) {
       console.error('Error loading statuses:', error);
       toast.error('Erro ao carregar status');
@@ -116,7 +116,7 @@ export function StatusManager({ type }: StatusManagerProps) {
       if (editingStatus) {
         // Atualizar
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .update({
             label: formData.label,
             color: formData.color,
@@ -131,7 +131,7 @@ export function StatusManager({ type }: StatusManagerProps) {
       } else {
         // Criar
         const { error } = await supabase
-          .from(tableName)
+          .from(tableName as any)
           .insert([{
             name: formData.name.toLowerCase().replace(/\s+/g, '_'),
             label: formData.label,
@@ -166,7 +166,7 @@ export function StatusManager({ type }: StatusManagerProps) {
 
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .delete()
         .eq('id', id);
 
@@ -182,7 +182,7 @@ export function StatusManager({ type }: StatusManagerProps) {
   async function handleToggleActive(id: string, isActive: boolean) {
     try {
       const { error } = await supabase
-        .from(tableName)
+        .from(tableName as any)
         .update({ is_active: !isActive })
         .eq('id', id);
 

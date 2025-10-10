@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,16 +17,30 @@ interface ProductDialogProps {
 
 export function ProductDialog({ open, onOpenChange, product, onSuccess }: ProductDialogProps) {
   const [loading, setLoading] = useState(false);
+  const [categories, setCategories] = useState<any[]>([]);
   const [formData, setFormData] = useState({
     name: product?.name || '',
     sku: product?.sku || '',
-    category: product?.category || 'insumo',
+    category: product?.category || '',
     description: product?.description || '',
     unit_price: product?.unit_price || '',
     cost_price: product?.cost_price || '',
     stock_quantity: product?.stock_quantity || 0,
     min_stock_quantity: product?.min_stock_quantity || 0,
   });
+
+  useEffect(() => {
+    async function loadCategories() {
+      const { data } = await supabase
+        .from('product_categories' as any)
+        .select('*')
+        .eq('is_active', true)
+        .order('sort_order');
+      
+      setCategories((data as any) || []);
+    }
+    loadCategories();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -118,9 +132,11 @@ export function ProductDialog({ open, onOpenChange, product, onSuccess }: Produc
                 <SelectValue placeholder="Selecione uma categoria" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="insumo">Insumo</SelectItem>
-                <SelectItem value="produto_acabado">Produto Acabado</SelectItem>
-                <SelectItem value="servico">Serviço</SelectItem>
+                {categories.map(cat => (
+                  <SelectItem key={cat.id} value={cat.id}>
+                    {cat.name} ({cat.type === 'supply' ? 'Insumo' : 'Produto'})
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>

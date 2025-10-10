@@ -15,8 +15,10 @@ import {
   Shield,
   CheckCircle2,
   XCircle,
-  RefreshCw
+  RefreshCw,
+  Layers
 } from 'lucide-react';
+import { CategoryManager } from '@/components/Settings/CategoryManager';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -52,24 +54,27 @@ export default function Settings() {
 
     setLoading(true);
     try {
-      // Test connection with new token
-      const response = await fetch('https://api.tiny.com.br/api2/info.php', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          token: tinyToken,
-          formato: 'JSON'
-        })
-      });
+      // 1. Testar conexão primeiro usando edge function
+      const { data: testResult, error: testError } = await supabase.functions.invoke(
+        'tiny-test-connection',
+        { body: { token: tinyToken } }
+      );
 
-      if (!response.ok) throw new Error('Token inválido');
+      if (testError || !testResult?.ok) {
+        throw new Error(testResult?.error || 'Falha ao validar token');
+      }
 
-      toast.success('Token Tiny salvo com sucesso');
+      // 2. Token válido - informar ao usuário
+      toast.success(`✅ Token validado! Conta: ${testResult.accountInfo?.name || 'Empresa'}`);
+      toast.info('⚠️ Agora você precisa salvar o token como Secret via Settings → Integrações → TINY_TOKEN');
+      
       setTinyConnected(true);
-      setTinyToken('');
-    } catch (error) {
-      console.error('Error saving Tiny token:', error);
-      toast.error('Erro ao validar token Tiny');
+      // Não limpar o token ainda, usuário pode querer copiar
+      
+    } catch (error: any) {
+      console.error('Error validating Tiny token:', error);
+      toast.error(`❌ ${error.message}`);
+      setTinyConnected(false);
     } finally {
       setLoading(false);
     }
@@ -109,6 +114,10 @@ export default function Settings() {
           <TabsTrigger value="integrations" className="gap-2">
             <Plug className="w-4 h-4" />
             Integrações
+          </TabsTrigger>
+          <TabsTrigger value="categories" className="gap-2">
+            <Layers className="w-4 h-4" />
+            Categorias
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-2">
             <Palette className="w-4 h-4" />
@@ -233,6 +242,11 @@ export default function Settings() {
               </div>
             </div>
           </Card>
+        </TabsContent>
+
+        {/* Categorias */}
+        <TabsContent value="categories" className="space-y-6">
+          <CategoryManager />
         </TabsContent>
 
         {/* Aparência */}

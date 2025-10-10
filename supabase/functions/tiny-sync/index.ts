@@ -10,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const TINY_API_TOKEN = Deno.env.get('TINY_API_TOKEN');
+const TINY_API_TOKEN = Deno.env.get('TINY_TOKEN') || Deno.env.get('TINY_API_TOKEN');
 const MAX_CALLS = 3;
 const PAGE_SIZE = 50;
 
@@ -29,6 +29,10 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
+    if (!TINY_API_TOKEN) {
+      throw new Error('TINY_TOKEN não configurado. Configure em Settings → Integrações.');
+    }
+
     const { entity, dryRun, since } = await req.json();
     
     if (!['contacts', 'products', 'orders'].includes(entity)) {
@@ -44,37 +48,64 @@ Deno.serve(async (req) => {
     let itemsSkipped = 0;
     const summary: any[] = [];
 
-    // Helper function to call Tiny API
+    // Helper function to call Tiny API with improved error handling
     async function callTinyAPI(endpoint: string) {
       if (apiCalls >= MAX_CALLS) {
-        throw new Error(`MAX_CALLS limit reached (${MAX_CALLS})`);
+        throw new Error(`Limite de ${MAX_CALLS} chamadas atingido. Use filtros ou aguarde próxima janela.`);
       }
       apiCalls++;
+
+      console.log(`[tiny-sync] Chamando API (${apiCalls}/${MAX_CALLS}): ${endpoint}`);
 
       const response = await fetch(`https://api.tiny.com.br/api2/${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: TINY_API_TOKEN, formato: 'JSON' }) // UPPERCASE para retornar JSON
+        body: JSON.stringify({ 
+          token: TINY_API_TOKEN, 
+          formato: 'JSON' // UPPERCASE obrigatório
+        })
       });
 
       if (!response.ok) {
-        throw new Error(`Tiny API HTTP ${response.status}: ${response.statusText}`);
+        console.error(`[tiny-sync] HTTP ${response.status}: ${response.statusText}`);
+        throw new Error(`API Tiny indisponível (HTTP ${response.status})`);
       }
 
       const text = await response.text();
       
-      // Verificar se a resposta é XML (erro comum)
+      // Validação robusta de XML vs JSON
       if (text.trim().startsWith('<?xml')) {
-        console.error('[tiny-sync] Received XML instead of JSON:', text.slice(0, 200));
-        throw new Error('Tiny API returned XML. Check token or endpoint configuration.');
+        console.error('[tiny-sync] Resposta em XML detectada:', text.slice(0, 300));
+        
+        // Tentar extrair mensagem de erro do XML
+        const errorMatch = text.match(/<erro[^>]*>(.*?)<\/erro>/i);
+        const errorMsg = errorMatch ? errorMatch[1] : 'Token inválido ou formato incorreto';
+        
+        throw new Error(`❌ Tiny API: ${errorMsg}. Verifique o token em Settings → Integrações.`);
       }
 
+      let jsonData;
       try {
-        return JSON.parse(text);
+        jsonData = JSON.parse(text);
       } catch (parseError) {
-        console.error('[tiny-sync] JSON parse failed:', text.slice(0, 200));
-        throw new Error('Invalid JSON response from Tiny API');
+        console.error('[tiny-sync] Falha ao parsear JSON:', text.slice(0, 300));
+        throw new Error('Resposta inválida da API Tiny. Contate o suporte.');
       }
+
+      // Validar erros na resposta JSON
+      if (jsonData.retorno?.status === 'Erro' || jsonData.retorno?.codigo_erro) {
+        const erro = jsonData.retorno?.erros?.[0]?.erro || 'Erro desconhecido';
+        console.error('[tiny-sync] Erro na resposta:', erro);
+        
+        if (erro.toLowerCase().includes('token')) {
+          throw new Error(`❌ Token inválido: ${erro}. Reconfigure em Settings → Integrações.`);
+        }
+        
+        throw new Error(`Tiny API: ${erro}`);
+      }
+
+      console.log(`[tiny-sync] ✅ Resposta válida recebida`);
+      return jsonData;
     }
 
     // Helper to generate hash for change detection

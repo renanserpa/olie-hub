@@ -21,5 +21,11 @@ verify_jwt = true
 [functions.tiny-order-status]
 verify_jwt = true
 
+[functions.tiny-sync]
+verify_jwt = true
+
+[functions.tiny-test-connection]
+verify_jwt = true
+
 [functions.tiny-webhooks]
 verify_jwt = false

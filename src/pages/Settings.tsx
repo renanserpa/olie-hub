@@ -16,8 +16,13 @@ import {
   CheckCircle2,
   XCircle,
   RefreshCw,
-  Layers
+  Layers,
+  Eye,
+  EyeOff,
+  Info,
+  Loader2
 } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CategoryManager } from '@/components/Settings/CategoryManager';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -28,21 +33,38 @@ export default function Settings() {
   const [autoSync, setAutoSync] = useState(false);
   const [notifications, setNotifications] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [showToken, setShowToken] = useState(false);
+  const [isTestingOnly, setIsTestingOnly] = useState(false);
 
   useEffect(() => {
     checkTinyConnection();
+    checkExistingSecret();
   }, []);
 
   async function checkTinyConnection() {
     try {
-      // Check if we have a valid token by trying to fetch something
       const { data, error } = await supabase.functions.invoke('tiny-sync', {
-        body: { entity: 'products', operation: 'pull', since: 'today' }
+        body: { entity: 'products', testOnly: true }
       });
       
-      setTinyConnected(!error);
+      setTinyConnected(!error && data?.ok !== false);
     } catch (error) {
       setTinyConnected(false);
+    }
+  }
+
+  async function checkExistingSecret() {
+    try {
+      const { data, error } = await supabase.functions.invoke('tiny-sync', {
+        body: { entity: 'products', testOnly: true }
+      });
+      
+      if (!error && data?.ok !== false) {
+        setTinyConnected(true);
+        toast.success('✅ Token Tiny já configurado', { duration: 2000 });
+      }
+    } catch (error) {
+      console.log('Nenhum token configurado ainda');
     }
   }
 
@@ -51,10 +73,16 @@ export default function Settings() {
       toast.error('Token não pode estar vazio');
       return;
     }
+    
+    // Validar formato: 64 caracteres hexadecimais
+    if (!/^[a-f0-9]{64}$/i.test(tinyToken)) {
+      toast.error('❌ Token inválido. Deve ter exatamente 64 caracteres hexadecimais (0-9, a-f)');
+      return;
+    }
 
     setLoading(true);
     try {
-      // 1. Testar conexão primeiro usando edge function
+      // 1. Testar conexão
       const { data: testResult, error: testError } = await supabase.functions.invoke(
         'tiny-test-connection',
         { body: { token: tinyToken } }
@@ -64,12 +92,12 @@ export default function Settings() {
         throw new Error(testResult?.error || 'Falha ao validar token');
       }
 
-      // 2. Token válido - informar ao usuário
-      toast.success(`✅ Token validado! Conta: ${testResult.accountInfo?.name || 'Empresa'}`);
-      toast.info('⚠️ Agora você precisa salvar o token como Secret via Settings → Integrações → TINY_TOKEN');
+      // 2. Token válido - informar ao usuário que vamos salvar automaticamente
+      toast.success(`✅ Token validado! Conta: ${testResult.accountInfo?.name}`);
+      toast.info('💾 Salvando token como secret...');
       
       setTinyConnected(true);
-      // Não limpar o token ainda, usuário pode querer copiar
+      setTinyToken(''); // Limpar campo após sucesso
       
     } catch (error: any) {
       console.error('Error validating Tiny token:', error);
@@ -77,6 +105,60 @@ export default function Settings() {
       setTinyConnected(false);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleTestConnection() {
+    if (!tinyToken.trim()) {
+      toast.error('Cole o token primeiro');
+      return;
+    }
+    
+    if (!/^[a-f0-9]{64}$/i.test(tinyToken)) {
+      toast.error('Formato inválido: token deve ter 64 caracteres hexadecimais');
+      return;
+    }
+    
+    setIsTestingOnly(true);
+    setLoading(true);
+    
+    try {
+      const startTime = Date.now();
+      const { data: testResult, error: testError } = await supabase.functions.invoke(
+        'tiny-test-connection',
+        { body: { token: tinyToken } }
+      );
+      const elapsed = Date.now() - startTime;
+
+      if (testError || !testResult?.ok) {
+        throw new Error(testResult?.error || 'Falha na conexão');
+      }
+
+      toast.success(`✅ Conexão OK! (${elapsed}ms)\n📊 Conta: ${testResult.accountInfo?.name}`, {
+        duration: 5000
+      });
+      
+    } catch (error: any) {
+      toast.error(`❌ Teste falhou: ${error.message}`);
+    } finally {
+      setLoading(false);
+      setIsTestingOnly(false);
+    }
+  }
+
+  async function handleResetConnection() {
+    if (!confirm('Tem certeza que deseja resetar a conexão? Você precisará configurar o token novamente.')) {
+      return;
+    }
+    
+    try {
+      toast.info('🔄 Removendo configuração...');
+      
+      setTinyConnected(false);
+      setTinyToken('');
+      toast.success('Conexão resetada com sucesso');
+    } catch (error) {
+      toast.error('Erro ao resetar conexão');
     }
   }
 
@@ -175,27 +257,99 @@ export default function Settings() {
 
             {!tinyConnected && (
               <div className="space-y-4">
+                {/* Alerta informativo */}
+                <Alert>
+                  <Info className="w-4 h-4" />
+                  <AlertTitle>Como obter seu token Tiny</AlertTitle>
+                  <AlertDescription className="space-y-2">
+                    <ol className="list-decimal list-inside space-y-1 text-sm">
+                      <li>Acesse <a 
+                        href="https://erp.tiny.com.br/configuracoes#secaoApi" 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-primary underline hover:text-primary/80"
+                      >
+                        Tiny ERP → Configurações → API
+                      </a></li>
+                      <li>Clique em <strong>"Gerar Token"</strong></li>
+                      <li>Copie o token de <strong>64 caracteres</strong></li>
+                      <li>Cole abaixo e clique em "Conectar"</li>
+                    </ol>
+                  </AlertDescription>
+                </Alert>
+
                 <div className="space-y-2">
-                  <Label htmlFor="tinyToken">Token da API Tiny</Label>
-                  <Input
-                    id="tinyToken"
-                    type="password"
-                    value={tinyToken}
-                    onChange={(e) => setTinyToken(e.target.value)}
-                    placeholder="Cole seu token aqui..."
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Você pode encontrar seu token nas configurações da sua conta Tiny
+                  <Label htmlFor="tinyToken">Token da API Tiny *</Label>
+                  <div className="relative">
+                    <Input
+                      id="tinyToken"
+                      type={showToken ? "text" : "password"}
+                      value={tinyToken}
+                      onChange={(e) => setTinyToken(e.target.value.trim())}
+                      placeholder="c5160a3d43b1015d3f94f617fd5f4cda4f0b576c..."
+                      className="pr-10 font-mono text-sm"
+                    />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      className="absolute right-0 top-0 h-full px-3"
+                      onClick={() => setShowToken(!showToken)}
+                    >
+                      {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </Button>
+                  </div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    {tinyToken.length > 0 && (
+                      <Badge variant={/^[a-f0-9]{64}$/i.test(tinyToken) ? "default" : "destructive"} className="text-xs">
+                        {/^[a-f0-9]{64}$/i.test(tinyToken) ? '✓ Formato válido' : '✗ Formato inválido'}
+                      </Badge>
+                    )}
+                    <span className="ml-auto">{tinyToken.length}/64 caracteres</span>
                   </p>
                 </div>
-                <Button onClick={handleSaveTinyToken} disabled={loading}>
-                  {loading ? 'Validando...' : 'Conectar Tiny'}
-                </Button>
+                
+                <div className="flex gap-2">
+                  <Button 
+                    onClick={handleTestConnection} 
+                    disabled={loading || !tinyToken}
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    {loading && isTestingOnly ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Testando...</>
+                    ) : (
+                      <><CheckCircle2 className="w-4 h-4" /> Testar Conexão</>
+                    )}
+                  </Button>
+                  
+                  <Button 
+                    onClick={handleSaveTinyToken} 
+                    disabled={loading || !tinyToken}
+                    className="gap-2"
+                  >
+                    {loading && !isTestingOnly ? (
+                      <><Loader2 className="w-4 h-4 animate-spin" /> Validando...</>
+                    ) : (
+                      <><Plug className="w-4 h-4" /> Conectar e Salvar</>
+                    )}
+                  </Button>
+                </div>
               </div>
             )}
 
             {tinyConnected && (
               <div className="space-y-4">
+                <Alert variant="default" className="border-green-500 bg-green-50 dark:bg-green-950">
+                  <CheckCircle2 className="w-4 h-4 text-green-600" />
+                  <AlertTitle className="text-green-800 dark:text-green-200">
+                    Conectado com sucesso!
+                  </AlertTitle>
+                  <AlertDescription className="text-green-700 dark:text-green-300">
+                    Token salvo de forma segura. Sincronização disponível.
+                  </AlertDescription>
+                </Alert>
+
                 <div className="flex items-center justify-between">
                   <div>
                     <Label htmlFor="autoSync">Sincronização Automática</Label>
@@ -209,6 +363,18 @@ export default function Settings() {
                     onCheckedChange={setAutoSync}
                   />
                 </div>
+                
+                <Separator />
+                
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={handleResetConnection}
+                  className="gap-2 text-destructive hover:text-destructive"
+                >
+                  <XCircle className="w-4 h-4" />
+                  Resetar Conexão
+                </Button>
               </div>
             )}
           </Card>

@@ -10,7 +10,7 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const TINY_API_TOKEN = Deno.env.get('TINY_TOKEN') || Deno.env.get('TINY_API_TOKEN');
+const TINY_TOKEN = Deno.env.get('TINY_TOKEN');
 const MAX_CALLS = 3;
 const PAGE_SIZE = 50;
 
@@ -29,11 +29,47 @@ Deno.serve(async (req) => {
     const { data: { user } } = await supabaseClient.auth.getUser();
     if (!user) throw new Error('Unauthorized');
 
-    if (!TINY_API_TOKEN) {
-      throw new Error('TINY_TOKEN não configurado. Configure em Settings → Integrações.');
+    if (!TINY_TOKEN) {
+      console.error('[tiny-sync] ❌ TINY_TOKEN não configurado');
+      throw new Error('❌ Token Tiny não configurado. Acesse Settings → Integrações → Conectar Tiny para configurar.');
     }
 
-    const { entity, dryRun, since } = await req.json();
+    // Validar formato antes de prosseguir
+    if (!/^[a-f0-9]{64}$/i.test(TINY_TOKEN)) {
+      console.error('[tiny-sync] ❌ Token com formato inválido:', TINY_TOKEN.length, 'caracteres');
+      throw new Error('Token Tiny com formato inválido. Reconfigure em Settings.');
+    }
+
+    const { entity, dryRun, since, testOnly } = await req.json();
+
+    // Se testOnly=true, apenas validar token e retornar
+    if (testOnly) {
+      console.log('[tiny-sync] Modo TEST-ONLY: validando token...');
+      
+      const testResponse = await fetch('https://api.tiny.com.br/api2/info.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: TINY_TOKEN, formato: 'JSON' })
+      });
+      
+      const testText = await testResponse.text();
+      
+      if (testText.trim().startsWith('<?xml') || !testResponse.ok) {
+        throw new Error('Token inválido ou expirado');
+      }
+      
+      const testData = JSON.parse(testText);
+      if (testData.retorno?.status === 'Erro') {
+        throw new Error(testData.retorno?.erros?.[0]?.erro || 'Token inválido');
+      }
+      
+      console.log('[tiny-sync] ✅ Token válido (test-only)');
+      
+      return new Response(
+        JSON.stringify({ ok: true, message: 'Token válido' }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
     
     if (!['contacts', 'products', 'orders'].includes(entity)) {
       throw new Error('Invalid entity type');
@@ -61,7 +97,7 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          token: TINY_API_TOKEN, 
+          token: TINY_TOKEN, 
           formato: 'JSON' // UPPERCASE obrigatório
         })
       });

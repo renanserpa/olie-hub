@@ -49,21 +49,32 @@ Deno.serve(async (req) => {
       if (apiCalls >= MAX_CALLS) {
         throw new Error(`MAX_CALLS limit reached (${MAX_CALLS})`);
       }
-      
       apiCalls++;
+
       const response = await fetch(`https://api.tiny.com.br/api2/${endpoint}`, {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ token: TINY_API_TOKEN, formato: 'json' })
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: TINY_API_TOKEN, formato: 'JSON' }) // UPPERCASE para retornar JSON
       });
 
       if (!response.ok) {
-        throw new Error(`Tiny API error: ${response.statusText}`);
+        throw new Error(`Tiny API HTTP ${response.status}: ${response.statusText}`);
       }
 
-      return await response.json();
+      const text = await response.text();
+      
+      // Verificar se a resposta é XML (erro comum)
+      if (text.trim().startsWith('<?xml')) {
+        console.error('[tiny-sync] Received XML instead of JSON:', text.slice(0, 200));
+        throw new Error('Tiny API returned XML. Check token or endpoint configuration.');
+      }
+
+      try {
+        return JSON.parse(text);
+      } catch (parseError) {
+        console.error('[tiny-sync] JSON parse failed:', text.slice(0, 200));
+        throw new Error('Invalid JSON response from Tiny API');
+      }
     }
 
     // Helper to generate hash for change detection

@@ -26,12 +26,14 @@ import {
   TabsList,
   TabsTrigger,
 } from '@/components/ui/tabs';
+import { OrderDialog } from '@/components/Orders/OrderDialog';
 
 export default function Orders() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [orderDialogOpen, setOrderDialogOpen] = useState(false);
 
   useEffect(() => {
     loadOrders();
@@ -76,6 +78,12 @@ export default function Orders() {
 
   return (
     <div className="space-y-6">
+      <OrderDialog
+        open={orderDialogOpen}
+        onOpenChange={setOrderDialogOpen}
+        onSuccess={loadOrders}
+      />
+      
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -86,7 +94,7 @@ export default function Orders() {
             Gerencie todos os pedidos e integrações com Tiny
           </p>
         </div>
-        <Button className="gradient-primary shadow-glow">
+        <Button className="gradient-primary shadow-glow" onClick={() => setOrderDialogOpen(true)}>
           + Novo Pedido
         </Button>
       </div>

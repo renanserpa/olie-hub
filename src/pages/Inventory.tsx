@@ -8,6 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Package, AlertTriangle, TrendingDown, Search, Plus, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
 import { StockAdjustmentDialog } from '@/components/Inventory/StockAdjustmentDialog';
+import { ProductDialog } from '@/components/Inventory/ProductDialog';
 
 export default function Inventory() {
   const [products, setProducts] = useState<any[]>([]);
@@ -16,6 +17,7 @@ export default function Inventory() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<any>(null);
   const [adjustmentOpen, setAdjustmentOpen] = useState(false);
+  const [productDialogOpen, setProductDialogOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -79,12 +81,21 @@ export default function Inventory() {
         product={selectedProduct}
         onSuccess={loadData}
       />
+      <ProductDialog
+        open={productDialogOpen}
+        onOpenChange={setProductDialogOpen}
+        product={selectedProduct}
+        onSuccess={loadData}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Estoque</h1>
           <p className="text-muted-foreground mt-1">Gestão de produtos e movimentações</p>
         </div>
-        <Button>
+        <Button onClick={() => {
+          setSelectedProduct(null);
+          setProductDialogOpen(true);
+        }}>
           <Plus className="w-4 h-4 mr-2" />
           Novo Produto
         </Button>

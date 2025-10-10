@@ -14,16 +14,453 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      contacts: {
+        Row: {
+          address: Json | null
+          cpf_cnpj: string | null
+          created_at: string
+          created_by: string | null
+          email: string | null
+          id: string
+          instagram: string | null
+          name: string
+          notes: string | null
+          phone: string | null
+          tags: string[] | null
+          tiny_customer_id: string | null
+          updated_at: string
+          whatsapp: string | null
+        }
+        Insert: {
+          address?: Json | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          name: string
+          notes?: string | null
+          phone?: string | null
+          tags?: string[] | null
+          tiny_customer_id?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Update: {
+          address?: Json | null
+          cpf_cnpj?: string | null
+          created_at?: string
+          created_by?: string | null
+          email?: string | null
+          id?: string
+          instagram?: string | null
+          name?: string
+          notes?: string | null
+          phone?: string | null
+          tags?: string[] | null
+          tiny_customer_id?: string | null
+          updated_at?: string
+          whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      inventory_movements: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          product_id: string | null
+          quantity: number
+          reason: string | null
+          reference_id: string | null
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          quantity: number
+          reason?: string | null
+          reference_id?: string | null
+          type: Database["public"]["Enums"]["movement_type"]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          product_id?: string | null
+          quantity?: number
+          reason?: string | null
+          reference_id?: string | null
+          type?: Database["public"]["Enums"]["movement_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_movements_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          attachments: string[] | null
+          channel: string
+          content: string
+          created_at: string
+          id: string
+          mentions: string[] | null
+          parent_id: string | null
+          sender_id: string | null
+        }
+        Insert: {
+          attachments?: string[] | null
+          channel: string
+          content: string
+          created_at?: string
+          id?: string
+          mentions?: string[] | null
+          parent_id?: string | null
+          sender_id?: string | null
+        }
+        Update: {
+          attachments?: string[] | null
+          channel?: string
+          content?: string
+          created_at?: string
+          id?: string
+          mentions?: string[] | null
+          parent_id?: string | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      orders: {
+        Row: {
+          contact_id: string | null
+          created_at: string
+          created_by: string | null
+          discount: number | null
+          fiscal: Json | null
+          id: string
+          items: Json
+          logistics: Json | null
+          metadata: Json | null
+          notes: string | null
+          order_number: string
+          payments: Json | null
+          shipping_cost: number | null
+          source: string | null
+          status: Database["public"]["Enums"]["order_status"] | null
+          subtotal: number
+          tiny_order_id: string | null
+          total: number
+          updated_at: string
+        }
+        Insert: {
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount?: number | null
+          fiscal?: Json | null
+          id?: string
+          items: Json
+          logistics?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          order_number: string
+          payments?: Json | null
+          shipping_cost?: number | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal: number
+          tiny_order_id?: string | null
+          total: number
+          updated_at?: string
+        }
+        Update: {
+          contact_id?: string | null
+          created_at?: string
+          created_by?: string | null
+          discount?: number | null
+          fiscal?: Json | null
+          id?: string
+          items?: Json
+          logistics?: Json | null
+          metadata?: Json | null
+          notes?: string | null
+          order_number?: string
+          payments?: Json | null
+          shipping_cost?: number | null
+          source?: string | null
+          status?: Database["public"]["Enums"]["order_status"] | null
+          subtotal?: number
+          tiny_order_id?: string | null
+          total?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "orders_contact_id_fkey"
+            columns: ["contact_id"]
+            isOneToOne: false
+            referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      production_tasks: {
+        Row: {
+          assigned_to: string | null
+          attachments: string[] | null
+          completed_at: string | null
+          created_at: string
+          due_date: string | null
+          id: string
+          notes: string | null
+          order_id: string | null
+          priority: number | null
+          product_name: string
+          quantity: number
+          started_at: string | null
+          status: Database["public"]["Enums"]["production_status"] | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          priority?: number | null
+          product_name: string
+          quantity: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["production_status"] | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_to?: string | null
+          attachments?: string[] | null
+          completed_at?: string | null
+          created_at?: string
+          due_date?: string | null
+          id?: string
+          notes?: string | null
+          order_id?: string | null
+          priority?: number | null
+          product_name?: string
+          quantity?: number
+          started_at?: string | null
+          status?: Database["public"]["Enums"]["production_status"] | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "production_tasks_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      products: {
+        Row: {
+          category: string | null
+          cost_price: number | null
+          created_at: string
+          description: string | null
+          id: string
+          images: string[] | null
+          is_active: boolean | null
+          metadata: Json | null
+          min_stock_quantity: number | null
+          name: string
+          sku: string | null
+          stock_quantity: number | null
+          tiny_product_id: string | null
+          unit_price: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          min_stock_quantity?: number | null
+          name: string
+          sku?: string | null
+          stock_quantity?: number | null
+          tiny_product_id?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cost_price?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          images?: string[] | null
+          is_active?: boolean | null
+          metadata?: Json | null
+          min_stock_quantity?: number | null
+          name?: string
+          sku?: string | null
+          stock_quantity?: number | null
+          tiny_product_id?: string | null
+          unit_price?: number | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          email: string
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          email: string
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          email?: string
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      templates: {
+        Row: {
+          category: string | null
+          content: string
+          created_at: string
+          created_by: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          subject: string | null
+          updated_at: string
+          variables: string[] | null
+        }
+        Insert: {
+          category?: string | null
+          content: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          subject?: string | null
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Update: {
+          category?: string | null
+          content?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          subject?: string | null
+          updated_at?: string
+          variables?: string[] | null
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      generate_order_number: {
+        Args: Record<PropertyKey, never>
+        Returns: string
+      }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "atendimento" | "producao"
+      movement_type: "in" | "out" | "adjustment"
+      order_status:
+        | "pending_payment"
+        | "paid"
+        | "awaiting_production"
+        | "in_production"
+        | "awaiting_shipping"
+        | "shipped"
+        | "delivered"
+        | "cancelled"
+      production_status:
+        | "pending"
+        | "cutting"
+        | "sewing"
+        | "finishing"
+        | "quality_check"
+        | "completed"
+        | "on_hold"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +587,28 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "atendimento", "producao"],
+      movement_type: ["in", "out", "adjustment"],
+      order_status: [
+        "pending_payment",
+        "paid",
+        "awaiting_production",
+        "in_production",
+        "awaiting_shipping",
+        "shipped",
+        "delivered",
+        "cancelled",
+      ],
+      production_status: [
+        "pending",
+        "cutting",
+        "sewing",
+        "finishing",
+        "quality_check",
+        "completed",
+        "on_hold",
+      ],
+    },
   },
 } as const

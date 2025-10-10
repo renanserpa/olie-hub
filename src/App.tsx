@@ -22,13 +22,14 @@ import Team from "./pages/Team";
 import Auth from "./pages/Auth";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
+import Settings from "./pages/Settings";
 import { 
   MessageSquare, 
   Factory, 
   Package, 
   Truck, 
   Users, 
-  Settings 
+  Settings as SettingsIcon 
 } from "lucide-react";
 
 const queryClient = new QueryClient();
@@ -223,11 +224,7 @@ const App = () => (
             } />
             <Route path="/settings" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Configurações"
-                  description="Gestão de acessos, integrações e configurações do sistema."
-                  icon={Settings}
-                />
+                <Settings />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

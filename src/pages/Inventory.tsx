@@ -4,14 +4,18 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Package, AlertTriangle, TrendingDown, Search, Plus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Package, AlertTriangle, TrendingDown, Search, Plus, TrendingUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { StockAdjustmentDialog } from '@/components/Inventory/StockAdjustmentDialog';
 
 export default function Inventory() {
   const [products, setProducts] = useState<any[]>([]);
   const [movements, setMovements] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [adjustmentOpen, setAdjustmentOpen] = useState(false);
 
   useEffect(() => {
     loadData();
@@ -55,6 +59,13 @@ export default function Inventory() {
   );
 
   const lowStockProducts = products.filter(isLowStock);
+  const supplies = products.filter(p => p.category === 'insumo');
+  const finishedProducts = products.filter(p => p.category !== 'insumo');
+
+  function handleAdjustStock(product: any) {
+    setSelectedProduct(product);
+    setAdjustmentOpen(true);
+  }
 
   if (loading) {
     return <div className="flex items-center justify-center h-64">Carregando...</div>;
@@ -62,6 +73,12 @@ export default function Inventory() {
 
   return (
     <div className="space-y-6">
+      <StockAdjustmentDialog
+        open={adjustmentOpen}
+        onOpenChange={setAdjustmentOpen}
+        product={selectedProduct}
+        onSuccess={loadData}
+      />
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Estoque</h1>
@@ -103,9 +120,21 @@ export default function Inventory() {
         </div>
       </div>
 
-      {/* Grid de Produtos */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.map(product => (
+      {/* Tabs */}
+      <Tabs defaultValue="products" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="products">Produtos ({finishedProducts.length})</TabsTrigger>
+          <TabsTrigger value="supplies">Insumos ({supplies.length})</TabsTrigger>
+          <TabsTrigger value="movements">Movimentações</TabsTrigger>
+        </TabsList>
+
+        {/* Produtos */}
+        <TabsContent value="products" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {finishedProducts.filter(p =>
+              p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+            ).map(product => (
           <Card key={product.id} className="p-4">
             <div className="flex items-start justify-between mb-3">
               <div className="flex-1">
@@ -141,23 +170,91 @@ export default function Inventory() {
               )}
             </div>
 
-            <div className="mt-3 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1">
-                Ajustar
-              </Button>
-              <Button variant="ghost" size="sm">
-                Ver
-              </Button>
-            </div>
-          </Card>
-        ))}
-      </div>
+              <div className="mt-3 flex gap-2">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => handleAdjustStock(product)}
+                >
+                  Ajustar
+                </Button>
+                <Button variant="ghost" size="sm">
+                  Ver
+                </Button>
+              </div>
+            </Card>
+          ))}
+          </div>
+        </TabsContent>
 
-      {/* Movimentações Recentes */}
-      <Card className="p-6">
-        <h2 className="text-xl font-semibold mb-4">Movimentações Recentes</h2>
-        <div className="space-y-3">
-          {movements.map(mov => (
+        {/* Insumos */}
+        <TabsContent value="supplies" className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {supplies.filter(p =>
+              p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+              p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+            ).map(product => (
+              <Card key={product.id} className="p-4">
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex-1">
+                    <h3 className="font-semibold">{product.name}</h3>
+                    {product.sku && (
+                      <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                    )}
+                  </div>
+                  {isLowStock(product) && (
+                    <Badge variant="destructive" className="text-xs">
+                      <AlertTriangle className="w-3 h-3 mr-1" />
+                      Baixo
+                    </Badge>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Estoque</span>
+                    <span className="font-semibold">{product.stock_quantity || 0}</span>
+                  </div>
+                  
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-muted-foreground">Mínimo</span>
+                    <span className="text-sm">{product.min_stock_quantity || 5}</span>
+                  </div>
+
+                  {product.cost_price && (
+                    <div className="flex items-center justify-between pt-2 border-t">
+                      <span className="text-sm text-muted-foreground">Custo</span>
+                      <span className="font-semibold">R$ {Number(product.cost_price).toFixed(2)}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="mt-3 flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1"
+                    onClick={() => handleAdjustStock(product)}
+                  >
+                    Ajustar
+                  </Button>
+                  <Button variant="ghost" size="sm">
+                    Ver
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
+
+        {/* Movimentações */}
+        <TabsContent value="movements" className="space-y-4">
+
+          <Card className="p-6">
+            <h2 className="text-xl font-semibold mb-4">Todas as Movimentações</h2>
+            <div className="space-y-3">
+              {movements.map(mov => (
             <div key={mov.id} className="flex items-center justify-between p-3 border rounded-lg">
               <div className="flex items-center gap-3">
                 <div className={`w-10 h-10 rounded-lg flex items-center justify-center ${
@@ -186,10 +283,12 @@ export default function Inventory() {
                   {new Date(mov.created_at).toLocaleDateString()}
                 </p>
               </div>
+              </div>
+            ))}
             </div>
-          ))}
-        </div>
-      </Card>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

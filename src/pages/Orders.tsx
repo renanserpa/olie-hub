@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -29,6 +30,49 @@ import {
 export default function Orders() {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    loadOrders();
+  }, []);
+
+  async function loadOrders() {
+    try {
+      const { data, error } = await supabase
+        .from('orders')
+        .select(`
+          *,
+          contacts(name),
+          items
+        `)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setOrders(data || []);
+    } catch (error) {
+      console.error('Error loading orders:', error);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function getStatusLabel(status: string) {
+    const labels: Record<string, string> = {
+      pending_payment: 'Aguardando Pagamento',
+      paid: 'Pago',
+      in_production: 'Em Produção',
+      awaiting_shipping: 'Aguardando Envio',
+      shipped: 'Enviado',
+      delivered: 'Entregue',
+      cancelled: 'Cancelado'
+    };
+    return labels[status] || status;
+  }
+
+  if (loading) {
+    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+  }
 
   return (
     <div className="space-y-6">
@@ -78,56 +122,65 @@ export default function Orders() {
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
-          {mockOrdersData.map((order) => (
+          {orders.filter(order => 
+            order.order_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            order.contacts?.name?.toLowerCase().includes(searchTerm.toLowerCase())
+          ).map((order) => (
             <Card key={order.id} className="p-6 shadow-card hover:shadow-elegant transition-smooth">
               <div className="flex items-start justify-between">
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-3">
                     <h3 className="text-lg font-semibold text-foreground">
-                      Pedido #{order.id}
+                      Pedido {order.order_number}
                     </h3>
                     <Badge variant={getStatusVariant(order.status)}>
-                      {order.statusLabel}
+                      {getStatusLabel(order.status)}
                     </Badge>
                   </div>
                   
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Cliente</p>
-                      <p className="font-medium text-foreground">{order.customer}</p>
+                      <p className="font-medium text-foreground">{order.contacts?.name || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-xs text-muted-foreground mb-1">Produto</p>
-                      <p className="font-medium text-foreground">{order.product}</p>
+                      <p className="text-xs text-muted-foreground mb-1">Itens</p>
+                      <p className="font-medium text-foreground">
+                        {Array.isArray(order.items) ? order.items.length : 0} item(s)
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Valor</p>
-                      <p className="font-medium text-foreground">{order.value}</p>
+                      <p className="font-medium text-foreground">
+                        R$ {Number(order.total).toFixed(2)}
+                      </p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground mb-1">Data</p>
-                      <p className="font-medium text-foreground">{order.date}</p>
+                      <p className="font-medium text-foreground">
+                        {new Date(order.created_at).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
                   {/* Integration Status */}
                   <div className="flex items-center gap-6 pt-4 border-t border-border">
                     <div className="flex items-center gap-2">
-                      <CreditCard className={`w-4 h-4 ${order.payment ? 'text-success' : 'text-muted-foreground'}`} />
+                      <CreditCard className={`w-4 h-4 ${order.payments ? 'text-success' : 'text-muted-foreground'}`} />
                       <span className="text-sm">
-                        {order.payment ? 'Pagamento OK' : 'Aguardando'}
+                        {order.payments ? 'Pagamento OK' : 'Aguardando'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <FileText className={`w-4 h-4 ${order.nfe ? 'text-success' : 'text-muted-foreground'}`} />
+                      <FileText className={`w-4 h-4 ${order.fiscal ? 'text-success' : 'text-muted-foreground'}`} />
                       <span className="text-sm">
-                        {order.nfe ? `NFe ${order.nfe}` : 'Sem NFe'}
+                        {order.fiscal ? 'NFe Emitida' : 'Sem NFe'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Truck className={`w-4 h-4 ${order.tracking ? 'text-success' : 'text-muted-foreground'}`} />
+                      <Truck className={`w-4 h-4 ${order.logistics ? 'text-success' : 'text-muted-foreground'}`} />
                       <span className="text-sm">
-                        {order.tracking ? `Rastreio: ${order.tracking}` : 'Sem envio'}
+                        {order.logistics ? 'Rastreio Ativo' : 'Sem envio'}
                       </span>
                     </div>
                   </div>
@@ -166,63 +219,16 @@ export default function Orders() {
 const getStatusVariant = (status: string) => {
   switch (status) {
     case 'paid':
+    case 'delivered':
       return 'default';
-    case 'production':
+    case 'in_production':
       return 'secondary';
-    case 'shipping':
+    case 'shipped':
+    case 'awaiting_shipping':
       return 'outline';
+    case 'cancelled':
+      return 'destructive';
     default:
       return 'outline';
   }
 };
-
-const mockOrdersData = [
-  {
-    id: '1234',
-    customer: 'Ana Silva',
-    product: 'Necessaire Cannes',
-    value: 'R$ 289,90',
-    date: '10/10/2025',
-    status: 'paid',
-    statusLabel: 'Pago',
-    payment: true,
-    nfe: '00123',
-    tracking: 'BR123456789',
-  },
-  {
-    id: '1235',
-    customer: 'Mariana Costa',
-    product: 'Kit Lourdes Completa',
-    value: 'R$ 456,80',
-    date: '10/10/2025',
-    status: 'production',
-    statusLabel: 'Em Produção',
-    payment: true,
-    nfe: '00124',
-    tracking: null,
-  },
-  {
-    id: '1236',
-    customer: 'Júlia Rodrigues',
-    product: 'Embalagem Impermeável',
-    value: 'R$ 198,50',
-    date: '09/10/2025',
-    status: 'paid',
-    statusLabel: 'Pago',
-    payment: true,
-    nfe: null,
-    tracking: null,
-  },
-  {
-    id: '1237',
-    customer: 'Beatriz Lima',
-    product: 'Bolsa Petit',
-    value: 'R$ 378,00',
-    date: '09/10/2025',
-    status: 'pending',
-    statusLabel: 'Aguardando Pagamento',
-    payment: false,
-    nfe: null,
-    tracking: null,
-  },
-];

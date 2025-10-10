@@ -1,1 +1,25 @@
 project_id = "ivhccupahlyrwqilzasa"
+
+[functions.tiny-payments-create-link]
+verify_jwt = true
+
+[functions.tiny-nfe-issue]
+verify_jwt = true
+
+[functions.tiny-shipping-quote]
+verify_jwt = true
+
+[functions.tiny-shipping-create-label]
+verify_jwt = true
+
+[functions.tiny-shipping-track]
+verify_jwt = true
+
+[functions.tiny-create-order]
+verify_jwt = true
+
+[functions.tiny-order-status]
+verify_jwt = true
+
+[functions.tiny-webhooks]
+verify_jwt = false

@@ -9,6 +9,8 @@ import { Session, User } from "@supabase/supabase-js";
 import { AppLayout } from "@/components/Layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
+import OrderDetail from "./pages/OrderDetail";
+import Inbox from "./pages/Inbox";
 import Auth from "./pages/Auth";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
@@ -161,13 +163,14 @@ const App = () => (
                 <Orders />
               </ProtectedRoute>
             } />
+            <Route path="/orders/:id" element={
+              <ProtectedRoute>
+                <OrderDetail />
+              </ProtectedRoute>
+            } />
             <Route path="/inbox" element={
               <ProtectedRoute>
-                <ComingSoon 
-                  title="Inbox"
-                  description="Sistema de atendimento integrado com WhatsApp e Instagram em desenvolvimento."
-                  icon={MessageSquare}
-                />
+                <Inbox />
               </ProtectedRoute>
             } />
             <Route path="/production" element={

@@ -14,6 +14,119 @@ export type Database = {
   }
   public: {
     Tables: {
+      cart_items: {
+        Row: {
+          cart_id: string
+          config_json: Json | null
+          created_at: string
+          id: string
+          preview_png_url: string | null
+          price_delta: number | null
+          product_id: string
+          quantity: number
+        }
+        Insert: {
+          cart_id: string
+          config_json?: Json | null
+          created_at?: string
+          id?: string
+          preview_png_url?: string | null
+          price_delta?: number | null
+          product_id: string
+          quantity?: number
+        }
+        Update: {
+          cart_id?: string
+          config_json?: Json | null
+          created_at?: string
+          id?: string
+          preview_png_url?: string | null
+          price_delta?: number | null
+          product_id?: string
+          quantity?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "cart_items_cart_id_fkey"
+            columns: ["cart_id"]
+            isOneToOne: false
+            referencedRelation: "carts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "cart_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      carts: {
+        Row: {
+          created_at: string
+          id: string
+          session_id: string | null
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          session_id?: string | null
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      config_presets: {
+        Row: {
+          config_json: Json
+          created_at: string
+          id: string
+          is_active: boolean | null
+          name: string
+          preview_png_url: string | null
+          price_delta: number | null
+          product_id: string
+        }
+        Insert: {
+          config_json: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          preview_png_url?: string | null
+          price_delta?: number | null
+          product_id: string
+        }
+        Update: {
+          config_json?: Json
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          preview_png_url?: string | null
+          price_delta?: number | null
+          product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "config_presets_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contacts: {
         Row: {
           address: Json | null
@@ -64,6 +177,48 @@ export type Database = {
           whatsapp?: string | null
         }
         Relationships: []
+      }
+      inventory_bom: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          quantity_per_unit: number
+          supply_product_id: string
+          unit: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          quantity_per_unit?: number
+          supply_product_id: string
+          unit?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          quantity_per_unit?: number
+          supply_product_id?: string
+          unit?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_bom_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventory_bom_supply_product_id_fkey"
+            columns: ["supply_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       inventory_movements: {
         Row: {
@@ -217,6 +372,44 @@ export type Database = {
             columns: ["contact_id"]
             isOneToOne: false
             referencedRelation: "contacts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_media: {
+        Row: {
+          alt: string | null
+          created_at: string
+          id: string
+          product_id: string
+          sort_order: number | null
+          type: string
+          url: string
+        }
+        Insert: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          sort_order?: number | null
+          type: string
+          url: string
+        }
+        Update: {
+          alt?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          sort_order?: number | null
+          type?: string
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_media_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
             referencedColumns: ["id"]
           },
         ]

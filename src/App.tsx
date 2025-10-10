@@ -14,6 +14,9 @@ import Inbox from "./pages/Inbox";
 import Production from "./pages/Production";
 import Inventory from "./pages/Inventory";
 import Logistics from "./pages/Logistics";
+import Catalog from "./pages/Catalog";
+import ProductDetail from "./pages/ProductDetail";
+import Cart from "./pages/Cart";
 import Auth from "./pages/Auth";
 import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
@@ -189,6 +192,21 @@ const App = () => (
             <Route path="/logistics" element={
               <ProtectedRoute>
                 <Logistics />
+              </ProtectedRoute>
+            } />
+            <Route path="/catalog" element={
+              <ProtectedRoute>
+                <Catalog />
+              </ProtectedRoute>
+            } />
+            <Route path="/p/:slug" element={
+              <ProtectedRoute>
+                <ProductDetail />
+              </ProtectedRoute>
+            } />
+            <Route path="/cart" element={
+              <ProtectedRoute>
+                <Cart />
               </ProtectedRoute>
             } />
             <Route path="/team" element={

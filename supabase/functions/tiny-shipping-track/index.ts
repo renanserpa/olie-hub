@@ -53,9 +53,10 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   } catch (error) {
-    console.error('[tiny-shipping-track]', error.message.slice(0, 200));
+    const message = error instanceof Error ? error.message : String(error);
+    console.error('[tiny-shipping-track]', message.slice(0, 200));
     return new Response(
-      JSON.stringify({ ok: false, error: error.message }),
+      JSON.stringify({ ok: false, error: message }),
       { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }

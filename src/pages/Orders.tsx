@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -26,6 +27,7 @@ import {
 } from '@/components/ui/tabs';
 
 export default function Orders() {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
 
   return (
@@ -138,7 +140,7 @@ export default function Orders() {
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem className="gap-2">
+                    <DropdownMenuItem className="gap-2" onClick={() => navigate(`/orders/${order.id}`)}>
                       <Eye className="w-4 h-4" />
                       Ver Detalhes
                     </DropdownMenuItem>

@@ -17,6 +17,7 @@ const navigation = [
   { name: 'Dashboard', href: '/', icon: LayoutDashboard },
   { name: 'Inbox', href: '/inbox', icon: MessageSquare },
   { name: 'Pedidos', href: '/orders', icon: ShoppingCart },
+  { name: 'Contatos', href: '/contacts', icon: Users },
   { name: 'Produção', href: '/production', icon: Factory },
   { name: 'Estoque', href: '/inventory', icon: Package },
   { name: 'Entregas', href: '/logistics', icon: Truck },

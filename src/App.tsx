@@ -11,6 +11,8 @@ import Dashboard from "./pages/Dashboard";
 import Orders from "./pages/Orders";
 import OrderDetail from "./pages/OrderDetail";
 import Inbox from "./pages/Inbox";
+import Contacts from "./pages/Contacts";
+import ContactDetail from "./pages/ContactDetail";
 import Production from "./pages/Production";
 import Inventory from "./pages/Inventory";
 import Logistics from "./pages/Logistics";
@@ -180,6 +182,16 @@ const App = () => (
             <Route path="/inbox" element={
               <ProtectedRoute>
                 <Inbox />
+              </ProtectedRoute>
+            } />
+            <Route path="/contacts" element={
+              <ProtectedRoute>
+                <Contacts />
+              </ProtectedRoute>
+            } />
+            <Route path="/contacts/:id" element={
+              <ProtectedRoute>
+                <ContactDetail />
               </ProtectedRoute>
             } />
             <Route path="/production" element={

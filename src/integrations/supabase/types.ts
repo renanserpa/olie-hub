@@ -130,6 +130,7 @@ export type Database = {
       contacts: {
         Row: {
           address: Json | null
+          birthdate: string | null
           cpf_cnpj: string | null
           created_at: string
           created_by: string | null
@@ -148,6 +149,7 @@ export type Database = {
         }
         Insert: {
           address?: Json | null
+          birthdate?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           created_by?: string | null
@@ -166,6 +168,7 @@ export type Database = {
         }
         Update: {
           address?: Json | null
+          birthdate?: string | null
           cpf_cnpj?: string | null
           created_at?: string
           created_by?: string | null
@@ -387,6 +390,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      product_categories: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          properties: Json | null
+          sort_order: number | null
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          properties?: Json | null
+          sort_order?: number | null
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          properties?: Json | null
+          sort_order?: number | null
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
       }
       product_media: {
         Row: {

@@ -52,6 +52,7 @@ Deno.serve(async (req) => {
       
       apiCalls++;
       const response = await fetch(`https://api.tiny.com.br/api2/${endpoint}`, {
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json'
         },

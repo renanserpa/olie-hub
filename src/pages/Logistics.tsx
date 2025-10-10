@@ -169,7 +169,7 @@ export default function Logistics() {
     );
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('logistics_view_mode', viewMode);
   }, [viewMode]);
 

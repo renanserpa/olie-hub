@@ -161,7 +161,7 @@ export default function Orders() {
     );
   }
 
-  React.useEffect(() => {
+  useEffect(() => {
     localStorage.setItem('orders_view_mode', viewMode);
   }, [viewMode]);
 

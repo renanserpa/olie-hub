@@ -1,7 +1,9 @@
-import { Bell, Search, User } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Bell, Search, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { useAuthStore } from '@/stores/authStore';
+import { supabase } from '@/integrations/supabase/client';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,15 +13,51 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { toast } from 'sonner';
+
+interface UserProfile {
+  full_name: string | null;
+  email: string;
+}
 
 export const Header = () => {
-  const { user, logout } = useAuthStore();
+  const navigate = useNavigate();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
   
-  const userInitials = user?.name
-    .split(' ')
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data } = await supabase
+          .from('profiles')
+          .select('full_name, email')
+          .eq('id', user.id)
+          .single();
+        
+        if (data) {
+          setProfile(data);
+        }
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      toast.error('Erro ao sair');
+    } else {
+      toast.success('Logout realizado com sucesso');
+      navigate('/auth');
+    }
+  };
+  
+  const userInitials = profile?.full_name
+    ?.split(' ')
     .map(n => n[0])
     .join('')
-    .toUpperCase() || 'U';
+    .toUpperCase() || profile?.email?.substring(0, 2).toUpperCase() || 'U';
   
   return (
     <header className="h-16 border-b border-border bg-card shadow-card flex items-center justify-between px-6">
@@ -50,8 +88,8 @@ export const Header = () => {
                 </AvatarFallback>
               </Avatar>
               <div className="text-left hidden md:block">
-                <p className="text-sm font-medium">{user?.name}</p>
-                <p className="text-xs text-muted-foreground capitalize">{user?.role}</p>
+                <p className="text-sm font-medium">{profile?.full_name || profile?.email}</p>
+                <p className="text-xs text-muted-foreground">Admin</p>
               </div>
             </Button>
           </DropdownMenuTrigger>
@@ -63,7 +101,8 @@ export const Header = () => {
               Perfil
             </DropdownMenuItem>
             <DropdownMenuSeparator />
-            <DropdownMenuItem onClick={logout} className="text-destructive">
+            <DropdownMenuItem onClick={handleLogout} className="text-destructive">
+              <LogOut className="mr-2 w-4 h-4" />
               Sair
             </DropdownMenuItem>
           </DropdownMenuContent>

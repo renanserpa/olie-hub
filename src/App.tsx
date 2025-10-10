@@ -1,3 +1,4 @@
+import React from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -23,11 +24,28 @@ const queryClient = new QueryClient();
 // Protected Route Wrapper
 const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   const { isAuthenticated, login } = useAuthStore();
+  const [isInitialized, setIsInitialized] = React.useState(false);
 
-  // Auto-login for demo purposes
-  if (!isAuthenticated) {
-    login('admin@olie.com', 'demo');
-    return null;
+  React.useEffect(() => {
+    // Auto-login for demo purposes
+    if (!isAuthenticated) {
+      login('admin@olie.com', 'demo').then(() => {
+        setIsInitialized(true);
+      });
+    } else {
+      setIsInitialized(true);
+    }
+  }, [isAuthenticated, login]);
+
+  if (!isInitialized) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gradient-subtle">
+        <div className="text-center">
+          <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto mb-4" />
+          <p className="text-muted-foreground">Carregando...</p>
+        </div>
+      </div>
+    );
   }
 
   return <AppLayout>{children}</AppLayout>;

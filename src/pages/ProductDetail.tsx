@@ -9,7 +9,7 @@ import { PieceConfigurator } from '@/components/Configurator/PieceConfigurator';
 import { toast } from 'sonner';
 
 export default function ProductDetail() {
-  const { slug } = useParams();
+  const { slug, id } = useParams();
   const navigate = useNavigate();
   const [product, setProduct] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -19,18 +19,32 @@ export default function ProductDetail() {
 
   useEffect(() => {
     loadProduct();
-  }, [slug]);
+  }, [slug, id]);
 
   async function loadProduct() {
     try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .eq('sku', slug)
-        .eq('is_active', true)
-        .single();
+      // Detect if we're using ID (UUID) or slug (SKU/slug)
+      const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+      
+      let query = supabase.from('products').select('*').eq('is_active', true);
+      
+      if (isUUID) {
+        query = query.eq('id', id);
+      } else if (slug) {
+        query = query.eq('sku', slug);
+      } else if (id) {
+        // Try slug field if it exists
+        query = query.eq('slug', id);
+      }
+      
+      const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
+      if (!data) {
+        toast.error('Produto não encontrado');
+        navigate('/catalog');
+        return;
+      }
       setProduct(data);
     } catch (error) {
       console.error('Error loading product:', error);

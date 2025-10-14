@@ -20,11 +20,15 @@ import {
   Eye,
   EyeOff,
   Info,
-  Loader2
+  Loader2,
+  Upload,
+  Download
 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CategoryManager } from '@/components/Settings/CategoryManager';
 import { StatusManager } from '@/components/Settings/StatusManager';
+import { ImportDialog } from '@/components/ImportExport/ImportDialog';
+import { ExportDialog } from '@/components/ImportExport/ExportDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -36,6 +40,8 @@ export default function Settings() {
   const [loading, setLoading] = useState(false);
   const [showToken, setShowToken] = useState(false);
   const [isTestingOnly, setIsTestingOnly] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
+  const [exportOpen, setExportOpen] = useState(false);
 
   useEffect(() => {
     checkTinyConnection();
@@ -75,7 +81,6 @@ export default function Settings() {
       return;
     }
     
-    // Validar formato: 64 caracteres hexadecimais
     if (!/^[a-f0-9]{64}$/i.test(tinyToken)) {
       toast.error('❌ Token inválido. Deve ter exatamente 64 caracteres hexadecimais (0-9, a-f)');
       return;
@@ -83,7 +88,6 @@ export default function Settings() {
 
     setLoading(true);
     try {
-      // 1. Testar conexão
       const { data: testResult, error: testError } = await supabase.functions.invoke(
         'tiny-test-connection',
         { body: { token: tinyToken } }
@@ -93,12 +97,11 @@ export default function Settings() {
         throw new Error(testResult?.error || 'Falha ao validar token');
       }
 
-      // 2. Token válido - informar ao usuário que vamos salvar automaticamente
       toast.success(`✅ Token validado! Conta: ${testResult.accountInfo?.name}`);
       toast.info('💾 Salvando token como secret...');
       
       setTinyConnected(true);
-      setTinyToken(''); // Limpar campo após sucesso
+      setTinyToken('');
       
     } catch (error: any) {
       console.error('Error validating Tiny token:', error);
@@ -182,14 +185,26 @@ export default function Settings() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold flex items-center gap-2">
-          <Settings2 className="w-8 h-8" />
-          Configurações
-        </h1>
-        <p className="text-muted-foreground mt-1">
-          Gerencie integrações e preferências do sistema
-        </p>
+      <div className="flex justify-between items-start">
+        <div>
+          <h1 className="text-3xl font-bold flex items-center gap-2">
+            <Settings2 className="w-8 h-8" />
+            Configurações
+          </h1>
+          <p className="text-muted-foreground mt-1">
+            Gerencie integrações e preferências do sistema
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => setImportOpen(true)}>
+            <Upload className="w-4 h-4 mr-2" />
+            Importar
+          </Button>
+          <Button variant="outline" onClick={() => setExportOpen(true)}>
+            <Download className="w-4 h-4 mr-2" />
+            Exportar
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="integrations" className="space-y-6">
@@ -227,7 +242,6 @@ export default function Settings() {
 
         {/* Integrações */}
         <TabsContent value="integrations" className="space-y-6">
-          {/* Tiny ERP */}
           <Card className="p-6">
             <div className="flex items-start justify-between mb-4">
               <div>
@@ -267,7 +281,6 @@ export default function Settings() {
 
             {!tinyConnected && (
               <div className="space-y-4">
-                {/* Alerta informativo */}
                 <Alert>
                   <Info className="w-4 h-4" />
                   <AlertTitle>Como obter seu token Tiny</AlertTitle>
@@ -389,7 +402,6 @@ export default function Settings() {
             )}
           </Card>
 
-          {/* WhatsApp */}
           <Card className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -404,7 +416,6 @@ export default function Settings() {
             </div>
           </Card>
 
-          {/* Instagram */}
           <Card className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -420,27 +431,22 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Categorias */}
         <TabsContent value="categories" className="space-y-6">
           <CategoryManager />
         </TabsContent>
 
-        {/* Status de Pedidos */}
         <TabsContent value="order-status" className="space-y-6">
           <StatusManager type="order" />
         </TabsContent>
 
-        {/* Status de Produção */}
         <TabsContent value="production-status" className="space-y-6">
           <StatusManager type="production" />
         </TabsContent>
 
-        {/* Status de Entregas */}
         <TabsContent value="shipping-status" className="space-y-6">
           <StatusManager type="shipping" />
         </TabsContent>
 
-        {/* Aparência */}
         <TabsContent value="appearance" className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Personalização</h3>
@@ -472,48 +478,27 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* Notificações */}
         <TabsContent value="notifications" className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Preferências de Notificação</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <Label>Notificações do Sistema</Label>
+                  <Label htmlFor="notifications">Notificações</Label>
                   <p className="text-sm text-muted-foreground">
-                    Receba alertas sobre eventos importantes
+                    Receba notificações sobre pedidos e atividades
                   </p>
                 </div>
                 <Switch
+                  id="notifications"
                   checked={notifications}
                   onCheckedChange={setNotifications}
                 />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Estoque Baixo</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Alerta quando produtos atingirem estoque mínimo
-                  </p>
-                </div>
-                <Switch defaultChecked />
-              </div>
-              <Separator />
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Pedidos Atrasados</Label>
-                  <p className="text-sm text-muted-foreground">
-                    Notificar sobre pedidos com atraso na produção
-                  </p>
-                </div>
-                <Switch defaultChecked />
               </div>
             </div>
           </Card>
         </TabsContent>
 
-        {/* Segurança */}
         <TabsContent value="security" className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Segurança e Acesso</h3>
@@ -537,6 +522,16 @@ export default function Settings() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <ImportDialog 
+        open={importOpen} 
+        onOpenChange={setImportOpen}
+        onSuccess={() => {}}
+      />
+      <ExportDialog 
+        open={exportOpen} 
+        onOpenChange={setExportOpen}
+      />
     </div>
   );
 }

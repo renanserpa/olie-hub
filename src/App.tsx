@@ -225,6 +225,11 @@ const App = () => (
                 <ProductDetail />
               </ProtectedRoute>
             } />
+            <Route path="/products/:id" element={
+              <ProtectedRoute>
+                <ProductDetail />
+              </ProtectedRoute>
+            } />
             <Route path="/cart" element={
               <ProtectedRoute>
                 <Cart />

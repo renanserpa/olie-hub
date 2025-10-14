@@ -610,15 +610,19 @@ export type Database = {
           category: string | null
           cost_price: number | null
           created_at: string
+          customization_options: Json | null
           description: string | null
           id: string
           images: string[] | null
           is_active: boolean | null
+          materials: Json | null
           metadata: Json | null
           min_stock_quantity: number | null
           name: string
           sku: string | null
+          slug: string | null
           stock_quantity: number | null
+          technical_specs: Json | null
           tiny_hash: string | null
           tiny_product_id: string | null
           tiny_synced_at: string | null
@@ -629,15 +633,19 @@ export type Database = {
           category?: string | null
           cost_price?: number | null
           created_at?: string
+          customization_options?: Json | null
           description?: string | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          materials?: Json | null
           metadata?: Json | null
           min_stock_quantity?: number | null
           name: string
           sku?: string | null
+          slug?: string | null
           stock_quantity?: number | null
+          technical_specs?: Json | null
           tiny_hash?: string | null
           tiny_product_id?: string | null
           tiny_synced_at?: string | null
@@ -648,15 +656,19 @@ export type Database = {
           category?: string | null
           cost_price?: number | null
           created_at?: string
+          customization_options?: Json | null
           description?: string | null
           id?: string
           images?: string[] | null
           is_active?: boolean | null
+          materials?: Json | null
           metadata?: Json | null
           min_stock_quantity?: number | null
           name?: string
           sku?: string | null
+          slug?: string | null
           stock_quantity?: number | null
+          technical_specs?: Json | null
           tiny_hash?: string | null
           tiny_product_id?: string | null
           tiny_synced_at?: string | null

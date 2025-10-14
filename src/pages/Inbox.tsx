@@ -9,6 +9,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { MessageSquare, Instagram, Send, Settings } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { InboxConfigurator } from '@/components/Inbox/InboxConfigurator';
 
 type Channel = 'wa' | 'ig';
 
@@ -84,9 +85,12 @@ export default function Inbox() {
             Atendimento integrado WhatsApp e Instagram
           </p>
         </div>
-        <Button variant="outline" size="icon">
-          <Settings className="w-4 h-4" />
-        </Button>
+        <div className="flex gap-2">
+          <InboxConfigurator />
+          <Button variant="outline" size="icon">
+            <Settings className="w-4 h-4" />
+          </Button>
+        </div>
       </div>
 
       <Tabs value={activeChannel} onValueChange={(v) => setActiveChannel(v as Channel)}>

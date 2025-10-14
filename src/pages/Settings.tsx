@@ -27,6 +27,7 @@ import {
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { CategoryManager } from '@/components/Settings/CategoryManager';
 import { StatusManager } from '@/components/Settings/StatusManager';
+import { ColorLibrary } from '@/components/Settings/ColorLibrary';
 import { ImportDialog } from '@/components/ImportExport/ImportDialog';
 import { ExportDialog } from '@/components/ImportExport/ExportDialog';
 import { supabase } from '@/integrations/supabase/client';
@@ -208,14 +209,26 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="integrations" className="space-y-6">
-        <TabsList className="grid grid-cols-3 lg:grid-cols-8">
-          <TabsTrigger value="integrations" className="gap-2">
+        <TabsList className="grid grid-cols-3 lg:grid-cols-12 gap-1">
+          <TabsTrigger value="integrations" className="gap-2 text-xs lg:text-sm">
             <Plug className="w-4 h-4" />
             <span className="hidden lg:inline">Integrações</span>
           </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-2">
+          <TabsTrigger value="categories" className="gap-2 text-xs lg:text-sm">
             <Layers className="w-4 h-4" />
             <span className="hidden lg:inline">Categorias</span>
+          </TabsTrigger>
+          <TabsTrigger value="colors-fabric" className="gap-2 text-xs lg:text-sm">
+            Tecido
+          </TabsTrigger>
+          <TabsTrigger value="colors-zipper" className="gap-2 text-xs lg:text-sm">
+            Zíper
+          </TabsTrigger>
+          <TabsTrigger value="colors-lining" className="gap-2 text-xs lg:text-sm">
+            Forro
+          </TabsTrigger>
+          <TabsTrigger value="colors-bias" className="gap-2 text-xs lg:text-sm">
+            Viés
           </TabsTrigger>
           <TabsTrigger value="order-status" className="gap-2 text-xs lg:text-sm">
             Status Pedidos
@@ -226,15 +239,15 @@ export default function Settings() {
           <TabsTrigger value="shipping-status" className="gap-2 text-xs lg:text-sm">
             Status Entregas
           </TabsTrigger>
-          <TabsTrigger value="appearance" className="gap-2">
+          <TabsTrigger value="appearance" className="gap-2 text-xs lg:text-sm">
             <Palette className="w-4 h-4" />
             <span className="hidden lg:inline">Aparência</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2">
+          <TabsTrigger value="notifications" className="gap-2 text-xs lg:text-sm">
             <Bell className="w-4 h-4" />
             <span className="hidden lg:inline">Notificações</span>
           </TabsTrigger>
-          <TabsTrigger value="security" className="gap-2">
+          <TabsTrigger value="security" className="gap-2 text-xs lg:text-sm">
             <Shield className="w-4 h-4" />
             <span className="hidden lg:inline">Segurança</span>
           </TabsTrigger>
@@ -433,6 +446,22 @@ export default function Settings() {
 
         <TabsContent value="categories" className="space-y-6">
           <CategoryManager />
+        </TabsContent>
+
+        <TabsContent value="colors-fabric" className="space-y-6">
+          <ColorLibrary type="fabric" />
+        </TabsContent>
+
+        <TabsContent value="colors-zipper" className="space-y-6">
+          <ColorLibrary type="zipper" />
+        </TabsContent>
+
+        <TabsContent value="colors-lining" className="space-y-6">
+          <ColorLibrary type="lining" />
+        </TabsContent>
+
+        <TabsContent value="colors-bias" className="space-y-6">
+          <ColorLibrary type="bias" />
         </TabsContent>
 
         <TabsContent value="order-status" className="space-y-6">

@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      bias_colors: {
+        Row: {
+          cmyk: string
+          created_at: string
+          hex: string
+          id: string
+          is_active: boolean | null
+          name: string
+          price_per_meter: number | null
+          stock_product_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cmyk: string
+          created_at?: string
+          hex: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cmyk?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bias_colors_stock_product_id_fkey"
+            columns: ["stock_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       cart_items: {
         Row: {
           cart_id: string
@@ -187,8 +231,54 @@ export type Database = {
         }
         Relationships: []
       }
+      fabric_colors: {
+        Row: {
+          cmyk: string
+          created_at: string
+          hex: string
+          id: string
+          is_active: boolean | null
+          name: string
+          price_per_meter: number | null
+          stock_product_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cmyk: string
+          created_at?: string
+          hex: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cmyk?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fabric_colors_stock_product_id_fkey"
+            columns: ["stock_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       inventory_bom: {
         Row: {
+          color_id: string | null
+          color_type: string | null
           created_at: string
           id: string
           product_id: string
@@ -197,6 +287,8 @@ export type Database = {
           unit: string | null
         }
         Insert: {
+          color_id?: string | null
+          color_type?: string | null
           created_at?: string
           id?: string
           product_id: string
@@ -205,6 +297,8 @@ export type Database = {
           unit?: string | null
         }
         Update: {
+          color_id?: string | null
+          color_type?: string | null
           created_at?: string
           id?: string
           product_id?: string
@@ -264,6 +358,50 @@ export type Database = {
           {
             foreignKeyName: "inventory_movements_product_id_fkey"
             columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lining_colors: {
+        Row: {
+          cmyk: string
+          created_at: string
+          hex: string
+          id: string
+          is_active: boolean | null
+          name: string
+          price_per_meter: number | null
+          stock_product_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cmyk: string
+          created_at?: string
+          hex: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cmyk?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_per_meter?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lining_colors_stock_product_id_fkey"
+            columns: ["stock_product_id"]
             isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
@@ -463,6 +601,87 @@ export type Database = {
         }
         Relationships: []
       }
+      product_configurations: {
+        Row: {
+          bias_color_id: string | null
+          config_json: Json | null
+          created_at: string
+          created_by: string | null
+          customization_text: string | null
+          fabric_color_id: string | null
+          id: string
+          lining_color_id: string | null
+          preview_png_url: string | null
+          product_id: string
+          total_price: number
+          zipper_color_id: string | null
+        }
+        Insert: {
+          bias_color_id?: string | null
+          config_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          customization_text?: string | null
+          fabric_color_id?: string | null
+          id?: string
+          lining_color_id?: string | null
+          preview_png_url?: string | null
+          product_id: string
+          total_price?: number
+          zipper_color_id?: string | null
+        }
+        Update: {
+          bias_color_id?: string | null
+          config_json?: Json | null
+          created_at?: string
+          created_by?: string | null
+          customization_text?: string | null
+          fabric_color_id?: string | null
+          id?: string
+          lining_color_id?: string | null
+          preview_png_url?: string | null
+          product_id?: string
+          total_price?: number
+          zipper_color_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_configurations_bias_color_id_fkey"
+            columns: ["bias_color_id"]
+            isOneToOne: false
+            referencedRelation: "bias_colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_configurations_fabric_color_id_fkey"
+            columns: ["fabric_color_id"]
+            isOneToOne: false
+            referencedRelation: "fabric_colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_configurations_lining_color_id_fkey"
+            columns: ["lining_color_id"]
+            isOneToOne: false
+            referencedRelation: "lining_colors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_configurations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_configurations_zipper_color_id_fkey"
+            columns: ["zipper_color_id"]
+            isOneToOne: false
+            referencedRelation: "zipper_colors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       product_media: {
         Row: {
           alt: string | null
@@ -494,6 +713,41 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "product_media_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      product_svg_maps: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          svg_mapping: Json
+          svg_url: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          svg_mapping?: Json
+          svg_url: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          svg_mapping?: Json
+          svg_url?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_svg_maps_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
@@ -853,6 +1107,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      zipper_colors: {
+        Row: {
+          cmyk: string
+          created_at: string
+          hex: string
+          id: string
+          is_active: boolean | null
+          name: string
+          price_delta: number | null
+          stock_product_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          cmyk: string
+          created_at?: string
+          hex: string
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price_delta?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          cmyk?: string
+          created_at?: string
+          hex?: string
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price_delta?: number | null
+          stock_product_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zipper_colors_stock_product_id_fkey"
+            columns: ["stock_product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

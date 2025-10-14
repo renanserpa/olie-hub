@@ -4,8 +4,10 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowLeft, ShoppingCart, Loader2 } from 'lucide-react';
-import { PieceConfigurator } from '@/components/Configurator/PieceConfigurator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ArrowLeft, ShoppingCart, Loader2, Upload } from 'lucide-react';
+import { SVGUploader } from '@/components/Configurator/SVGUploader';
+import { SVGColorTester } from '@/components/Configurator/SVGColorTester';
 import { toast } from 'sonner';
 
 export default function ProductDetail() {
@@ -15,7 +17,32 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [adding, setAdding] = useState(false);
   const [config, setConfig] = useState<any>(null);
+  const [previewUrl, setPreviewUrl] = useState<string>("");
+  const [totalPrice, setTotalPrice] = useState<number>(0);
   const [quantity, setQuantity] = useState(1);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    checkAdminRole();
+  }, []);
+
+  async function checkAdminRole() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', user.id)
+        .eq('role', 'admin')
+        .single();
+
+      setIsAdmin(!!data);
+    } catch (error) {
+      console.error('Error checking admin role:', error);
+    }
+  }
 
   useEffect(() => {
     loadProduct();
@@ -55,6 +82,12 @@ export default function ProductDetail() {
     }
   }
 
+  function handleConfigChange(selectedColors: any, preview: string, price: number) {
+    setConfig(selectedColors);
+    setPreviewUrl(preview);
+    setTotalPrice(price);
+  }
+
   async function handleAddToCart() {
     if (!product || !config) {
       toast.error('Configure sua peça antes de adicionar ao carrinho');
@@ -76,9 +109,9 @@ export default function ProductDetail() {
           body: JSON.stringify({
             productId: product.id,
             quantity,
-            configJson: config.configJson,
-            previewPngDataUrl: config.previewPngDataUrl,
-            priceDelta: config.priceDelta
+            configJson: config,
+            previewPngDataUrl: previewUrl,
+            priceDelta: totalPrice - basePrice
           })
         }
       );
@@ -105,7 +138,7 @@ export default function ProductDetail() {
   }
 
   const basePrice = Number(product.unit_price || 0);
-  const finalPrice = basePrice + (config?.priceDelta || 0);
+  const finalPrice = totalPrice || basePrice;
 
   return (
     <div className="space-y-6">
@@ -119,17 +152,17 @@ export default function ProductDetail() {
         <div className="space-y-6">
           <Card className="p-6">
             <div className="aspect-square bg-muted rounded-lg mb-4 flex items-center justify-center">
-              {product.images?.[0] ? (
+              {previewUrl ? (
+                <img
+                  src={previewUrl}
+                  alt="Preview Configurado"
+                  className="w-full h-full object-contain rounded-lg"
+                />
+              ) : product.images?.[0] ? (
                 <img
                   src={product.images[0]}
                   alt={product.name}
                   className="w-full h-full object-cover rounded-lg"
-                />
-              ) : config?.previewPngDataUrl ? (
-                <img
-                  src={config.previewPngDataUrl}
-                  alt="Preview"
-                  className="w-full h-full object-contain rounded-lg"
                 />
               ) : (
                 <div className="text-muted-foreground">Sem imagem</div>
@@ -161,10 +194,10 @@ export default function ProductDetail() {
                   <span className="text-sm text-muted-foreground">Preço base:</span>
                   <span className="text-lg">R$ {basePrice.toFixed(2)}</span>
                 </div>
-                {config?.priceDelta > 0 && (
+                {(finalPrice - basePrice) > 0 && (
                   <div className="flex items-baseline gap-2">
                     <span className="text-sm text-muted-foreground">Personalização:</span>
-                    <span className="text-lg">+ R$ {config.priceDelta.toFixed(2)}</span>
+                    <span className="text-lg">+ R$ {(finalPrice - basePrice).toFixed(2)}</span>
                   </div>
                 )}
                 <div className="flex items-baseline gap-2 mt-2">
@@ -191,10 +224,38 @@ export default function ProductDetail() {
 
         {/* Configurator */}
         <div>
-          <PieceConfigurator
-            productId={product.id}
-            onConfigChange={setConfig}
-          />
+          {isAdmin ? (
+            <Tabs defaultValue="tester" className="w-full">
+              <TabsList className="grid w-full grid-cols-2">
+                <TabsTrigger value="tester">Testar Cores</TabsTrigger>
+                <TabsTrigger value="upload">
+                  <Upload className="w-4 h-4 mr-2" />
+                  Upload SVG
+                </TabsTrigger>
+              </TabsList>
+              <TabsContent value="tester" className="mt-6">
+                <SVGColorTester
+                  productId={product.id}
+                  basePrice={basePrice}
+                  onConfigChange={handleConfigChange}
+                />
+              </TabsContent>
+              <TabsContent value="upload" className="mt-6">
+                <SVGUploader
+                  productId={product.id}
+                  onSaved={() => {
+                    toast.success('SVG salvo! Atualize a página para testar.');
+                  }}
+                />
+              </TabsContent>
+            </Tabs>
+          ) : (
+            <SVGColorTester
+              productId={product.id}
+              basePrice={basePrice}
+              onConfigChange={handleConfigChange}
+            />
+          )}
         </div>
       </div>
     </div>

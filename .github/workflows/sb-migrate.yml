@@ -1,0 +1,53 @@
+name: Supabase — Migrate & Seed (remote)
+
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "db/migrations/**"
+      - "db/seeds/**"
+      - ".github/workflows/sb-migrate.yml"
+
+jobs:
+  migrate:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install Supabase CLI
+        uses: supabase/setup-cli@v1
+        with:
+          version: latest
+
+      - name: Link project (remote)
+        run: supabase link --project-ref qrfvdoecpmcnlpxklcsu --password "$SUPABASE_DB_PASSWORD"
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Push migrations (DDL/RLS)
+        run: supabase db push
+        env:
+          SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Seed (idempotente)
+        run: |
+          set -e
+          export DATABASE_URL="postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.qrfvdoecpmcnlpxklcsu.supabase.co:5432/postgres?sslmode=require"
+          # Rode apenas se existirem (ajuste nomes conforme o repo)
+          [ -f db/seeds/2025-10-16_configs_seeds.sql ] && psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql || true
+          [ -f db/seeds/2025-10-16_configs_seeds_2.sql ] && psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds_2.sql || true
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+
+      - name: Smoke checks
+        run: |
+          export DATABASE_URL="postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.qrfvdoecpmcnlpxklcsu.supabase.co:5432/postgres?sslmode=require"
+          psql "$DATABASE_URL" -c "SELECT current_database(), current_user;"
+          psql "$DATABASE_URL" -c "SELECT to_regclass('public.config_color_palettes') AS has_palettes;"
+          psql "$DATABASE_URL" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

@@ -1,4 +1,4 @@
-project_id = "ivhccupahlyrwqilzasa"
+project_id = "qrfvdoecpmcnlpxklcsu"
 
 [functions.tiny-payments-create-link]
 verify_jwt = true

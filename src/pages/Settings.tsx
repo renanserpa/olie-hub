@@ -30,6 +30,7 @@ import { StatusManager } from '@/components/Settings/StatusManager';
 import { ColorLibrary } from '@/components/Settings/ColorLibrary';
 import { ImportDialog } from '@/components/ImportExport/ImportDialog';
 import { ExportDialog } from '@/components/ImportExport/ExportDialog';
+import { SettingsManagers } from '@/components/Settings/Settings';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -217,6 +218,9 @@ export default function Settings() {
           <TabsTrigger value="categories" className="gap-2 text-xs lg:text-sm">
             <Layers className="w-4 h-4" />
             <span className="hidden lg:inline">Categorias</span>
+          </TabsTrigger>
+          <TabsTrigger value="configuration-managers" className="gap-2 text-xs lg:text-sm">
+            Materiais
           </TabsTrigger>
           <TabsTrigger value="colors-fabric" className="gap-2 text-xs lg:text-sm">
             Tecido
@@ -446,6 +450,10 @@ export default function Settings() {
 
         <TabsContent value="categories" className="space-y-6">
           <CategoryManager />
+        </TabsContent>
+
+        <TabsContent value="configuration-managers" className="space-y-6">
+          <SettingsManagers />
         </TabsContent>
 
         <TabsContent value="colors-fabric" className="space-y-6">

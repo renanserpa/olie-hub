@@ -28,26 +28,36 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - name: Push migrations (DDL/RLS)
-        run: supabase db push
+        run: supabase db push --non-interactive
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - name: Seed (idempotente)
-        run: |
-          set -e
-          export DATABASE_URL="postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.qrfvdoecpmcnlpxklcsu.supabase.co:5432/postgres?sslmode=require"
-          # Rode apenas se existirem (ajuste nomes conforme o repo)
-          [ -f db/seeds/2025-10-16_configs_seeds.sql ] && psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql || true
-          [ -f db/seeds/2025-10-16_configs_seeds_2.sql ] && psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds_2.sql || true
         env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGHOST: db.qrfvdoecpmcnlpxklcsu.supabase.co
+          PGUSER: postgres
+          PGDATABASE: postgres
+          PGPORT: 5432
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [ -f db/seeds/2025-10-16_configs_seeds.sql ]; then
+            psql "sslmode=require" -v ON_ERROR_STOP=1 -f db/seeds/2025-10-16_configs_seeds.sql || true
+          fi
+          if [ -f db/seeds/extra_seeds.sql ]; then
+            psql "sslmode=require" -v ON_ERROR_STOP=1 -f db/seeds/extra_seeds.sql || true
+          fi
 
       - name: Smoke checks
-        run: |
-          export DATABASE_URL="postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.qrfvdoecpmcnlpxklcsu.supabase.co:5432/postgres?sslmode=require"
-          psql "$DATABASE_URL" -c "SELECT current_database(), current_user;"
-          psql "$DATABASE_URL" -c "SELECT to_regclass('public.config_color_palettes') AS has_palettes;"
-          psql "$DATABASE_URL" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true
         env:
-          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          PGHOST: db.qrfvdoecpmcnlpxklcsu.supabase.co
+          PGUSER: postgres
+          PGDATABASE: postgres
+          PGPORT: 5432
+          PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+        run: |
+          set -euo pipefail
+          psql "sslmode=require" -c "SELECT current_database(), current_user, version();"
+          psql "sslmode=require" -c "SELECT to_regclass('public.config_color_palettes') AS has_palettes;"
+          psql "sslmode=require" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true

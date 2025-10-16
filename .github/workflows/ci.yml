@@ -1,0 +1,35 @@
+name: ci
+on: [push, pull_request]
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: oliehub
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres" --health-interval 10s --health-timeout 5s --health-retries 5
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/oliehub
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 20 }
+      - name: Install deps
+        run: |
+          corepack enable || true
+          pnpm i --frozen-lockfile || npm ci
+      - name: Apply migrations
+        run: |
+          psql "$DATABASE_URL" -f db/migrations/2025-10-16_001_configs_core.sql
+          psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql
+      - name: Run tests
+        run: npx vitest run --reporter=default || npm test --if-present
+      - name: Lint & Typecheck (optional)
+        run: |
+          npm run lint --if-present
+          npm run typecheck --if-present

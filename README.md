@@ -71,3 +71,17 @@ Yes, you can!
 To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
 
 Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+
+## Security Pack CONFIGS
+
+O módulo de configurações agora conta com tabelas de paletas de cores, texturas de tecido e políticas RLS que garantem acesso somente leitura para itens ativos e escrita restrita a administradores. As novas migrations incluem gatilhos `updated_at`, índices e uma view consolidada `public.config_all_colors` para consultar rapidamente todas as cores disponíveis no catálogo.
+
+### Rodar local
+
+```sh
+createdb oliehub || true
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/oliehub
+psql "$DATABASE_URL" -f db/migrations/2025-10-16_001_configs_core.sql
+psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql
+npx vitest run
+```

@@ -118,3 +118,55 @@ DO $$ BEGIN
   ALTER TABLE public.config_component_options
     ADD COLUMN IF NOT EXISTS insumo_id UUID REFERENCES public.insumo(id) ON DELETE SET NULL;
 EXCEPTION WHEN undefined_table THEN NULL; END $$;
+-- ==== CI/Local helpers (idempotentes) =====================================
+
+-- 1) Garantir schema auth + função uid() (stub em ambientes sem Supabase)
+CREATE SCHEMA IF NOT EXISTS auth;
+
+DO $$
+BEGIN
+  CREATE OR REPLACE FUNCTION auth.uid()
+  RETURNS uuid
+  LANGUAGE sql STABLE
+AS $func$
+  SELECT gen_random_uuid()
+$func$;
+EXCEPTION
+  WHEN others THEN
+    -- Se existir implementação gerenciada (Supabase), ignorar
+    NULL;
+END
+$$;
+
+-- 2) Garantir função has_role(uid, role) em ambientes de CI
+DO $$
+BEGIN
+  CREATE FUNCTION public.has_role(uid uuid, role text)
+  RETURNS boolean
+  LANGUAGE sql STABLE
+AS $func$
+  SELECT false
+$func$;
+EXCEPTION
+  WHEN duplicate_function THEN
+    -- Já existe no projeto: manter a original
+    NULL;
+END
+$$;
+
+-- 3) Usuário de teste sem privilégios elevados (para validar RLS)
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_roles WHERE rolname = 'olie_app_user') THEN
+    CREATE ROLE olie_app_user LOGIN PASSWORD 'test' NOSUPERUSER NOCREATEDB NOCREATEROLE NOINHERIT;
+  END IF;
+END
+$$;
+
+-- 4) Grants mínimos para SELECT (RLS fará o filtro de linhas)
+GRANT USAGE ON SCHEMA public TO olie_app_user;
+
+GRANT SELECT ON TABLE public.config_color_palettes TO olie_app_user;
+GRANT SELECT ON TABLE public.config_fabric_textures TO olie_app_user;
+
+-- (se precisar testar mais tabelas, adicione GRANTs equivalentes)

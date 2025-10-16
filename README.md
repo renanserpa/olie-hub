@@ -85,3 +85,17 @@ psql "$DATABASE_URL" -f db/migrations/2025-10-16_001_configs_core.sql
 psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql
 npx vitest run
 ```
+
+### Testes RLS (local)
+```bash
+export DATABASE_URL=postgresql://postgres:postgres@localhost:5432/oliehub
+export DATABASE_URL_RLS=postgresql://olie_app_user:test@localhost:5432/oliehub
+
+createdb oliehub || true
+psql "$DATABASE_URL" -f db/migrations/2025-10-16_001_configs_core.sql
+psql "$DATABASE_URL" -f db/seeds/2025-10-16_configs_seeds.sql
+
+npx vitest run
+```
+
+O usuário olie_app_user é criado na migration com permissões mínimas de leitura.

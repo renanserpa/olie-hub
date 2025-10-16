@@ -43,13 +43,28 @@ export default function Products() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      const supabaseUrl =
+        import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
+        (typeof window !== 'undefined' ? window.ENV?.NEXT_PUBLIC_SUPABASE_URL : '');
+
+      if (!supabaseUrl) {
+        toast.error('Variável NEXT_PUBLIC_SUPABASE_URL não configurada.');
+        setSyncing(false);
+        return;
+      }
+
       const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/tiny-sync`,
+        `${supabaseUrl}/functions/v1/tiny-sync`,
         {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
+            'Authorization': `Bearer ${
+              session?.access_token ??
+              import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+              (typeof window !== 'undefined' ? window.ENV?.NEXT_PUBLIC_SUPABASE_ANON_KEY : '') ??
+              ''
+            }`
           },
           body: JSON.stringify({
             entity: 'products',
@@ -73,9 +88,10 @@ export default function Products() {
       }
 
       console.log('[TinySync]', `Calls used: ${result.stats.apiCallsUsed}/${result.stats.maxCalls}`);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Sync error:', error);
-      toast.error(error.message || 'Erro ao sincronizar');
+      const message = error instanceof Error ? error.message : 'Erro ao sincronizar';
+      toast.error(message);
     } finally {
       setSyncing(false);
     }

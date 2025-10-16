@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,11 +25,21 @@ import { StatusManager } from '@/components/Settings/StatusManager';
 import { ColorLibrary } from '@/components/Settings/ColorLibrary';
 import { ImportDialog } from '@/components/ImportExport/ImportDialog';
 import { ExportDialog } from '@/components/ImportExport/ExportDialog';
+import { SupplyGroupsManager } from '@/components/Settings/SupplyGroupsManager';
+import { BasicMaterialsManager } from '@/components/Settings/BasicMaterialsManager';
+import { useAdminAccess } from '@/hooks/useAdminAccess';
 
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
+  const [supplyGroupsVersion, setSupplyGroupsVersion] = useState(0);
+  const { isAdmin, loading: adminLoading } = useAdminAccess();
+
+  const materialsReadOnly = useMemo(() => {
+    if (adminLoading) return true;
+    return !isAdmin;
+  }, [adminLoading, isAdmin]);
 
   return (
     <div className="space-y-6">
@@ -173,20 +183,26 @@ export default function Settings() {
 
         {/* C) Materiais (templates - NÃO Estoque) */}
         <TabsContent value="materials" className="space-y-6">
-          <Alert className="mb-6">
-            <Info className="w-4 h-4" />
-            <AlertDescription>
-              Esta seção gerencia <strong>modelos</strong> de materiais (unidade, custo padrão, grupo). 
-              O <strong>estoque real</strong> é cadastrado em <strong>Estoque → Insumos</strong>.
-            </AlertDescription>
-          </Alert>
-          
-          <Alert>
-            <Info className="w-4 h-4" />
-            <AlertDescription>
-              <strong>Migrations pendentes.</strong> Aplique <code className="font-mono">db/migrations/*.sql</code> no Supabase <strong>qrfvdoecpmcnlpxklcsu</strong>.
-            </AlertDescription>
-          </Alert>
+          <Tabs defaultValue="groups" className="space-y-6">
+            <TabsList className="w-full sm:w-auto">
+              <TabsTrigger value="groups">Grupos de insumo</TabsTrigger>
+              <TabsTrigger value="basic-materials">Materiais básicos (templates)</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="groups" className="space-y-6">
+              <SupplyGroupsManager
+                readOnly={materialsReadOnly}
+                onChanged={() => setSupplyGroupsVersion((value) => value + 1)}
+              />
+            </TabsContent>
+
+            <TabsContent value="basic-materials" className="space-y-6">
+              <BasicMaterialsManager
+                readOnly={materialsReadOnly}
+                supplyGroupsVersion={supplyGroupsVersion}
+              />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
         {/* D) Logística & Operação */}

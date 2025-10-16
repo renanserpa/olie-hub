@@ -1,10 +1,56 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { humanize } from '@/lib/supabase/errors';
 
 interface AdminAccessState {
   isAdmin: boolean;
   loading: boolean;
   error: string | null;
+}
+
+let cachedRoles: string[] | null = null;
+let cachedError: string | null = null;
+let inflightPromise: Promise<string[] | null> | null = null;
+let subscribedToAuthChanges = false;
+
+function ensureAuthSubscription() {
+  if (subscribedToAuthChanges) return;
+  supabase.auth.onAuthStateChange(() => {
+    cachedRoles = null;
+    cachedError = null;
+  });
+  subscribedToAuthChanges = true;
+}
+
+async function loadRoles(): Promise<string[] | null> {
+  ensureAuthSubscription();
+
+  if (cachedRoles) {
+    return cachedRoles;
+  }
+
+  if (inflightPromise) {
+    return inflightPromise;
+  }
+
+  inflightPromise = (async () => {
+    const { data, error } = await supabase.rpc('whoami');
+
+    if (error) {
+      cachedError = humanize(error);
+      cachedRoles = null;
+      return null;
+    }
+
+    const roles = Array.isArray((data as any)?.roles) ? ((data as any).roles as string[]) : [];
+    cachedRoles = roles;
+    cachedError = null;
+    return roles;
+  })();
+
+  const roles = await inflightPromise;
+  inflightPromise = null;
+  return roles;
 }
 
 export function useAdminAccess(): AdminAccessState {
@@ -15,50 +61,36 @@ export function useAdminAccess(): AdminAccessState {
   });
 
   useEffect(() => {
-    let isMounted = true;
+    let mounted = true;
 
-    async function checkAdminAccess() {
+    async function resolveRoles() {
       try {
-        const {
-          data: { user },
-        } = await supabase.auth.getUser();
+        const roles = await loadRoles();
+        if (!mounted) return;
 
-        if (!isMounted) return;
-
-        if (!user) {
-          setState({ isAdmin: false, loading: false, error: 'Usuário não autenticado' });
-          return;
-        }
-
-        const { data, error } = await supabase.rpc('has_role', {
-          _user_id: user.id,
-          _role: 'admin',
+        setState({
+          isAdmin: Boolean(roles?.includes('admin')),
+          loading: false,
+          error: cachedError,
         });
+      } catch (err) {
+        if (!mounted) return;
 
-        if (!isMounted) return;
-
-        if (error) {
-          console.error('Erro ao verificar papel de admin:', error);
-          setState({ isAdmin: false, loading: false, error: error.message });
-          return;
-        }
-
-        setState({ isAdmin: Boolean(data), loading: false, error: null });
-      } catch (error: any) {
-        console.error('Erro inesperado ao verificar papel de admin:', error);
-        if (!isMounted) return;
+        const message = err instanceof Error ? err.message : 'Não foi possível verificar permissões';
+        cachedError = message;
+        cachedRoles = null;
         setState({
           isAdmin: false,
           loading: false,
-          error: error?.message || 'Não foi possível verificar permissões',
+          error: message,
         });
       }
     }
 
-    checkAdminAccess();
+    resolveRoles();
 
     return () => {
-      isMounted = false;
+      mounted = false;
     };
   }, []);
 

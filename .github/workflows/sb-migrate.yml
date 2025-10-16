@@ -34,31 +34,61 @@ jobs:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
+      - name: Resolve IPv4 for Supabase host
+        run: |
+          set -euo pipefail
+          SUPABASE_HOST="db.qrfvdoecpmcnlpxklcsu.supabase.co"
+
+          # tenta getent (ubuntu), depois dig, depois python (fallback)
+          IPV4="$(getent ahostsv4 "$SUPABASE_HOST" | awk '{print $1; exit}' || true)"
+          if [ -z "${IPV4:-}" ]; then
+            IPV4="$(dig +short A "$SUPABASE_HOST" | head -n1 || true)"
+          fi
+          if [ -z "${IPV4:-}" ]; then
+            IPV4="$(python3 - <<'PY'
+import socket
+for ai in socket.getaddrinfo("db.qrfvdoecpmcnlpxklcsu.supabase.co", None, family=socket.AF_INET):
+  print(ai[4][0]); break
+PY
+)"
+          fi
+
+          if [ -z "${IPV4:-}" ]; then
+            echo "Não foi possível resolver IPv4 do host $SUPABASE_HOST"
+            exit 1
+          fi
+
+          echo "PGHOST=$SUPABASE_HOST" >> "$GITHUB_ENV"
+          echo "PGHOSTADDR=$IPV4" >> "$GITHUB_ENV"
+          echo "PGUSER=postgres" >> "$GITHUB_ENV"
+          echo "PGDATABASE=postgres" >> "$GITHUB_ENV"
+          echo "PGPORT=5432" >> "$GITHUB_ENV"
+          echo "PGSSLMODE=require" >> "$GITHUB_ENV"
+          echo "Resolved IPv4: $IPV4"
+
       - name: Seed (idempotente)
         env:
-          PGHOST: db.qrfvdoecpmcnlpxklcsu.supabase.co
-          PGUSER: postgres
-          PGDATABASE: postgres
-          PGPORT: 5432
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -euo pipefail
+          retry() { n=0; until [ $n -ge 5 ]; do "$@" && return 0; n=$((n+1)); sleep $((2**n)); done; return 1; }
+
           if [ -f db/seeds/2025-10-16_configs_seeds.sql ]; then
-            psql "sslmode=require" -v ON_ERROR_STOP=1 -f db/seeds/2025-10-16_configs_seeds.sql || true
+            retry psql "hostaddr=$PGHOSTADDR host=$PGHOST sslmode=$PGSSLMODE" -v ON_ERROR_STOP=1 -f db/seeds/2025-10-16_configs_seeds.sql || true
           fi
+
           if [ -f db/seeds/extra_seeds.sql ]; then
-            psql "sslmode=require" -v ON_ERROR_STOP=1 -f db/seeds/extra_seeds.sql || true
+            retry psql "hostaddr=$PGHOSTADDR host=$PGHOST sslmode=$PGSSLMODE" -v ON_ERROR_STOP=1 -f db/seeds/extra_seeds.sql || true
           fi
 
       - name: Smoke checks
         env:
-          PGHOST: db.qrfvdoecpmcnlpxklcsu.supabase.co
-          PGUSER: postgres
-          PGDATABASE: postgres
-          PGPORT: 5432
           PGPASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
         run: |
           set -euo pipefail
-          psql "sslmode=require" -c "SELECT current_database(), current_user, version();"
-          psql "sslmode=require" -c "SELECT to_regclass('public.config_color_palettes') AS has_palettes;"
-          psql "sslmode=require" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true
+          retry() { n=0; until [ $n -ge 5 ]; do "$@" && return 0; n=$((n+1)); sleep $((2**n)); done; return 1; }
+
+          retry psql "hostaddr=$PGHOSTADDR host=$PGHOST sslmode=$PGSSLMODE" -c "SELECT current_database(), current_user, version();"
+          retry psql "hostaddr=$PGHOSTADDR host=$PGHOST sslmode=$PGSSLMODE" -c "SELECT to_regclass('public.config_color_palettes') AS has_palettes;"
+          # health_probe opcional; ignora se não existir
+          retry psql "hostaddr=$PGHOSTADDR host=$PGHOST sslmode=$PGSSLMODE" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true

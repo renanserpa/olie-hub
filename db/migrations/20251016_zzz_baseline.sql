@@ -1,0 +1,2 @@
+-- Baseline migration to mark current schema as applied.
+-- No changes are required because the schema already exists in production.

@@ -18,7 +18,28 @@ VITE_APP_ENV=production
 NEXT_PUBLIC_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu
 ```
 
-## 2. Aplicar Migrations no Supabase qrfvdoecpmcnlpxklcsu
+## 2. GitHub Actions para migrations
+
+### Secrets necessários (já configurados)
+
+Os workflows usam dois secrets no GitHub (`Settings → Secrets and variables → Actions`). Caso precisem ser recriados:
+
+1. `SUPABASE_ACCESS_TOKEN`
+   - Gere um access token em [Supabase → Account Settings → Access Tokens](https://supabase.com/account/tokens) com permissões de Deploy.
+   - No GitHub, clique em **New repository secret**, defina o nome e cole o token.
+2. `SUPABASE_DB_PASSWORD`
+   - Em Supabase, acesse **Project Settings → Database** e copie a senha do usuário `postgres`.
+   - Crie o secret no GitHub com este valor.
+
+### Rodar workflows manualmente
+
+1. Vá para **GitHub → Actions**.
+2. Selecione **“Supabase — Migrate & Seed (remote)”** ou **“Supabase — Health Probe”**.
+3. Clique em **Run workflow** e confirme. As migrations são aplicadas e os seeds executados de forma idempotente.
+
+> **Observação:** não utilize a `service_role` no cliente. Ela deve ficar apenas nos secrets do CI.
+
+## 3. Aplicar Migrations no Supabase qrfvdoecpmcnlpxklcsu
 
 1. Acesse https://supabase.com/dashboard/project/qrfvdoecpmcnlpxklcsu
 2. Navegue para **SQL Editor**
@@ -29,7 +50,7 @@ NEXT_PUBLIC_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu
    - `db/seeds/2025-10-16_configs_seeds.sql`
    - `db/seeds/2025-10-16_configs_seeds_2.sql`
 
-## 3. Verificar RLS e Roles
+## 4. Verificar RLS e Roles
 
 Garanta que o banco tenha:
 
@@ -63,7 +84,7 @@ VALUES ('<user_id>', 'admin'::app_role)
 ON CONFLICT (user_id, role) DO NOTHING;
 ```
 
-## 4. Verificar Conectividade
+## 5. Verificar Conectividade
 
 1. Acesse a aplicação (Preview ou Production)
 2. Banner no topo deve mostrar:
@@ -71,14 +92,14 @@ ON CONFLICT (user_id, role) DO NOTHING;
 3. Acesse `/admin/diagnostics/configs` (somente admin)
 4. Verifique que todos os checks estão OK (verde)
 
-## 5. Refetch em Caso de Erro
+## 6. Refetch em Caso de Erro
 
 Se alguma tela mostrar "Migrations pendentes":
-1. Verifique se aplicou TODAS as migrations (passo 2)
+1. Verifique se aplicou TODAS as migrations (passo 3)
 2. Clique no botão **"Tentar novamente"** na tela
 3. Ou force refresh: `Ctrl+Shift+R` (Windows/Linux) ou `Cmd+Shift+R` (Mac)
 
-## 6. Migrar Dados (Opcional)
+## 7. Migrar Dados (Opcional)
 
 Se houver dados importantes no projeto antigo `ivhccupahlyrwqilzasa`:
 
@@ -91,7 +112,7 @@ Se houver dados importantes no projeto antigo `ivhccupahlyrwqilzasa`:
    - Ajustar UUIDs e FKs se necessário
    - Usar ferramenta de Import/Export do Supabase ou SQL Editor
 
-## 7. Deploy Final
+## 8. Deploy Final
 
 1. Commit das mudanças: `git commit -am "chore: reconexão Supabase qrfvdoecpmcnlpxklcsu"`
 2. Push para repositório: `git push origin main`

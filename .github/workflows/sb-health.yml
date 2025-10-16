@@ -1,0 +1,16 @@
+name: Supabase — Health Probe
+on: { workflow_dispatch: {} }
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: supabase/setup-cli@v1
+        with: { version: latest }
+      - name: Probe
+        run: |
+          export DATABASE_URL="postgresql://postgres:${SUPABASE_DB_PASSWORD}@db.qrfvdoecpmcnlpxklcsu.supabase.co:5432/postgres?sslmode=require"
+          psql "$DATABASE_URL" -c "SELECT current_database(), current_user;"
+          psql "$DATABASE_URL" -c "SELECT to_regclass('public.config_color_palettes');"
+          psql "$DATABASE_URL" -c "DO $$ BEGIN IF to_regclass('public.health_probe') IS NOT NULL THEN RAISE NOTICE 'health:%', (SELECT public.health_probe()); END IF; END $$;" || true
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

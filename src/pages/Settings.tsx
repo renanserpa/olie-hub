@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -13,177 +13,23 @@ import {
   Palette, 
   Bell, 
   Shield,
-  CheckCircle2,
-  XCircle,
-  RefreshCw,
-  Layers,
-  Eye,
-  EyeOff,
   Info,
-  Loader2,
   Upload,
-  Download
+  Download,
+  Truck,
+  Layers
 } from 'lucide-react';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import { CategoryManager } from '@/components/Settings/CategoryManager';
 import { StatusManager } from '@/components/Settings/StatusManager';
 import { ColorLibrary } from '@/components/Settings/ColorLibrary';
 import { ImportDialog } from '@/components/ImportExport/ImportDialog';
 import { ExportDialog } from '@/components/ImportExport/ExportDialog';
-import { SettingsManagers } from '@/components/Settings/Settings';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
 
 export default function Settings() {
-  const [tinyToken, setTinyToken] = useState('');
-  const [tinyConnected, setTinyConnected] = useState(false);
-  const [autoSync, setAutoSync] = useState(false);
   const [notifications, setNotifications] = useState(true);
-  const [loading, setLoading] = useState(false);
-  const [showToken, setShowToken] = useState(false);
-  const [isTestingOnly, setIsTestingOnly] = useState(false);
   const [importOpen, setImportOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
-
-  useEffect(() => {
-    checkTinyConnection();
-    checkExistingSecret();
-  }, []);
-
-  async function checkTinyConnection() {
-    try {
-      const { data, error } = await supabase.functions.invoke('tiny-sync', {
-        body: { entity: 'products', testOnly: true }
-      });
-      
-      setTinyConnected(!error && data?.ok !== false);
-    } catch (error) {
-      setTinyConnected(false);
-    }
-  }
-
-  async function checkExistingSecret() {
-    try {
-      const { data, error } = await supabase.functions.invoke('tiny-sync', {
-        body: { entity: 'products', testOnly: true }
-      });
-      
-      if (!error && data?.ok !== false) {
-        setTinyConnected(true);
-        toast.success('✅ Token Tiny já configurado', { duration: 2000 });
-      }
-    } catch (error) {
-      console.log('Nenhum token configurado ainda');
-    }
-  }
-
-  async function handleSaveTinyToken() {
-    if (!tinyToken.trim()) {
-      toast.error('Token não pode estar vazio');
-      return;
-    }
-    
-    if (!/^[a-f0-9]{64}$/i.test(tinyToken)) {
-      toast.error('❌ Token inválido. Deve ter exatamente 64 caracteres hexadecimais (0-9, a-f)');
-      return;
-    }
-
-    setLoading(true);
-    try {
-      const { data: testResult, error: testError } = await supabase.functions.invoke(
-        'tiny-test-connection',
-        { body: { token: tinyToken } }
-      );
-
-      if (testError || !testResult?.ok) {
-        throw new Error(testResult?.error || 'Falha ao validar token');
-      }
-
-      toast.success(`✅ Token validado! Conta: ${testResult.accountInfo?.name}`);
-      toast.info('💾 Salvando token como secret...');
-      
-      setTinyConnected(true);
-      setTinyToken('');
-      
-    } catch (error: any) {
-      console.error('Error validating Tiny token:', error);
-      toast.error(`❌ ${error.message}`);
-      setTinyConnected(false);
-    } finally {
-      setLoading(false);
-    }
-  }
-
-  async function handleTestConnection() {
-    if (!tinyToken.trim()) {
-      toast.error('Cole o token primeiro');
-      return;
-    }
-    
-    if (!/^[a-f0-9]{64}$/i.test(tinyToken)) {
-      toast.error('Formato inválido: token deve ter 64 caracteres hexadecimais');
-      return;
-    }
-    
-    setIsTestingOnly(true);
-    setLoading(true);
-    
-    try {
-      const startTime = Date.now();
-      const { data: testResult, error: testError } = await supabase.functions.invoke(
-        'tiny-test-connection',
-        { body: { token: tinyToken } }
-      );
-      const elapsed = Date.now() - startTime;
-
-      if (testError || !testResult?.ok) {
-        throw new Error(testResult?.error || 'Falha na conexão');
-      }
-
-      toast.success(`✅ Conexão OK! (${elapsed}ms)\n📊 Conta: ${testResult.accountInfo?.name}`, {
-        duration: 5000
-      });
-      
-    } catch (error: any) {
-      toast.error(`❌ Teste falhou: ${error.message}`);
-    } finally {
-      setLoading(false);
-      setIsTestingOnly(false);
-    }
-  }
-
-  async function handleResetConnection() {
-    if (!confirm('Tem certeza que deseja resetar a conexão? Você precisará configurar o token novamente.')) {
-      return;
-    }
-    
-    try {
-      toast.info('🔄 Removendo configuração...');
-      
-      setTinyConnected(false);
-      setTinyToken('');
-      toast.success('Conexão resetada com sucesso');
-    } catch (error) {
-      toast.error('Erro ao resetar conexão');
-    }
-  }
-
-  async function handleSync() {
-    setLoading(true);
-    try {
-      const { error } = await supabase.functions.invoke('tiny-sync', {
-        body: { entity: 'products', operation: 'pull', since: 'all' }
-      });
-
-      if (error) throw error;
-      toast.success('Sincronização iniciada com sucesso');
-    } catch (error) {
-      console.error('Error syncing:', error);
-      toast.error('Erro ao sincronizar');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   return (
     <div className="space-y-6">
@@ -210,46 +56,30 @@ export default function Settings() {
       </div>
 
       <Tabs defaultValue="integrations" className="space-y-6">
-        <TabsList className="grid grid-cols-3 lg:grid-cols-12 gap-1">
+        <TabsList className="grid grid-cols-2 lg:grid-cols-7 gap-1">
           <TabsTrigger value="integrations" className="gap-2 text-xs lg:text-sm">
             <Plug className="w-4 h-4" />
             <span className="hidden lg:inline">Integrações</span>
           </TabsTrigger>
-          <TabsTrigger value="categories" className="gap-2 text-xs lg:text-sm">
+          <TabsTrigger value="catalogs" className="gap-2 text-xs lg:text-sm">
+            <Palette className="w-4 h-4" />
+            <span className="hidden lg:inline">Catálogos</span>
+          </TabsTrigger>
+          <TabsTrigger value="materials" className="gap-2 text-xs lg:text-sm">
             <Layers className="w-4 h-4" />
-            <span className="hidden lg:inline">Categorias</span>
+            <span className="hidden lg:inline">Materiais</span>
           </TabsTrigger>
-          <TabsTrigger value="configuration-managers" className="gap-2 text-xs lg:text-sm">
-            Materiais
+          <TabsTrigger value="logistics" className="gap-2 text-xs lg:text-sm">
+            <Truck className="w-4 h-4" />
+            <span className="hidden lg:inline">Logística</span>
           </TabsTrigger>
-          <TabsTrigger value="colors-fabric" className="gap-2 text-xs lg:text-sm">
-            Tecido
-          </TabsTrigger>
-          <TabsTrigger value="colors-zipper" className="gap-2 text-xs lg:text-sm">
-            Zíper
-          </TabsTrigger>
-          <TabsTrigger value="colors-lining" className="gap-2 text-xs lg:text-sm">
-            Forro
-          </TabsTrigger>
-          <TabsTrigger value="colors-bias" className="gap-2 text-xs lg:text-sm">
-            Viés
-          </TabsTrigger>
-          <TabsTrigger value="order-status" className="gap-2 text-xs lg:text-sm">
-            Status Pedidos
-          </TabsTrigger>
-          <TabsTrigger value="production-status" className="gap-2 text-xs lg:text-sm">
-            Status Produção
-          </TabsTrigger>
-          <TabsTrigger value="shipping-status" className="gap-2 text-xs lg:text-sm">
-            Status Entregas
+          <TabsTrigger value="system" className="gap-2 text-xs lg:text-sm">
+            <Settings2 className="w-4 h-4" />
+            <span className="hidden lg:inline">Sistema</span>
           </TabsTrigger>
           <TabsTrigger value="appearance" className="gap-2 text-xs lg:text-sm">
             <Palette className="w-4 h-4" />
             <span className="hidden lg:inline">Aparência</span>
-          </TabsTrigger>
-          <TabsTrigger value="notifications" className="gap-2 text-xs lg:text-sm">
-            <Bell className="w-4 h-4" />
-            <span className="hidden lg:inline">Notificações</span>
           </TabsTrigger>
           <TabsTrigger value="security" className="gap-2 text-xs lg:text-sm">
             <Shield className="w-4 h-4" />
@@ -257,168 +87,28 @@ export default function Settings() {
           </TabsTrigger>
         </TabsList>
 
-        {/* Integrações */}
+        {/* A) Integrações */}
         <TabsContent value="integrations" className="space-y-6">
           <Card className="p-6">
-            <div className="flex items-start justify-between mb-4">
-              <div>
-                <h3 className="text-lg font-semibold flex items-center gap-2">
-                  Tiny ERP
-                  {tinyConnected ? (
-                    <Badge variant="default" className="gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
-                      Conectado
-                    </Badge>
-                  ) : (
-                    <Badge variant="destructive" className="gap-1">
-                      <XCircle className="w-3 h-3" />
-                      Desconectado
-                    </Badge>
-                  )}
-                </h3>
-                <p className="text-sm text-muted-foreground mt-1">
-                  Sincronize produtos, pedidos e estoque com o Tiny ERP
-                </p>
-              </div>
-              {tinyConnected && (
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  onClick={handleSync}
-                  disabled={loading}
-                  className="gap-2"
-                >
-                  <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                  Sincronizar Agora
-                </Button>
-              )}
-            </div>
-
-            <Separator className="my-4" />
-
-            {!tinyConnected && (
-              <div className="space-y-4">
-                <Alert>
-                  <Info className="w-4 h-4" />
-                  <AlertTitle>Como obter seu token Tiny</AlertTitle>
-                  <AlertDescription className="space-y-2">
-                    <ol className="list-decimal list-inside space-y-1 text-sm">
-                      <li>Acesse <a 
-                        href="https://erp.tiny.com.br/configuracoes#secaoApi" 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-primary underline hover:text-primary/80"
-                      >
-                        Tiny ERP → Configurações → API
-                      </a></li>
-                      <li>Clique em <strong>"Gerar Token"</strong></li>
-                      <li>Copie o token de <strong>64 caracteres</strong></li>
-                      <li>Cole abaixo e clique em "Conectar"</li>
-                    </ol>
-                  </AlertDescription>
-                </Alert>
-
-                <div className="space-y-2">
-                  <Label htmlFor="tinyToken">Token da API Tiny *</Label>
-                  <div className="relative">
-                    <Input
-                      id="tinyToken"
-                      type={showToken ? "text" : "password"}
-                      value={tinyToken}
-                      onChange={(e) => setTinyToken(e.target.value.trim())}
-                      placeholder="c5160a3d43b1015d3f94f617fd5f4cda4f0b576c..."
-                      className="pr-10 font-mono text-sm"
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowToken(!showToken)}
-                    >
-                      {showToken ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                  <p className="text-xs text-muted-foreground flex items-center gap-1">
-                    {tinyToken.length > 0 && (
-                      <Badge variant={/^[a-f0-9]{64}$/i.test(tinyToken) ? "default" : "destructive"} className="text-xs">
-                        {/^[a-f0-9]{64}$/i.test(tinyToken) ? '✓ Formato válido' : '✗ Formato inválido'}
-                      </Badge>
-                    )}
-                    <span className="ml-auto">{tinyToken.length}/64 caracteres</span>
-                  </p>
-                </div>
-                
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={handleTestConnection} 
-                    disabled={loading || !tinyToken}
-                    variant="outline"
-                    className="gap-2"
-                  >
-                    {loading && isTestingOnly ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Testando...</>
-                    ) : (
-                      <><CheckCircle2 className="w-4 h-4" /> Testar Conexão</>
-                    )}
-                  </Button>
-                  
-                  <Button 
-                    onClick={handleSaveTinyToken} 
-                    disabled={loading || !tinyToken}
-                    className="gap-2"
-                  >
-                    {loading && !isTestingOnly ? (
-                      <><Loader2 className="w-4 h-4 animate-spin" /> Validando...</>
-                    ) : (
-                      <><Plug className="w-4 h-4" /> Conectar e Salvar</>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            )}
-
-            {tinyConnected && (
-              <div className="space-y-4">
-                <Alert variant="default" className="border-green-500 bg-green-50 dark:bg-green-950">
-                  <CheckCircle2 className="w-4 h-4 text-green-600" />
-                  <AlertTitle className="text-green-800 dark:text-green-200">
-                    Conectado com sucesso!
-                  </AlertTitle>
-                  <AlertDescription className="text-green-700 dark:text-green-300">
-                    Token salvo de forma segura. Sincronização disponível.
-                  </AlertDescription>
-                </Alert>
-
-                <div className="flex items-center justify-between">
-                  <div>
-                    <Label htmlFor="autoSync">Sincronização Automática</Label>
-                    <p className="text-sm text-muted-foreground">
-                      Sincronizar dados a cada 30 minutos
-                    </p>
-                  </div>
-                  <Switch
-                    id="autoSync"
-                    checked={autoSync}
-                    onCheckedChange={setAutoSync}
-                  />
-                </div>
-                
-                <Separator />
-                
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={handleResetConnection}
-                  className="gap-2 text-destructive hover:text-destructive"
-                >
-                  <XCircle className="w-4 h-4" />
-                  Resetar Conexão
-                </Button>
-              </div>
-            )}
+            <h3 className="text-lg font-semibold mb-4">Pagamentos</h3>
+            <Alert>
+              <Info className="w-4 h-4" />
+              <AlertDescription>
+                Integração com Mercado Pago/Stripe em breve
+              </AlertDescription>
+            </Alert>
           </Card>
-
+          
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Envios</h3>
+            <Alert>
+              <Info className="w-4 h-4" />
+              <AlertDescription>
+                Integração com Correios/Melhor Envio em breve
+              </AlertDescription>
+            </Alert>
+          </Card>
+          
           <Card className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -448,42 +138,125 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="categories" className="space-y-6">
-          <CategoryManager />
+        {/* B) Catálogos & Personalização */}
+        <TabsContent value="catalogs" className="space-y-6">
+          <Tabs defaultValue="categories">
+            <TabsList className="grid grid-cols-2 lg:grid-cols-5">
+              <TabsTrigger value="categories">Categorias</TabsTrigger>
+              <TabsTrigger value="fabric">Cores Tecido</TabsTrigger>
+              <TabsTrigger value="zipper">Cores Zíper</TabsTrigger>
+              <TabsTrigger value="lining">Cores Forro</TabsTrigger>
+              <TabsTrigger value="bias">Cores Viés</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="categories" className="mt-6">
+              <CategoryManager />
+            </TabsContent>
+            
+            <TabsContent value="fabric" className="mt-6">
+              <ColorLibrary type="fabric" />
+            </TabsContent>
+            
+            <TabsContent value="zipper" className="mt-6">
+              <ColorLibrary type="zipper" />
+            </TabsContent>
+            
+            <TabsContent value="lining" className="mt-6">
+              <ColorLibrary type="lining" />
+            </TabsContent>
+            
+            <TabsContent value="bias" className="mt-6">
+              <ColorLibrary type="bias" />
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="configuration-managers" className="space-y-6">
-          <SettingsManagers />
+        {/* C) Materiais (templates - NÃO Estoque) */}
+        <TabsContent value="materials" className="space-y-6">
+          <Alert className="mb-6">
+            <Info className="w-4 h-4" />
+            <AlertDescription>
+              Esta seção gerencia <strong>modelos</strong> de materiais (unidade, custo padrão, grupo). 
+              O <strong>estoque real</strong> é cadastrado em <strong>Estoque → Insumos</strong>.
+            </AlertDescription>
+          </Alert>
+          
+          <Alert>
+            <Info className="w-4 h-4" />
+            <AlertDescription>
+              <strong>Migrations pendentes.</strong> Aplique <code className="font-mono">db/migrations/*.sql</code> no Supabase <strong>qrfvdoecpmcnlpxklcsu</strong>.
+            </AlertDescription>
+          </Alert>
         </TabsContent>
 
-        <TabsContent value="colors-fabric" className="space-y-6">
-          <ColorLibrary type="fabric" />
+        {/* D) Logística & Operação */}
+        <TabsContent value="logistics" className="space-y-6">
+          <Tabs defaultValue="statuses">
+            <TabsList>
+              <TabsTrigger value="statuses">Status</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="statuses" className="mt-6">
+              <Tabs defaultValue="order-status">
+                <TabsList className="grid grid-cols-3">
+                  <TabsTrigger value="order-status">Pedidos</TabsTrigger>
+                  <TabsTrigger value="production-status">Produção</TabsTrigger>
+                  <TabsTrigger value="shipping-status">Entregas</TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="order-status" className="mt-6">
+                  <StatusManager type="order" />
+                </TabsContent>
+                
+                <TabsContent value="production-status" className="mt-6">
+                  <StatusManager type="production" />
+                </TabsContent>
+                
+                <TabsContent value="shipping-status" className="mt-6">
+                  <StatusManager type="shipping" />
+                </TabsContent>
+              </Tabs>
+            </TabsContent>
+          </Tabs>
         </TabsContent>
 
-        <TabsContent value="colors-zipper" className="space-y-6">
-          <ColorLibrary type="zipper" />
+        {/* E) Sistema (preferências gerais) */}
+        <TabsContent value="system" className="space-y-6">
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Preferências Gerais</h3>
+            
+            <div className="space-y-4">
+              <div>
+                <Label>Moeda</Label>
+                <Input value="BRL" disabled />
+              </div>
+              
+              <div>
+                <Label>Timezone</Label>
+                <Input value="America/Sao_Paulo" disabled />
+              </div>
+              
+              <div>
+                <Label>Prefixo de Pedido</Label>
+                <Input defaultValue="OLIE-" />
+              </div>
+              
+              <div>
+                <Label>Lead Time de Produção (dias)</Label>
+                <Input type="number" defaultValue={7} />
+              </div>
+              
+              <div>
+                <Label>SLA Atendimento (minutos)</Label>
+                <Input type="number" defaultValue={30} />
+              </div>
+            </div>
+            
+            <Button className="mt-6">Salvar Preferências</Button>
+          </Card>
         </TabsContent>
 
-        <TabsContent value="colors-lining" className="space-y-6">
-          <ColorLibrary type="lining" />
-        </TabsContent>
-
-        <TabsContent value="colors-bias" className="space-y-6">
-          <ColorLibrary type="bias" />
-        </TabsContent>
-
-        <TabsContent value="order-status" className="space-y-6">
-          <StatusManager type="order" />
-        </TabsContent>
-
-        <TabsContent value="production-status" className="space-y-6">
-          <StatusManager type="production" />
-        </TabsContent>
-
-        <TabsContent value="shipping-status" className="space-y-6">
-          <StatusManager type="shipping" />
-        </TabsContent>
-
+        {/* F) Aparência */}
         <TabsContent value="appearance" className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Personalização</h3>
@@ -515,9 +288,23 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-6">
+        {/* G) Segurança */}
+        <TabsContent value="security" className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Preferências de Notificação</h3>
+            <h3 className="text-lg font-semibold mb-4">Diagnóstico do Sistema</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Verificar integridade das configurações e tabelas do banco de dados
+            </p>
+            <Button asChild variant="outline">
+              <a href="/admin/diagnostics/configs">
+                <Shield className="w-4 h-4 mr-2" />
+                Acessar Diagnóstico
+              </a>
+            </Button>
+          </Card>
+          
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Notificações</h3>
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -534,9 +321,7 @@ export default function Settings() {
               </div>
             </div>
           </Card>
-        </TabsContent>
-
-        <TabsContent value="security" className="space-y-6">
+          
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Segurança e Acesso</h3>
             <div className="space-y-4">

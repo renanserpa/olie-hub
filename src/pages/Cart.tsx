@@ -18,20 +18,14 @@ export default function Cart() {
 
   async function loadCart() {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke('sandbox-cart', {
+        method: 'GET',
+      });
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sandbox-cart`,
-        {
-          headers: {
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          }
-        }
-      );
-
-      const result = await response.json();
-      if (result.ok) {
-        setCart(result.cart);
+      if (error) throw error;
+      
+      if (data?.ok) {
+        setCart(data.cart);
       }
     } catch (error) {
       console.error('Error loading cart:', error);
@@ -46,25 +40,14 @@ export default function Cart() {
 
     setChecking(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data, error } = await supabase.functions.invoke('sandbox-checkout', {
+        body: { cartId: cart.id }
+      });
       
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sandbox-checkout`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({ cartId: cart.id })
-        }
-      );
+      if (error || !data?.ok) throw new Error(data?.error || 'Erro no checkout');
 
-      const result = await response.json();
-      if (!result.ok) throw new Error(result.error);
-
-      toast.success(`Pedido ${result.orderNumber} criado com sucesso!`);
-      navigate(`/orders/${result.orderId}`);
+      toast.success(`Pedido ${data.orderNumber} criado com sucesso!`);
+      navigate(`/orders/${data.orderId}`);
     } catch (error: any) {
       console.error('Error checking out:', error);
       toast.error(error.message || 'Erro ao finalizar pedido');

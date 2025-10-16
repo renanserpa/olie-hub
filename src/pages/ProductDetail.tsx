@@ -96,34 +96,24 @@ export default function ProductDetail() {
 
     setAdding(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/sandbox-cart/add`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token || import.meta.env.VITE_SUPABASE_ANON_KEY}`
-          },
-          body: JSON.stringify({
-            productId: product.id,
-            quantity,
-            configJson: config,
-            previewPngDataUrl: previewUrl,
-            priceDelta: totalPrice - basePrice
-          })
+      const { data, error } = await supabase.functions.invoke('sandbox-cart', {
+        method: 'POST',
+        body: {
+          productId: product.id,
+          quantity,
+          configJson: config,
+          previewPngDataUrl: previewUrl,
+          priceDelta: totalPrice - basePrice
         }
-      );
-
-      const result = await response.json();
-      if (!result.ok) throw new Error(result.error);
+      });
+      
+      if (error || !data?.ok) throw new Error(data?.error || 'Erro ao adicionar ao carrinho');
 
       toast.success('Produto adicionado ao carrinho!');
       navigate('/cart');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding to cart:', error);
-      toast.error('Erro ao adicionar ao carrinho');
+      toast.error(error.message || 'Erro ao adicionar ao carrinho');
     } finally {
       setAdding(false);
     }

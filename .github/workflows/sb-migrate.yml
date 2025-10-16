@@ -28,7 +28,8 @@ jobs:
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
 
       - name: Push migrations (DDL/RLS)
-        run: supabase db push --non-interactive
+        # ⚠️ correção: usar --yes (não existe --non-interactive)
+        run: supabase db push --yes -p "$SUPABASE_DB_PASSWORD"
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
           SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}

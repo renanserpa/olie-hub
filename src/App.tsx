@@ -27,6 +27,7 @@ import ComingSoon from "./pages/ComingSoon";
 import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import DiagnosticsConfigs from "./pages/DiagnosticsConfigs";
+import DiagnosticsConnectivity from "./pages/DiagnosticsConnectivity";
 import { 
   MessageSquare, 
   Factory, 
@@ -254,6 +255,11 @@ const App = () => (
             <Route path="/admin/diagnostics/configs" element={
               <ProtectedRoute>
                 <DiagnosticsConfigs />
+              </ProtectedRoute>
+            } />
+            <Route path="/admin/diagnostics/connectivity" element={
+              <ProtectedRoute>
+                <DiagnosticsConnectivity />
               </ProtectedRoute>
             } />
             <Route path="*" element={<NotFound />} />

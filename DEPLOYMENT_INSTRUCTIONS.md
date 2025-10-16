@@ -4,18 +4,18 @@
 
 ### Preview
 Já aplicado via `.env` local:
-- ✅ `VITE_SUPABASE_URL=https://qrfvdoecpmcnlpxklcsu.supabase.co`
-- ✅ `VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGci...`
+- ✅ `NEXT_PUBLIC_SUPABASE_URL=https://qrfvdoecpmcnlpxklcsu.supabase.co`
+- ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGci...`
 - ✅ `VITE_APP_ENV=preview`
-- ✅ `VITE_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu`
+- ✅ `NEXT_PUBLIC_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu`
 
 ### Production
 Acesse **Lovable → Project Settings → Environment Variables** e configure:
 ```
-VITE_SUPABASE_URL=https://qrfvdoecpmcnlpxklcsu.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZnZkb2VjcG1jbmxweGtsY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTU2OTEsImV4cCI6MjA3NjAzMTY5MX0.dpX90AmxL_JrxkYacPFkzQzhmCETDTa21Up5TdQgLLk
+NEXT_PUBLIC_SUPABASE_URL=https://qrfvdoecpmcnlpxklcsu.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFyZnZkb2VjcG1jbmxweGtsY3N1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjA0NTU2OTEsImV4cCI6MjA3NjAzMTY5MX0.dpX90AmxL_JrxkYacPFkzQzhmCETDTa21Up5TdQgLLk
 VITE_APP_ENV=production
-VITE_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu
+NEXT_PUBLIC_SUPABASE_ALLOWED_REF=qrfvdoecpmcnlpxklcsu
 ```
 
 ## 2. Aplicar Migrations no Supabase qrfvdoecpmcnlpxklcsu

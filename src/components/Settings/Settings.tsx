@@ -1,8 +1,8 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ColorPaletteManager } from "./ColorPaletteManager";
 import { FabricTextureManager } from "./FabricTextureManager";
-import { BasicMaterialManager } from "./BasicMaterialManager";
-import { SupplyGroupManager } from "./SupplyGroupManager";
+import { BasicMaterialsManager } from "./BasicMaterialsManager";
+import { SupplyGroupsManager } from "./SupplyGroupsManager";
 import { PackagingTypeManager } from "./PackagingTypeManager";
 import { BondTypeManager } from "./BondTypeManager";
 import { CustomizationComponentManager } from "./CustomizationComponentManager";
@@ -35,11 +35,11 @@ export function SettingsManagers() {
       </TabsContent>
 
       <TabsContent value="basic-materials" className="space-y-6">
-        <BasicMaterialManager />
+        <BasicMaterialsManager />
       </TabsContent>
 
       <TabsContent value="supply-groups" className="space-y-6">
-        <SupplyGroupManager />
+        <SupplyGroupsManager />
       </TabsContent>
 
       <TabsContent value="packaging-types" className="space-y-6">

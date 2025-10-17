@@ -50,7 +50,7 @@ type SelectFilterConfig = {
 
 type FilterConfig = SearchFilterConfig | SelectFilterConfig;
 
-interface TableManagerProps<T extends { id?: string | number } = any> {
+export type TableManagerProps<T extends { id?: string | number } = any> = {
   title: string;
   table: string;
   columns: ColumnConfig<T>[];
@@ -62,7 +62,7 @@ interface TableManagerProps<T extends { id?: string | number } = any> {
   reloadKey?: number;
   helpText?: ReactNode;
   createLabel?: string;
-}
+};
 
 function readDebugFlag(): boolean {
   const direct = import.meta.env.NEXT_PUBLIC_DEBUG_SUPABASE;

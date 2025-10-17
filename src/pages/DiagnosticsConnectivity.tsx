@@ -59,7 +59,7 @@ const initialState: DiagnosticsState = {
 function readPublicEnv(key: keyof ImportMetaEnv): string | undefined {
   return (
     import.meta.env[key] ??
-    (typeof window !== 'undefined' ? window.ENV?.[key as string] : undefined)
+    (typeof window !== 'undefined' ? (window as any).ENV?.[key as string] : undefined)
   );
 }
 
@@ -88,10 +88,10 @@ export default function DiagnosticsConnectivity() {
       setState((prev) => ({ ...prev, loading: true }));
 
       const [whoami, health, palettes, textures] = await Promise.all([
-        supabase.rpc('whoami'),
-        supabase.rpc('health_probe'),
-        supabase.from('config_color_palettes').select('*').limit(5),
-        supabase.from('config_fabric_textures').select('*').limit(5),
+        supabase.rpc('whoami' as any),
+        supabase.rpc('health_probe' as any),
+        supabase.from('config_color_palettes' as any).select('*').limit(5),
+        supabase.from('config_fabric_textures' as any).select('*').limit(5),
       ]);
 
       if (!active) return;
@@ -100,7 +100,7 @@ export default function DiagnosticsConnectivity() {
         loading: false,
         env: envInfo,
         whoami: {
-          data: (whoami.data as WhoamiPayload | null) ?? null,
+          data: (whoami.data as unknown as WhoamiPayload | null) ?? null,
           error: whoami.error ? humanize(whoami.error) : null,
         },
         health: {
@@ -108,11 +108,11 @@ export default function DiagnosticsConnectivity() {
           error: health.error ? humanize(health.error) : null,
         },
         palettes: {
-          rows: (palettes.data as JsonRecord[] | null) ?? [],
+          rows: (palettes.data as unknown as JsonRecord[] | null) ?? [],
           error: palettes.error ? humanize(palettes.error) : null,
         },
         textures: {
-          rows: (textures.data as JsonRecord[] | null) ?? [],
+          rows: (textures.data as unknown as JsonRecord[] | null) ?? [],
           error: textures.error ? humanize(textures.error) : null,
         },
       });

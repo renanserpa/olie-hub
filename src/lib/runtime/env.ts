@@ -3,7 +3,8 @@ function readPublicEnv(key: keyof ImportMetaEnv): string {
   if (value) return value;
 
   if (typeof window !== 'undefined') {
-    const fromWindow = window.ENV?.[key as string];
+    const w = window as any;
+    const fromWindow = w.ENV?.[key as string];
     if (fromWindow) return fromWindow;
   }
 

@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
-import { humanize, isPermission } from '@/lib/supabase/errors';
+import { humanize, isPermission, isMissingTable } from '@/lib/supabase/errors';
 
 const UNIT_OPTIONS = ['pc', 'm', 'cm', 'mm', 'g', 'kg', 'ml', 'l'] as const;
 
@@ -115,12 +115,16 @@ export function EditDrawer({
     try {
       if (initialData?.id) {
         const { error } = await supabase
-          .from('config_basic_materials')
+          .from('config_basic_materials' as any)
           .update(payload)
           .eq('id', initialData.id);
 
         if (error) {
-          if (isPermission(error)) {
+          if (isMissingTable(error)) {
+            toast.error('Migrations Pendentes', {
+              description: 'Aplique as migrations no Supabase antes de continuar.',
+            });
+          } else if (isPermission(error)) {
             toast.error('Sem permissão para atualizar este material.');
           } else {
             toast.error(humanize(error));
@@ -130,10 +134,14 @@ export function EditDrawer({
 
         toast.success('Material atualizado com sucesso');
       } else {
-        const { error } = await supabase.from('config_basic_materials').insert(payload);
+        const { error } = await supabase.from('config_basic_materials' as any).insert(payload);
 
         if (error) {
-          if (isPermission(error)) {
+          if (isMissingTable(error)) {
+            toast.error('Migrations Pendentes', {
+              description: 'Aplique as migrations no Supabase antes de continuar.',
+            });
+          } else if (isPermission(error)) {
             toast.error('Sem permissão para criar materiais.');
           } else {
             toast.error(humanize(error));

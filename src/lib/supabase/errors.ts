@@ -8,6 +8,15 @@ export function isRelationMissing(error: SupabaseErrorLike | null | undefined): 
   return /relation .* does not exist/i.test(error.message);
 }
 
+export function isRlsError(error: SupabaseErrorLike | null | undefined): boolean {
+  if (!error) return false;
+  return !!error.message && /row-level security/i.test(error.message);
+}
+
+export function isMissingTable(error: SupabaseErrorLike | null | undefined): boolean {
+  return isRelationMissing(error);
+}
+
 export function isPermission(error: SupabaseErrorLike | null | undefined): boolean {
   if (!error) return false;
   return ['42501', 'PGRST301', '401', '403'].includes(error.code ?? String(error.status ?? ''));

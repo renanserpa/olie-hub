@@ -45,7 +45,7 @@ export default function Products() {
       
       const supabaseUrl =
         import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
-        (typeof window !== 'undefined' ? window.ENV?.NEXT_PUBLIC_SUPABASE_URL : '');
+        (typeof window !== 'undefined' ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_URL : '');
 
       if (!supabaseUrl) {
         toast.error('Variável NEXT_PUBLIC_SUPABASE_URL não configurada.');
@@ -62,7 +62,7 @@ export default function Products() {
             'Authorization': `Bearer ${
               session?.access_token ??
               import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-              (typeof window !== 'undefined' ? window.ENV?.NEXT_PUBLIC_SUPABASE_ANON_KEY : '') ??
+              (typeof window !== 'undefined' ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_ANON_KEY : '') ??
               ''
             }`
           },

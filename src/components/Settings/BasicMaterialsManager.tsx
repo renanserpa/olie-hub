@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { EditDrawer } from '@/components/Settings/EditDrawer';
 import { supabase } from '@/integrations/supabase/client';
-import { humanize } from '@/lib/supabase/errors';
+import { humanize, isMissingTable } from '@/lib/supabase/errors';
+import { TableNotFoundCallout } from '@/components/common/TableNotFoundCallout';
 import { Loader2 } from 'lucide-react';
+import type { ConfigSupplyGroup } from '@/lib/supabase/types-override';
 
 type BasicMaterial = {
   id: string;
@@ -34,7 +36,7 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
   const [editing, setEditing] = useState<BasicMaterial | null>(null);
   const [groupOptions, setGroupOptions] = useState<SupplyGroupOption[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
-  const [groupError, setGroupError] = useState<string | null>(null);
+  const [groupError, setGroupError] = useState<string | 'MISSING_TABLE' | null>(null);
 
   const currencyFormatter = useMemo(
     () =>
@@ -70,19 +72,29 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
       setLoadingGroups(true);
       setGroupError(null);
 
-      const { data, error } = await supabase
-        .from('config_supply_groups')
-        .select('id, name, is_active')
-        .order('name');
+      try {
+        const { data, error } = await supabase
+          .from('config_supply_groups' as any)
+          .select('id, name, is_active')
+          .order('name');
 
-      if (error) {
-        setGroupError(humanize(error));
+        if (error) {
+          if (isMissingTable(error)) {
+            setGroupError('MISSING_TABLE');
+          } else {
+            setGroupError(humanize(error));
+          }
+          setGroupOptions([]);
+        } else {
+          const typedData = (data || []) as unknown as ConfigSupplyGroup[];
+          const options = typedData
+            .filter((group) => group.is_active !== false)
+            .map((group) => ({ value: group.id, label: group.name }));
+          setGroupOptions(options);
+        }
+      } catch (err) {
+        setGroupError('Erro ao carregar grupos de suprimento');
         setGroupOptions([]);
-      } else {
-        const options = (data ?? [])
-          .filter((group) => group.is_active !== false)
-          .map((group) => ({ value: group.id as string, label: group.name as string }));
-        setGroupOptions(options);
       }
 
       setLoadingGroups(false);
@@ -185,6 +197,24 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
     setReloadKey((value) => value + 1);
   };
 
+  if (groupError === 'MISSING_TABLE') {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertTitle>Materiais básicos</AlertTitle>
+          <AlertDescription>
+            Esta seção gerencia <strong>modelos de materiais</strong> (unidade, custo padrão, grupo). O estoque real é
+            cadastrado em <strong>Estoque → Insumos</strong>.
+          </AlertDescription>
+        </Alert>
+        <TableNotFoundCallout 
+          tableName="config_supply_groups" 
+          onRetry={() => window.location.reload()} 
+        />
+      </div>
+    );
+  }
+
   const supplyGroupOptionsForForm: SupplyGroupOption[] = useMemo(() => {
     const options = groupOptions.map((option) => ({ value: option.value, label: option.label }));
 
@@ -207,7 +237,7 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
       id: editing.id,
       name: editing.name ?? '',
       codigo: editing.codigo ?? '',
-      unit: (editing.unit as string) ?? 'pc',
+      unit: (editing.unit as 'pc' | 'm' | 'cm' | 'mm' | 'g' | 'kg' | 'ml' | 'l') ?? 'pc',
       default_cost: Number(editing.default_cost ?? 0),
       supply_group_id: editing.supply_group_id,
       is_active: editing.is_active,

@@ -219,7 +219,7 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
     try {
       if (initialData) {
         const { error } = await supabase
-          .from('config_supply_groups')
+          .from('config_supply_groups' as any)
           .update(payload)
           .eq('id', initialData.id);
 
@@ -230,7 +230,7 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
 
         toast.success('Grupo atualizado com sucesso');
       } else {
-        const { error } = await supabase.from('config_supply_groups').insert(payload);
+        const { error } = await supabase.from('config_supply_groups' as any).insert(payload);
 
         if (error) {
           toast.error(isPermission(error) ? 'Sem permissão para criar grupos.' : humanize(error));

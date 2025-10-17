@@ -71,7 +71,8 @@ function readDebugFlag(): boolean {
   }
 
   if (typeof window !== 'undefined') {
-    const fromWindow = window.ENV?.NEXT_PUBLIC_DEBUG_SUPABASE;
+    const w = window as any;
+    const fromWindow = w.ENV?.NEXT_PUBLIC_DEBUG_SUPABASE;
     if (fromWindow) {
       return fromWindow === 'true';
     }
@@ -133,7 +134,7 @@ export function TableManager<T extends { id?: string | number }>({
     setError(null);
 
     try {
-      let query = supabase.from(table).select('*', { count: 'exact' });
+      let query = supabase.from(table as any).select('*', { count: 'exact' });
 
       if (searchFilter && searchTerm.trim().length > 0) {
         const sanitized = searchTerm.trim();
@@ -172,7 +173,7 @@ export function TableManager<T extends { id?: string | number }>({
         setData([]);
         setTotalCount(0);
       } else {
-        setData(((data ?? []) as T[]) ?? []);
+        setData(((data ?? []) as unknown as T[]) ?? []);
         setTotalCount(count ?? 0);
       }
     } catch (err) {
@@ -184,7 +185,8 @@ export function TableManager<T extends { id?: string | number }>({
         details: '',
         hint: '',
         message: err instanceof Error ? err.message : String(err),
-      });
+        name: 'UnexpectedError',
+      } as any);
       setData([]);
       setTotalCount(0);
     } finally {
@@ -363,7 +365,7 @@ export function TableManager<T extends { id?: string | number }>({
                 <TableRow key={rowKey}>
                   {columns.map((column) => (
                     <TableCell key={String(column.key)} className={column.className}>
-                      {column.render ? column.render(item) : (item as Record<string, unknown>)[column.key as string] ?? '—'}
+                      {column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key as string] ?? '—')}
                     </TableCell>
                   ))}
                   {onEdit && (

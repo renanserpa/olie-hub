@@ -34,7 +34,7 @@ async function loadRoles(): Promise<string[] | null> {
   }
 
   inflightPromise = (async () => {
-    const { data, error } = await supabase.rpc('whoami');
+    const { data, error } = await supabase.rpc('whoami' as any);
 
     if (error) {
       cachedError = humanize(error);

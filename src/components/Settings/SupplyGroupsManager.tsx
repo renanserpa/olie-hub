@@ -124,7 +124,7 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
 
   return (
     <>
-      <TableManager<SupplyGroup>
+      <TableManager
         title="Grupos de insumo"
         table="config_supply_groups"
         columns={columns}

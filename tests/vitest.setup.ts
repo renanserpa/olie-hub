@@ -1,1 +1,1 @@
-import '@testing-library/jest-dom/vitest';
+// Intentionally left empty: reserved for future shared Vitest setup.

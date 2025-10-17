@@ -23,8 +23,10 @@ jobs:
         with: { node-version: 20 }
       - name: Install deps
         run: |
-          corepack enable || true
-          pnpm i --frozen-lockfile || npm ci
+          npm config set registry https://registry.npmjs.org/
+          npm config set @testing-library:registry https://registry.npmjs.org/
+          npm cache clean --force || true
+          npm ci --no-audit --no-fund
       - name: Apply migrations
         run: |
           psql "$DATABASE_URL" -f db/migrations/2025-10-16_001_configs_core.sql

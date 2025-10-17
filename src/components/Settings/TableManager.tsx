@@ -50,7 +50,7 @@ type SelectFilterConfig = {
 
 type FilterConfig = SearchFilterConfig | SelectFilterConfig;
 
-export type TableManagerProps<T extends { id?: string | number } = any> = {
+export type TableManagerProps<T = any> = {
   title: string;
   table: string;
   columns: ColumnConfig<T>[];
@@ -81,7 +81,7 @@ function readDebugFlag(): boolean {
   return false;
 }
 
-export function TableManager<T extends { id?: string | number } = any>({
+export function TableManager<T = any>({
   title,
   table,
   columns,
@@ -360,7 +360,8 @@ export function TableManager<T extends { id?: string | number } = any>({
           </TableHeader>
           <TableBody>
             {data.map((item, index) => {
-              const rowKey = (item?.id ?? index) as React.Key;
+              const itemWithId = item as { id?: string | number };
+              const rowKey = (itemWithId?.id ?? index) as React.Key;
               return (
                 <TableRow key={rowKey}>
                   {columns.map((column) => (

@@ -4,9 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { EditDrawer } from "@/components/Settings/EditDrawer";
 import { supabase } from "@/integrations/supabase/client";
-import { humanize, isMissingTable } from "@/lib/supabase/errors";
+import { humanize, isMissingTable, isPermission } from "@/lib/supabase/errors";
 import { TableNotFoundCallout } from "@/components/common/TableNotFoundCallout";
-import { Loader2 } from "lucide-react";
+import { Loader2, AlertTriangle } from "lucide-react";
 import type { ConfigSupplyGroup } from "@/lib/supabase/types-override";
 
 type BasicMaterial = {
@@ -39,9 +39,10 @@ export function BasicMaterialsManager({
   const [editing, setEditing] = useState<BasicMaterial | null>(null);
   const [groupOptions, setGroupOptions] = useState<SupplyGroupOption[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
-  const [groupError, setGroupError] = useState<string | "MISSING_TABLE" | null>(
+  const [groupError, setGroupError] = useState<string | "MISSING_TABLE" | "PERMISSION_DENIED" | null>(
     null,
   );
+  const [supplyGroupsVersion, setSupplyGroupsVersion] = useState(0);
 
   const currencyFormatter = useMemo(
     () =>
@@ -86,6 +87,8 @@ export function BasicMaterialsManager({
         if (error) {
           if (isMissingTable(error)) {
             setGroupError("MISSING_TABLE");
+          } else if (isPermission(error)) {
+            setGroupError("PERMISSION_DENIED");
           } else {
             setGroupError(humanize(error));
           }
@@ -106,7 +109,7 @@ export function BasicMaterialsManager({
     }
 
     loadGroups();
-  }, [supplyGroupsVersion]);
+  }, [supplyGroupsVersion, supplyGroupsVersion]);
 
   const columns = useMemo(
     () => [
@@ -218,8 +221,30 @@ export function BasicMaterialsManager({
         </Alert>
         <TableNotFoundCallout
           tableName="config_supply_groups"
-          onRetry={() => window.location.reload()}
+          onRetry={() => setSupplyGroupsVersion((v) => v + 1)}
         />
+      </div>
+    );
+  }
+
+  if (groupError === "PERMISSION_DENIED") {
+    return (
+      <div className="space-y-4">
+        <Alert>
+          <AlertTitle>Materiais básicos</AlertTitle>
+          <AlertDescription>
+            Esta seção gerencia <strong>modelos de materiais</strong> (unidade,
+            custo padrão, grupo). O estoque real é cadastrado em{" "}
+            <strong>Estoque → Insumos</strong>.
+          </AlertDescription>
+        </Alert>
+        <Alert variant="destructive">
+          <AlertTriangle className="w-4 h-4" />
+          <AlertDescription>
+            Você não tem permissão para acessar esta área. Entre como{" "}
+            <strong>admin</strong> ou peça acesso.
+          </AlertDescription>
+        </Alert>
       </div>
     );
   }

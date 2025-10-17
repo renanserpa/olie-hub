@@ -1,1 +1,2 @@
-export const BUILD_TOUCH = "force-rebuild-2025-10-17T18:25:00Z";
+export const BUILD_TOUCH = "lovable-rebuild-2025-10-17T19:30:00Z";
+export const BUILD_VERSION = "1.0.0-preview";

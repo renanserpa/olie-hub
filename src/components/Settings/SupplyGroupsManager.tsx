@@ -25,7 +25,10 @@ import { Switch } from "@/components/ui/switch";
 import { Textarea } from "@/components/ui/textarea";
 import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { humanize, isPermission } from "@/lib/supabase/errors";
+import { humanize, isPermission, isMissingTable } from "@/lib/supabase/errors";
+import { TableNotFoundCallout } from "@/components/common/TableNotFoundCallout";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 
 type SupplyGroup = {
@@ -49,7 +52,31 @@ export function SupplyGroupsManager({
   const [nonce, setNonce] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<SupplyGroup | null>(null);
+  const [error, setError] = useState<string | "TABLE_NOT_FOUND" | "PERMISSION_DENIED" | null>(null);
+  const [loading, setLoading] = useState(true);
   const isAdmin = !readOnly;
+
+  useEffect(() => {
+    async function checkTable() {
+      setLoading(true);
+      const { error } = await supabase
+        .from("config_supply_groups" as any)
+        .select("id")
+        .limit(1);
+      
+      if (error) {
+        if (isMissingTable(error)) {
+          setError("TABLE_NOT_FOUND");
+        } else if (isPermission(error)) {
+          setError("PERMISSION_DENIED");
+        } else {
+          setError(humanize(error));
+        }
+      }
+      setLoading(false);
+    }
+    checkTable();
+  }, [nonce]);
 
   const dateFormatter = useMemo(
     () =>
@@ -141,6 +168,35 @@ export function SupplyGroupsManager({
     }
   };
 
+  if (loading) {
+    return <div className="text-sm text-muted-foreground">Carregando...</div>;
+  }
+
+  if (error === "TABLE_NOT_FOUND") {
+    return (
+      <TableNotFoundCallout
+        tableName="config_supply_groups"
+        onRetry={() => setNonce((k) => k + 1)}
+      />
+    );
+  }
+
+  if (error === "PERMISSION_DENIED") {
+    return (
+      <Alert variant="destructive">
+        <AlertTriangle className="w-4 h-4" />
+        <AlertDescription>
+          Você não tem permissão para acessar esta área. Entre como{" "}
+          <strong>admin</strong> ou peça acesso.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (error) {
+    return <div className="text-sm text-destructive">Erro: {error}</div>;
+  }
+
   return (
     <>
       <TableManager
@@ -148,6 +204,8 @@ export function SupplyGroupsManager({
         table="config_supply_groups"
         columns={columns}
         filters={filters}
+        onCreate={handleCreate}
+        onEdit={handleEdit}
         isReadOnly={!isAdmin}
         onRetry={() => setNonce((n) => n + 1)}
       />

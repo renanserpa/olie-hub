@@ -4,7 +4,10 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  server: { hmr: { overlay: false } },
+  server: { 
+    port: 8080,
+    hmr: { overlay: false } 
+  },
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

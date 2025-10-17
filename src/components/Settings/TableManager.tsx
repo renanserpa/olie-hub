@@ -73,13 +73,13 @@ type SelectFilterConfig = {
 
 type FilterConfig = SearchFilterConfig | SelectFilterConfig;
 
-export type TableManagerProps<T = any> = {
+export type TableManagerProps = {
   title: string;
   table: string;
-  columns: ColumnConfig<T>[];
+  columns: ColumnConfig[];
   filters?: FilterConfig[];
   onCreate?: () => void;
-  onEdit?: (item: T) => void;
+  onEdit?: (item: any) => void;
   readOnly?: boolean;
   isReadOnly?: boolean;
   emptyHelpText?: string;
@@ -106,7 +106,7 @@ function readDebugFlag(): boolean {
   return false;
 }
 
-export function TableManager<T = any>({
+export function TableManager({
   title,
   table,
   columns,
@@ -120,7 +120,7 @@ export function TableManager<T = any>({
   helpText,
   createLabel,
   onRetry,
-}: TableManagerProps<T>) {
+}: TableManagerProps) {
   const readOnly = isReadOnly ?? readOnlyProp;
   const debugSupabase = useMemo(() => readDebugFlag(), []);
 
@@ -152,7 +152,7 @@ export function TableManager<T = any>({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectValues, setSelectValues] =
     useState<Record<string, string>>(initialSelectValues);
-  const [data, setData] = useState<T[]>([]);
+  const [data, setData] = useState<any[]>([]);
   const [error, setError] = useState<PostgrestError | null>(null);
   const [loading, setLoading] = useState(true);
   const [totalCount, setTotalCount] = useState(0);
@@ -214,7 +214,7 @@ export function TableManager<T = any>({
         setData([]);
         setTotalCount(0);
       } else {
-        setData(((data ?? []) as unknown as T[]) ?? []);
+        setData((data ?? []) as any[]);
         setTotalCount(count ?? 0);
       }
     } catch (err) {

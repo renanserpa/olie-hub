@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -88,7 +88,7 @@ export function ProductDialog({
     if (data) setCategories(data);
   }
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     if (!formData.name) {

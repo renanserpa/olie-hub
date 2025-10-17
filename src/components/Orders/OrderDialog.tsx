@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, type FormEvent } from "react";
 import {
   Dialog,
   DialogContent,
@@ -125,7 +125,7 @@ export function OrderDialog({
     return { subtotal, total };
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
     if (!formData.contact_id) {

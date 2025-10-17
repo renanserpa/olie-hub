@@ -42,7 +42,7 @@ export function BasicMaterialsManager({
   const [groupError, setGroupError] = useState<string | "MISSING_TABLE" | "PERMISSION_DENIED" | null>(
     null,
   );
-  const [supplyGroupsVersion, setSupplyGroupsVersion] = useState(0);
+  const [internalSupplyGroupsVersion, setInternalSupplyGroupsVersion] = useState(0);
 
   const currencyFormatter = useMemo(
     () =>
@@ -221,7 +221,7 @@ export function BasicMaterialsManager({
         </Alert>
         <TableNotFoundCallout
           tableName="config_supply_groups"
-          onRetry={() => setSupplyGroupsVersion((v) => v + 1)}
+          onRetry={() => setInternalSupplyGroupsVersion((v) => v + 1)}
         />
       </div>
     );

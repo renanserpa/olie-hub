@@ -81,10 +81,12 @@ export type TableManagerProps<T = any> = {
   onCreate?: () => void;
   onEdit?: (item: T) => void;
   readOnly?: boolean;
+  isReadOnly?: boolean;
   emptyHelpText?: string;
   reloadKey?: number;
   helpText?: ReactNode;
   createLabel?: string;
+  onRetry?: () => void;
 };
 
 function readDebugFlag(): boolean {
@@ -111,12 +113,15 @@ export function TableManager<T = any>({
   filters,
   onCreate,
   onEdit,
-  readOnly = false,
+  readOnly: readOnlyProp = false,
+  isReadOnly,
   emptyHelpText,
   reloadKey,
   helpText,
   createLabel,
+  onRetry,
 }: TableManagerProps<T>) {
+  const readOnly = isReadOnly ?? readOnlyProp;
   const debugSupabase = useMemo(() => readDebugFlag(), []);
 
   const searchFilter = useMemo(
@@ -245,7 +250,11 @@ export function TableManager<T = any>({
   const totalPages = Math.max(1, Math.ceil(totalCount / PAGE_SIZE));
 
   const handleRetry = () => {
-    fetchData();
+    if (onRetry) {
+      onRetry();
+    } else {
+      fetchData();
+    }
   };
 
   const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {

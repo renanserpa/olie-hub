@@ -1,19 +1,32 @@
-import { useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { TableManager } from '@/components/Settings/TableManager';
-import { Badge } from '@/components/ui/badge';
-import { Drawer, DrawerContent, DrawerFooter, DrawerHeader, DrawerTitle } from '@/components/ui/drawer';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
-import { Loader2 } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { humanize, isPermission } from '@/lib/supabase/errors';
-import { toast } from 'sonner';
+import { useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { TableManager } from "@/components/Settings/TableManager";
+import { Badge } from "@/components/ui/badge";
+import {
+  Drawer,
+  DrawerContent,
+  DrawerFooter,
+  DrawerHeader,
+  DrawerTitle,
+} from "@/components/ui/drawer";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
+import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { humanize, isPermission } from "@/lib/supabase/errors";
+import { toast } from "sonner";
 
 type SupplyGroup = {
   id: string;
@@ -29,36 +42,40 @@ interface SupplyGroupsManagerProps {
   onChanged?: () => void;
 }
 
-export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroupsManagerProps) {
-  const [reloadKey, setReloadKey] = useState(0);
+export function SupplyGroupsManager({
+  readOnly = false,
+  onChanged,
+}: SupplyGroupsManagerProps) {
+  const [nonce, setNonce] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<SupplyGroup | null>(null);
+  const isAdmin = !readOnly;
 
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'short',
-        timeStyle: 'short',
+      new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
       }),
     [],
   );
 
   const columns = useMemo(
     () => [
-      { key: 'codigo', label: 'Código' },
-      { key: 'name', label: 'Nome' },
+      { key: "codigo", label: "Código" },
+      { key: "name", label: "Nome" },
       {
-        key: 'descricao',
-        label: 'Descrição',
+        key: "descricao",
+        label: "Descrição",
         render: (item: SupplyGroup) => (
           <span className="block max-w-xs truncate text-sm text-muted-foreground">
-            {item.descricao?.trim() || '—'}
+            {item.descricao?.trim() || "—"}
           </span>
         ),
       },
       {
-        key: 'is_active',
-        label: 'Status',
+        key: "is_active",
+        label: "Status",
         render: (item: SupplyGroup) =>
           item.is_active ? (
             <Badge variant="secondary">Ativo</Badge>
@@ -69,10 +86,12 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
           ),
       },
       {
-        key: 'updated_at',
-        label: 'Atualizado em',
+        key: "updated_at",
+        label: "Atualizado em",
         render: (item: SupplyGroup) =>
-          item.updated_at ? dateFormatter.format(new Date(item.updated_at)) : '—',
+          item.updated_at
+            ? dateFormatter.format(new Date(item.updated_at))
+            : "—",
       },
     ],
     [dateFormatter],
@@ -81,19 +100,19 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
   const filters = useMemo(
     () => [
       {
-        type: 'search' as const,
-        fields: ['name', 'codigo'],
-        placeholder: 'Buscar por nome ou código',
+        type: "search" as const,
+        fields: ["name", "codigo"],
+        placeholder: "Buscar por nome ou código",
       },
       {
-        type: 'select' as const,
-        label: 'Status',
-        field: 'is_active',
-        defaultValue: 'true',
+        type: "select" as const,
+        label: "Status",
+        field: "is_active",
+        defaultValue: "true",
         options: [
-          { label: 'Ativos', value: 'true', queryValue: true },
-          { label: 'Inativos', value: 'false', queryValue: false },
-          { label: 'Todos', value: 'all', queryValue: undefined },
+          { label: "Ativos", value: "true", queryValue: true },
+          { label: "Inativos", value: "false", queryValue: false },
+          { label: "Todos", value: "all", queryValue: undefined },
         ],
       },
     ],
@@ -111,7 +130,7 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
   };
 
   const handleSaved = () => {
-    setReloadKey((value) => value + 1);
+    setNonce((value) => value + 1);
     onChanged?.();
   };
 
@@ -129,11 +148,12 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
         table="config_supply_groups"
         columns={columns}
         filters={filters}
+        isReadOnly={!isAdmin}
+        onRetry={() => setNonce((n) => n + 1)}
         onCreate={handleCreate}
         onEdit={handleEdit}
-        readOnly={readOnly}
         emptyHelpText="Nenhum grupo cadastrado. Clique em 'Novo grupo' para começar."
-        reloadKey={reloadKey}
+        reloadKey={nonce}
         createLabel="Novo grupo"
       />
 
@@ -150,16 +170,16 @@ export function SupplyGroupsManager({ readOnly = false, onChanged }: SupplyGroup
 
 const groupSchema = z.object({
   name: z
-    .string({ required_error: 'Nome é obrigatório' })
-    .min(2, 'Informe pelo menos 2 caracteres')
-    .max(180, 'Nome muito longo'),
+    .string({ required_error: "Nome é obrigatório" })
+    .min(2, "Informe pelo menos 2 caracteres")
+    .max(180, "Nome muito longo"),
   codigo: z
-    .string({ required_error: 'Código é obrigatório' })
-    .regex(/^[A-Z0-9_]{2,30}$/, 'Use 2-30 caracteres (letras maiúsculas, números ou _)'),
-  descricao: z
-    .string()
-    .max(300, 'Máximo de 300 caracteres')
-    .optional(),
+    .string({ required_error: "Código é obrigatório" })
+    .regex(
+      /^[A-Z0-9_]{2,30}$/,
+      "Use 2-30 caracteres (letras maiúsculas, números ou _)",
+    ),
+  descricao: z.string().max(300, "Máximo de 300 caracteres").optional(),
   is_active: z.boolean(),
 });
 
@@ -173,15 +193,21 @@ interface SupplyGroupDrawerProps {
   readOnly?: boolean;
 }
 
-function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly = false }: SupplyGroupDrawerProps) {
+function SupplyGroupDrawer({
+  open,
+  onOpenChange,
+  initialData,
+  onSaved,
+  readOnly = false,
+}: SupplyGroupDrawerProps) {
   const [submitting, setSubmitting] = useState(false);
 
   const form = useForm<GroupFormValues>({
     resolver: zodResolver(groupSchema),
     defaultValues: {
-      name: '',
-      codigo: '',
-      descricao: '',
+      name: "",
+      codigo: "",
+      descricao: "",
       is_active: true,
     },
   });
@@ -189,9 +215,9 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
   const handleClose = (nextOpen: boolean) => {
     if (!nextOpen) {
       form.reset({
-        name: '',
-        codigo: '',
-        descricao: '',
+        name: "",
+        codigo: "",
+        descricao: "",
         is_active: true,
       });
       setSubmitting(false);
@@ -203,7 +229,7 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
 
   const onSubmit = form.handleSubmit(async (values) => {
     if (readOnly) {
-      toast.info('Somente administradores podem alterar grupos.');
+      toast.info("Somente administradores podem alterar grupos.");
       return;
     }
 
@@ -219,31 +245,44 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
     try {
       if (initialData) {
         const { error } = await supabase
-          .from('config_supply_groups' as any)
+          .from("config_supply_groups" as any)
           .update(payload)
-          .eq('id', initialData.id);
+          .eq("id", initialData.id);
 
         if (error) {
-          toast.error(isPermission(error) ? 'Sem permissão para atualizar grupos.' : humanize(error));
+          toast.error(
+            isPermission(error)
+              ? "Sem permissão para atualizar grupos."
+              : humanize(error),
+          );
           return;
         }
 
-        toast.success('Grupo atualizado com sucesso');
+        toast.success("Grupo atualizado com sucesso");
       } else {
-        const { error } = await supabase.from('config_supply_groups' as any).insert(payload);
+        const { error } = await supabase
+          .from("config_supply_groups" as any)
+          .insert(payload);
 
         if (error) {
-          toast.error(isPermission(error) ? 'Sem permissão para criar grupos.' : humanize(error));
+          toast.error(
+            isPermission(error)
+              ? "Sem permissão para criar grupos."
+              : humanize(error),
+          );
           return;
         }
 
-        toast.success('Grupo criado com sucesso');
+        toast.success("Grupo criado com sucesso");
       }
 
       onSaved?.();
       onOpenChange(false);
     } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Erro inesperado ao salvar grupo';
+      const message =
+        error instanceof Error
+          ? error.message
+          : "Erro inesperado ao salvar grupo";
       toast.error(message);
     } finally {
       setSubmitting(false);
@@ -253,9 +292,9 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
   useEffect(() => {
     if (open) {
       form.reset({
-        name: initialData?.name ?? '',
-        codigo: initialData?.codigo ?? '',
-        descricao: initialData?.descricao ?? '',
+        name: initialData?.name ?? "",
+        codigo: initialData?.codigo ?? "",
+        descricao: initialData?.descricao ?? "",
         is_active: initialData?.is_active ?? true,
       });
     }
@@ -272,7 +311,9 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
       <DrawerContent>
         <div className="px-4 pb-4">
           <DrawerHeader>
-            <DrawerTitle>{initialData ? 'Editar grupo' : 'Novo grupo de insumo'}</DrawerTitle>
+            <DrawerTitle>
+              {initialData ? "Editar grupo" : "Novo grupo de insumo"}
+            </DrawerTitle>
           </DrawerHeader>
 
           <Form {...form}>
@@ -284,7 +325,11 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
                   <FormItem>
                     <FormLabel>Nome *</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Ex: Metais" disabled={readOnly} />
+                      <Input
+                        {...field}
+                        placeholder="Ex: Metais"
+                        disabled={readOnly}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -302,7 +347,9 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
                         {...field}
                         placeholder="GRUPO_METAL"
                         disabled={readOnly}
-                        onChange={(event) => field.onChange(event.target.value.toUpperCase())}
+                        onChange={(event) =>
+                          field.onChange(event.target.value.toUpperCase())
+                        }
                       />
                     </FormControl>
                     <FormMessage />
@@ -337,10 +384,16 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
                   <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
                     <div className="space-y-0.5">
                       <FormLabel>Ativo</FormLabel>
-                      <p className="text-sm text-muted-foreground">Grupos inativos não aparecem em novos cadastros.</p>
+                      <p className="text-sm text-muted-foreground">
+                        Grupos inativos não aparecem em novos cadastros.
+                      </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} disabled={readOnly} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        disabled={readOnly}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
@@ -351,12 +404,16 @@ function SupplyGroupDrawer({ open, onOpenChange, initialData, onSaved, readOnly 
 
         <DrawerFooter className="border-t bg-muted/30">
           <div className="flex justify-end gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)} disabled={submitting}>
+            <Button
+              variant="outline"
+              onClick={() => onOpenChange(false)}
+              disabled={submitting}
+            >
               Cancelar
             </Button>
             <Button onClick={onSubmit} disabled={readOnly || submitting}>
               {submitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {initialData ? 'Salvar alterações' : 'Criar grupo'}
+              {initialData ? "Salvar alterações" : "Criar grupo"}
             </Button>
           </div>
         </DrawerFooter>

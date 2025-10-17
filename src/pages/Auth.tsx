@@ -1,16 +1,19 @@
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { toast } from 'sonner';
-import { z } from 'zod';
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { toast } from "sonner";
+import { z } from "zod";
 
 const authSchema = z.object({
-  email: z.string().email('Email inválido'),
-  password: z.string().min(6, 'Senha deve ter no mínimo 6 caracteres'),
-  fullName: z.string().min(2, 'Nome deve ter no mínimo 2 caracteres').optional(),
+  email: z.string().email("Email inválido"),
+  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+  fullName: z
+    .string()
+    .min(2, "Nome deve ter no mínimo 2 caracteres")
+    .optional(),
 });
 
 export default function Auth() {
@@ -18,9 +21,9 @@ export default function Auth() {
   const [isLogin, setIsLogin] = useState(true);
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-    fullName: '',
+    email: "",
+    password: "",
+    fullName: "",
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,8 +46,8 @@ export default function Auth() {
         });
 
         if (error) {
-          if (error.message.includes('Invalid login credentials')) {
-            toast.error('Email ou senha incorretos');
+          if (error.message.includes("Invalid login credentials")) {
+            toast.error("Email ou senha incorretos");
           } else {
             toast.error(error.message);
           }
@@ -52,8 +55,8 @@ export default function Auth() {
         }
 
         if (data.user) {
-          toast.success('Login realizado com sucesso!');
-          navigate('/');
+          toast.success("Login realizado com sucesso!");
+          navigate("/");
         }
       } else {
         // Cadastro
@@ -69,8 +72,8 @@ export default function Auth() {
         });
 
         if (error) {
-          if (error.message.includes('already registered')) {
-            toast.error('Este email já está cadastrado');
+          if (error.message.includes("already registered")) {
+            toast.error("Este email já está cadastrado");
           } else {
             toast.error(error.message);
           }
@@ -78,16 +81,16 @@ export default function Auth() {
         }
 
         if (data.user) {
-          toast.success('Cadastro realizado! Você já pode fazer login.');
+          toast.success("Cadastro realizado! Você já pode fazer login.");
           setIsLogin(true);
-          setFormData({ email: '', password: '', fullName: '' });
+          setFormData({ email: "", password: "", fullName: "" });
         }
       }
     } catch (error) {
       if (error instanceof z.ZodError) {
         toast.error(error.errors[0].message);
       } else {
-        toast.error('Erro ao processar requisição');
+        toast.error("Erro ao processar requisição");
       }
     } finally {
       setIsLoading(false);
@@ -103,7 +106,7 @@ export default function Auth() {
             Olie OPS
           </h1>
           <p className="text-muted-foreground">
-            {isLogin ? 'Entre na sua conta' : 'Crie sua conta'}
+            {isLogin ? "Entre na sua conta" : "Crie sua conta"}
           </p>
         </div>
 
@@ -118,7 +121,9 @@ export default function Auth() {
                 type="text"
                 placeholder="Seu nome completo"
                 value={formData.fullName}
-                onChange={(e) => setFormData({ ...formData, fullName: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, fullName: e.target.value })
+                }
                 disabled={isLoading}
                 required
               />
@@ -133,7 +138,9 @@ export default function Auth() {
               type="email"
               placeholder="seu@email.com"
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, email: e.target.value })
+              }
               disabled={isLoading}
               required
             />
@@ -147,7 +154,9 @@ export default function Auth() {
               type="password"
               placeholder="••••••••"
               value={formData.password}
-              onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+              onChange={(e) =>
+                setFormData({ ...formData, password: e.target.value })
+              }
               disabled={isLoading}
               required
             />
@@ -158,7 +167,7 @@ export default function Auth() {
             className="w-full gradient-primary shadow-glow"
             disabled={isLoading}
           >
-            {isLoading ? 'Processando...' : isLogin ? 'Entrar' : 'Criar Conta'}
+            {isLoading ? "Processando..." : isLogin ? "Entrar" : "Criar Conta"}
           </Button>
         </form>
 
@@ -168,12 +177,14 @@ export default function Auth() {
             type="button"
             onClick={() => {
               setIsLogin(!isLogin);
-              setFormData({ email: '', password: '', fullName: '' });
+              setFormData({ email: "", password: "", fullName: "" });
             }}
             className="text-sm text-primary hover:underline"
             disabled={isLoading}
           >
-            {isLogin ? 'Não tem uma conta? Cadastre-se' : 'Já tem uma conta? Entre'}
+            {isLogin
+              ? "Não tem uma conta? Cadastre-se"
+              : "Já tem uma conta? Entre"}
           </button>
         </div>
       </Card>

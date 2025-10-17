@@ -14,7 +14,7 @@ export interface ConfigBasicMaterial {
   id: string;
   name: string;
   codigo: string;
-  unit: 'pc' | 'm' | 'cm' | 'mm' | 'g' | 'kg' | 'ml' | 'l';
+  unit: "pc" | "m" | "cm" | "mm" | "g" | "kg" | "ml" | "l";
   default_cost: number;
   supply_group_id: string;
   is_active: boolean;

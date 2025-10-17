@@ -1,21 +1,51 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Plus, Edit2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { listConfigs, createConfig, updateConfig } from '@/lib/supabase/configs';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Plus, Edit2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  listConfigs,
+  createConfig,
+  updateConfig,
+} from "@/lib/supabase/configs";
 import {
   codigoSchema,
   jsonArrayStringSchema,
@@ -23,24 +53,24 @@ import {
   optionalNumberSchema,
   parseJsonArrayOrEmpty,
   stringifyJson,
-} from '@/lib/zod/configs';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+} from "@/lib/zod/configs";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const CUSTOMIZATION_TYPES = [
-  'bordado',
-  'laser',
-  'monograma',
-  'patch',
-  'sublimacao',
-  'aplicacao',
-  'outro',
+  "bordado",
+  "laser",
+  "monograma",
+  "patch",
+  "sublimacao",
+  "aplicacao",
+  "outro",
 ] as const;
 
 type CustomizationType = (typeof CUSTOMIZATION_TYPES)[number];
 
-type StatusFilter = 'all' | 'active' | 'inactive';
+type StatusFilter = "all" | "active" | "inactive";
 
-type TypeFilter = 'all' | CustomizationType;
+type TypeFilter = "all" | CustomizationType;
 
 interface CustomizationComponent {
   id: string;
@@ -57,19 +87,19 @@ interface CustomizationComponent {
 
 const formSchema = z.object({
   name: z
-    .string({ required_error: 'Nome é obrigatório' })
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(180, 'Nome muito longo'),
+    .string({ required_error: "Nome é obrigatório" })
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(180, "Nome muito longo"),
   codigo: codigoSchema,
-  type: z.enum(CUSTOMIZATION_TYPES, { required_error: 'Tipo é obrigatório' }),
+  type: z.enum(CUSTOMIZATION_TYPES, { required_error: "Tipo é obrigatório" }),
   allowed_positions_json: jsonArrayStringSchema,
   max_colors: optionalIntegerSchema.refine(
     (value) => value === undefined || value >= 0,
-    { message: 'Informe um número inteiro maior ou igual a zero' },
+    { message: "Informe um número inteiro maior ou igual a zero" },
   ),
   price_extra: optionalNumberSchema.refine(
     (value) => value === undefined || value >= 0,
-    { message: 'Informe um valor maior ou igual a zero' },
+    { message: "Informe um valor maior ou igual a zero" },
   ),
   is_active: z.boolean(),
 });
@@ -83,18 +113,18 @@ export function CustomizationComponentManager() {
   const [components, setComponents] = useState<CustomizationComponent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<CustomizationComponent | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      codigo: '',
-      type: 'bordado',
+      name: "",
+      codigo: "",
+      type: "bordado",
       allowed_positions_json: undefined,
       max_colors: undefined,
       price_extra: undefined,
@@ -106,15 +136,20 @@ export function CustomizationComponentManager() {
     setLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await listConfigs<CustomizationComponent>('config_customization_components', {
-      search: searchTerm,
-      searchColumns: ['name', 'codigo'],
-      filters: {
-        is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        type: typeFilter === 'all' ? undefined : typeFilter,
-      },
-      order: { column: 'updated_at', ascending: false },
-    });
+    const { data, error: fetchError } =
+      await listConfigs<CustomizationComponent>(
+        "config_customization_components",
+        {
+          search: searchTerm,
+          searchColumns: ["name", "codigo"],
+          filters: {
+            is_active:
+              statusFilter === "all" ? undefined : statusFilter === "active",
+            type: typeFilter === "all" ? undefined : typeFilter,
+          },
+          order: { column: "updated_at", ascending: false },
+        },
+      );
 
     if (fetchError) {
       setError(fetchError);
@@ -137,16 +172,18 @@ export function CustomizationComponentManager() {
           name: editing.name,
           codigo: editing.codigo,
           type: editing.type,
-          allowed_positions_json: stringifyJson(editing.allowed_positions_json ?? []),
+          allowed_positions_json: stringifyJson(
+            editing.allowed_positions_json ?? [],
+          ),
           max_colors: editing.max_colors ?? undefined,
           price_extra: editing.price_extra ?? undefined,
           is_active: editing.is_active,
         });
       } else {
         form.reset({
-          name: '',
-          codigo: '',
-          type: 'bordado',
+          name: "",
+          codigo: "",
+          type: "bordado",
           allowed_positions_json: undefined,
           max_colors: undefined,
           price_extra: undefined,
@@ -158,7 +195,7 @@ export function CustomizationComponentManager() {
 
   const handleCreateClick = () => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem criar componentes');
+      toast.error("Apenas administradores podem criar componentes");
       return;
     }
 
@@ -168,7 +205,7 @@ export function CustomizationComponentManager() {
 
   const handleEditClick = (component: CustomizationComponent) => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem editar componentes');
+      toast.error("Apenas administradores podem editar componentes");
       return;
     }
 
@@ -178,7 +215,7 @@ export function CustomizationComponentManager() {
 
   const onSubmit = async (values: FormValues) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar componentes');
+      toast.error("Você não tem permissão para alterar componentes");
       return;
     }
 
@@ -186,24 +223,37 @@ export function CustomizationComponentManager() {
       name: values.name.trim(),
       codigo: values.codigo.trim(),
       type: values.type,
-      allowed_positions_json: values.allowed_positions_json && values.allowed_positions_json.trim().length > 0
-        ? parseJsonArrayOrEmpty(values.allowed_positions_json)
-        : [],
+      allowed_positions_json:
+        values.allowed_positions_json &&
+        values.allowed_positions_json.trim().length > 0
+          ? parseJsonArrayOrEmpty(values.allowed_positions_json)
+          : [],
       max_colors: values.max_colors ?? null,
       price_extra: values.price_extra ?? null,
       is_active: values.is_active,
     } satisfies Partial<CustomizationComponent>;
 
     const action = editing
-      ? await updateConfig<CustomizationComponent>('config_customization_components', editing.id, payload)
-      : await createConfig<CustomizationComponent>('config_customization_components', payload);
+      ? await updateConfig<CustomizationComponent>(
+          "config_customization_components",
+          editing.id,
+          payload,
+        )
+      : await createConfig<CustomizationComponent>(
+          "config_customization_components",
+          payload,
+        );
 
     if (action.error) {
       toast.error(action.error);
       return;
     }
 
-    toast.success(editing ? 'Componente atualizado com sucesso' : 'Componente criado com sucesso');
+    toast.success(
+      editing
+        ? "Componente atualizado com sucesso"
+        : "Componente criado com sucesso",
+    );
     setDialogOpen(false);
     setEditing(null);
     loadComponents();
@@ -211,39 +261,52 @@ export function CustomizationComponentManager() {
 
   const handleToggleActive = async (component: CustomizationComponent) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar componentes');
+      toast.error("Você não tem permissão para alterar componentes");
       return;
     }
 
-    if (component.is_active && !confirm('Tem certeza que deseja arquivar este componente?')) {
+    if (
+      component.is_active &&
+      !confirm("Tem certeza que deseja arquivar este componente?")
+    ) {
       return;
     }
 
-    const { error: toggleError } = await updateConfig<CustomizationComponent>('config_customization_components', component.id, {
-      is_active: !component.is_active,
-    });
+    const { error: toggleError } = await updateConfig<CustomizationComponent>(
+      "config_customization_components",
+      component.id,
+      {
+        is_active: !component.is_active,
+      },
+    );
 
     if (toggleError) {
       toast.error(toggleError);
       return;
     }
 
-    toast.success(component.is_active ? 'Componente arquivado' : 'Componente reativado');
+    toast.success(
+      component.is_active ? "Componente arquivado" : "Componente reativado",
+    );
     loadComponents();
   };
 
   const emptyMessage = useMemo(() => {
     if (searchTerm.trim().length > 0) {
-      return 'Nenhum componente encontrado com os filtros atuais';
+      return "Nenhum componente encontrado com os filtros atuais";
     }
-    return 'Nenhum componente de customização cadastrado ainda';
+    return "Nenhum componente de customização cadastrado ainda";
   }, [searchTerm]);
 
-  const currencyFormatter = useMemo(() => new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }), []);
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+      }),
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -254,16 +317,20 @@ export function CustomizationComponentManager() {
             Defina opções adicionais para personalização e suas regras de cores
           </p>
         </div>
-        <Button onClick={handleCreateClick} disabled={!canEdit || checkingAdmin}>
+        <Button
+          onClick={handleCreateClick}
+          disabled={!canEdit || checkingAdmin}
+        >
           <Plus className="mr-2 h-4 w-4" /> Novo Componente
         </Button>
       </div>
 
-      {(!isAdmin && !checkingAdmin) && (
+      {!isAdmin && !checkingAdmin && (
         <Alert variant="default" className="border-dashed">
           <AlertTitle>Acesso de leitura</AlertTitle>
           <AlertDescription>
-            Você não possui permissões de administrador. É possível visualizar os componentes, mas não criar ou editar.
+            Você não possui permissões de administrador. É possível visualizar
+            os componentes, mas não criar ou editar.
           </AlertDescription>
         </Alert>
       )}
@@ -283,7 +350,10 @@ export function CustomizationComponentManager() {
           className="md:w-80"
         />
         <div className="flex gap-2">
-          <Select value={typeFilter} onValueChange={(value: TypeFilter) => setTypeFilter(value)}>
+          <Select
+            value={typeFilter}
+            onValueChange={(value: TypeFilter) => setTypeFilter(value)}
+          >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -296,7 +366,10 @@ export function CustomizationComponentManager() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: StatusFilter) => setStatusFilter(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -312,10 +385,13 @@ export function CustomizationComponentManager() {
       <Card>
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando componentes...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando
+            componentes...
           </div>
         ) : components.length === 0 ? (
-          <div className="py-10 text-center text-muted-foreground">{emptyMessage}</div>
+          <div className="py-10 text-center text-muted-foreground">
+            {emptyMessage}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -325,8 +401,12 @@ export function CustomizationComponentManager() {
                 <TableHead>Tipo</TableHead>
                 <TableHead className="hidden md:table-cell">Posições</TableHead>
                 <TableHead className="hidden md:table-cell">Cores</TableHead>
-                <TableHead className="hidden md:table-cell">Adicional</TableHead>
-                <TableHead className="hidden md:table-cell">Atualizado em</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Adicional
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Atualizado em
+                </TableHead>
                 <TableHead className="w-[160px]">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -335,7 +415,9 @@ export function CustomizationComponentManager() {
                 <TableRow key={component.id}>
                   <TableCell>
                     <div className="font-medium">{component.name}</div>
-                    <div className="text-xs text-muted-foreground md:hidden">Código: {component.codigo}</div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Código: {component.codigo}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {component.codigo}
@@ -349,20 +431,22 @@ export function CustomizationComponentManager() {
                     {component.allowed_positions_json?.length ?? 0}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                    {component.max_colors ?? '—'}
+                    {component.max_colors ?? "—"}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {component.price_extra !== null
                       ? currencyFormatter.format(component.price_extra)
-                      : '—'}
+                      : "—"}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                    {new Date(component.updated_at).toLocaleString('pt-BR')}
+                    {new Date(component.updated_at).toLocaleString("pt-BR")}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant={component.is_active ? 'default' : 'outline'}>
-                        {component.is_active ? 'Ativo' : 'Arquivado'}
+                      <Badge
+                        variant={component.is_active ? "default" : "outline"}
+                      >
+                        {component.is_active ? "Ativo" : "Arquivado"}
                       </Badge>
                       <Switch
                         checked={component.is_active}
@@ -390,7 +474,11 @@ export function CustomizationComponentManager() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar componente' : 'Novo componente de customização'}</DialogTitle>
+            <DialogTitle>
+              {editing
+                ? "Editar componente"
+                : "Novo componente de customização"}
+            </DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
@@ -417,7 +505,10 @@ export function CustomizationComponentManager() {
                     <FormItem>
                       <FormLabel>Código *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: CUSTOM_BORDADO_INICIAL" {...field} />
+                        <Input
+                          placeholder="Ex: CUSTOM_BORDADO_INICIAL"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -459,7 +550,7 @@ export function CustomizationComponentManager() {
                     <FormControl>
                       <Textarea
                         placeholder='Ex: ["frente", "costas"]'
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                         rows={4}
                       />
@@ -479,10 +570,12 @@ export function CustomizationComponentManager() {
                       <FormControl>
                         <Input
                           type="number"
-                          value={field.value ?? ''}
+                          value={field.value ?? ""}
                           onChange={(event) => {
                             const value = event.target.value;
-                            field.onChange(value === '' ? undefined : Number(value));
+                            field.onChange(
+                              value === "" ? undefined : Number(value),
+                            );
                           }}
                         />
                       </FormControl>
@@ -501,10 +594,12 @@ export function CustomizationComponentManager() {
                         <Input
                           type="number"
                           step="0.01"
-                          value={field.value ?? ''}
+                          value={field.value ?? ""}
                           onChange={(event) => {
                             const value = event.target.value;
-                            field.onChange(value === '' ? undefined : Number(value));
+                            field.onChange(
+                              value === "" ? undefined : Number(value),
+                            );
                           }}
                         />
                       </FormControl>
@@ -522,25 +617,33 @@ export function CustomizationComponentManager() {
                     <div>
                       <FormLabel>Ativo</FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Componentes desativados ficam ocultos para usuários comuns.
+                        Componentes desativados ficam ocultos para usuários
+                        comuns.
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  type="button"
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {editing ? 'Salvar alterações' : 'Criar componente'}
+                  {editing ? "Salvar alterações" : "Criar componente"}
                 </Button>
               </DialogFooter>
             </form>

@@ -150,11 +150,6 @@ export function SupplyGroupsManager({
         filters={filters}
         isReadOnly={!isAdmin}
         onRetry={() => setNonce((n) => n + 1)}
-        onCreate={handleCreate}
-        onEdit={handleEdit}
-        emptyHelpText="Nenhum grupo cadastrado. Clique em 'Novo grupo' para começar."
-        reloadKey={nonce}
-        createLabel="Novo grupo"
       />
 
       <SupplyGroupDrawer

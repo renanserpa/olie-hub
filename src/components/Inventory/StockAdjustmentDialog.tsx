@@ -1,12 +1,18 @@
-import { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { supabase } from '@/integrations/supabase/client';
-import { toast } from 'sonner';
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface StockAdjustmentDialogProps {
   open: boolean;
@@ -15,54 +21,60 @@ interface StockAdjustmentDialogProps {
   onSuccess: () => void;
 }
 
-export function StockAdjustmentDialog({ open, onOpenChange, product, onSuccess }: StockAdjustmentDialogProps) {
-  const [type, setType] = useState<'in' | 'out'>('in');
-  const [quantity, setQuantity] = useState('');
-  const [reason, setReason] = useState('');
+export function StockAdjustmentDialog({
+  open,
+  onOpenChange,
+  product,
+  onSuccess,
+}: StockAdjustmentDialogProps) {
+  const [type, setType] = useState<"in" | "out">("in");
+  const [quantity, setQuantity] = useState("");
+  const [reason, setReason] = useState("");
   const [loading, setLoading] = useState(false);
 
   async function handleSubmit() {
     if (!quantity || parseInt(quantity) <= 0) {
-      toast.error('Quantidade inválida');
+      toast.error("Quantidade inválida");
       return;
     }
 
     setLoading(true);
     try {
       const qty = parseInt(quantity);
-      const newStock = type === 'in' 
-        ? (product.stock_quantity || 0) + qty 
-        : (product.stock_quantity || 0) - qty;
+      const newStock =
+        type === "in"
+          ? (product.stock_quantity || 0) + qty
+          : (product.stock_quantity || 0) - qty;
 
       // Update stock
       const { error: updateError } = await supabase
-        .from('products')
+        .from("products")
         .update({ stock_quantity: newStock })
-        .eq('id', product.id);
+        .eq("id", product.id);
 
       if (updateError) throw updateError;
 
       // Create movement log
       const { error: logError } = await supabase
-        .from('inventory_movements')
+        .from("inventory_movements")
         .insert({
           product_id: product.id,
           type,
           quantity: qty,
           reason,
-          created_by: (await supabase.auth.getUser()).data.user?.id
+          created_by: (await supabase.auth.getUser()).data.user?.id,
         });
 
       if (logError) throw logError;
 
-      toast.success('Estoque ajustado com sucesso');
+      toast.success("Estoque ajustado com sucesso");
       onSuccess();
       onOpenChange(false);
-      setQuantity('');
-      setReason('');
+      setQuantity("");
+      setReason("");
     } catch (error) {
-      console.error('Error adjusting stock:', error);
-      toast.error('Erro ao ajustar estoque');
+      console.error("Error adjusting stock:", error);
+      toast.error("Erro ao ajustar estoque");
     } finally {
       setLoading(false);
     }
@@ -78,7 +90,10 @@ export function StockAdjustmentDialog({ open, onOpenChange, product, onSuccess }
         <div className="space-y-4 py-4">
           <div className="space-y-2">
             <Label>Tipo de Movimentação</Label>
-            <RadioGroup value={type} onValueChange={(v) => setType(v as 'in' | 'out')}>
+            <RadioGroup
+              value={type}
+              onValueChange={(v) => setType(v as "in" | "out")}
+            >
               <div className="flex items-center space-x-2">
                 <RadioGroupItem value="in" id="in" />
                 <Label htmlFor="in">Entrada</Label>
@@ -115,27 +130,33 @@ export function StockAdjustmentDialog({ open, onOpenChange, product, onSuccess }
           <div className="p-3 bg-muted rounded-lg">
             <p className="text-sm">
               <span className="text-muted-foreground">Estoque Atual: </span>
-              <span className="font-semibold">{product?.stock_quantity || 0}</span>
+              <span className="font-semibold">
+                {product?.stock_quantity || 0}
+              </span>
             </p>
             <p className="text-sm mt-1">
               <span className="text-muted-foreground">Novo Estoque: </span>
               <span className="font-semibold">
-                {quantity ? (
-                  type === 'in' 
+                {quantity
+                  ? type === "in"
                     ? (product?.stock_quantity || 0) + parseInt(quantity)
                     : (product?.stock_quantity || 0) - parseInt(quantity)
-                ) : '-'}
+                  : "-"}
               </span>
             </p>
           </div>
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
+          <Button
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            disabled={loading}
+          >
             Cancelar
           </Button>
           <Button onClick={handleSubmit} disabled={loading}>
-            {loading ? 'Ajustando...' : 'Confirmar Ajuste'}
+            {loading ? "Ajustando..." : "Confirmar Ajuste"}
           </Button>
         </DialogFooter>
       </DialogContent>

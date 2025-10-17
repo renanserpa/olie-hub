@@ -1,13 +1,13 @@
-import { useEffect, useMemo, useState } from 'react';
-import { TableManager } from '@/components/Settings/TableManager';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { EditDrawer } from '@/components/Settings/EditDrawer';
-import { supabase } from '@/integrations/supabase/client';
-import { humanize, isMissingTable } from '@/lib/supabase/errors';
-import { TableNotFoundCallout } from '@/components/common/TableNotFoundCallout';
-import { Loader2 } from 'lucide-react';
-import type { ConfigSupplyGroup } from '@/lib/supabase/types-override';
+import { useEffect, useMemo, useState } from "react";
+import { TableManager } from "@/components/Settings/TableManager";
+import { Badge } from "@/components/ui/badge";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { EditDrawer } from "@/components/Settings/EditDrawer";
+import { supabase } from "@/integrations/supabase/client";
+import { humanize, isMissingTable } from "@/lib/supabase/errors";
+import { TableNotFoundCallout } from "@/components/common/TableNotFoundCallout";
+import { Loader2 } from "lucide-react";
+import type { ConfigSupplyGroup } from "@/lib/supabase/types-override";
 
 type BasicMaterial = {
   id: string;
@@ -30,19 +30,24 @@ interface BasicMaterialsManagerProps {
   supplyGroupsVersion?: number;
 }
 
-export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 0 }: BasicMaterialsManagerProps) {
+export function BasicMaterialsManager({
+  readOnly = false,
+  supplyGroupsVersion = 0,
+}: BasicMaterialsManagerProps) {
   const [reloadKey, setReloadKey] = useState(0);
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [editing, setEditing] = useState<BasicMaterial | null>(null);
   const [groupOptions, setGroupOptions] = useState<SupplyGroupOption[]>([]);
   const [loadingGroups, setLoadingGroups] = useState(false);
-  const [groupError, setGroupError] = useState<string | 'MISSING_TABLE' | null>(null);
+  const [groupError, setGroupError] = useState<string | "MISSING_TABLE" | null>(
+    null,
+  );
 
   const currencyFormatter = useMemo(
     () =>
-      new Intl.NumberFormat('pt-BR', {
-        style: 'currency',
-        currency: 'BRL',
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
         maximumFractionDigits: 2,
       }),
     [],
@@ -50,9 +55,9 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
 
   const dateFormatter = useMemo(
     () =>
-      new Intl.DateTimeFormat('pt-BR', {
-        dateStyle: 'short',
-        timeStyle: 'short',
+      new Intl.DateTimeFormat("pt-BR", {
+        dateStyle: "short",
+        timeStyle: "short",
       }),
     [],
   );
@@ -74,13 +79,13 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
 
       try {
         const { data, error } = await supabase
-          .from('config_supply_groups' as any)
-          .select('id, name, is_active')
-          .order('name');
+          .from("config_supply_groups" as any)
+          .select("id, name, is_active")
+          .order("name");
 
         if (error) {
           if (isMissingTable(error)) {
-            setGroupError('MISSING_TABLE');
+            setGroupError("MISSING_TABLE");
           } else {
             setGroupError(humanize(error));
           }
@@ -93,7 +98,7 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
           setGroupOptions(options);
         }
       } catch (err) {
-        setGroupError('Erro ao carregar grupos de suprimento');
+        setGroupError("Erro ao carregar grupos de suprimento");
         setGroupOptions([]);
       }
 
@@ -105,27 +110,28 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
 
   const columns = useMemo(
     () => [
-      { key: 'codigo', label: 'Código' },
-      { key: 'name', label: 'Nome' },
+      { key: "codigo", label: "Código" },
+      { key: "name", label: "Nome" },
       {
-        key: 'unit',
-        label: 'Unidade',
-        render: (item: BasicMaterial) => item.unit?.toUpperCase() ?? '—',
+        key: "unit",
+        label: "Unidade",
+        render: (item: BasicMaterial) => item.unit?.toUpperCase() ?? "—",
       },
       {
-        key: 'default_cost',
-        label: 'Custo padrão',
+        key: "default_cost",
+        label: "Custo padrão",
         render: (item: BasicMaterial) =>
           currencyFormatter.format(Number(item.default_cost ?? 0)),
       },
       {
-        key: 'supply_group_id',
-        label: 'Grupo',
-        render: (item: BasicMaterial) => groupsById[item.supply_group_id ?? ''] || 'Sem grupo',
+        key: "supply_group_id",
+        label: "Grupo",
+        render: (item: BasicMaterial) =>
+          groupsById[item.supply_group_id ?? ""] || "Sem grupo",
       },
       {
-        key: 'is_active',
-        label: 'Status',
+        key: "is_active",
+        label: "Status",
         render: (item: BasicMaterial) =>
           item.is_active ? (
             <Badge variant="secondary">Ativo</Badge>
@@ -136,10 +142,12 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
           ),
       },
       {
-        key: 'updated_at',
-        label: 'Atualizado em',
+        key: "updated_at",
+        label: "Atualizado em",
         render: (item: BasicMaterial) =>
-          item.updated_at ? dateFormatter.format(new Date(item.updated_at)) : '—',
+          item.updated_at
+            ? dateFormatter.format(new Date(item.updated_at))
+            : "—",
       },
     ],
     [currencyFormatter, dateFormatter, groupsById],
@@ -147,8 +155,8 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
 
   const filters = useMemo(() => {
     const groupFilterOptions = [
-      { label: 'Todos', value: 'all', queryValue: undefined },
-      { label: 'Sem grupo', value: 'none', queryValue: null },
+      { label: "Todos", value: "all", queryValue: undefined },
+      { label: "Sem grupo", value: "none", queryValue: null },
       ...groupOptions.map((option) => ({
         label: option.label,
         value: option.value,
@@ -158,26 +166,26 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
 
     return [
       {
-        type: 'search' as const,
-        fields: ['name', 'codigo'],
-        placeholder: 'Buscar por nome ou código',
+        type: "search" as const,
+        fields: ["name", "codigo"],
+        placeholder: "Buscar por nome ou código",
       },
       {
-        type: 'select' as const,
-        label: 'Status',
-        field: 'is_active',
-        defaultValue: 'true',
+        type: "select" as const,
+        label: "Status",
+        field: "is_active",
+        defaultValue: "true",
         options: [
-          { label: 'Ativos', value: 'true', queryValue: true },
-          { label: 'Inativos', value: 'false', queryValue: false },
-          { label: 'Todos', value: 'all', queryValue: undefined },
+          { label: "Ativos", value: "true", queryValue: true },
+          { label: "Inativos", value: "false", queryValue: false },
+          { label: "Todos", value: "all", queryValue: undefined },
         ],
       },
       {
-        type: 'select' as const,
-        label: 'Grupo',
-        field: 'supply_group_id',
-        defaultValue: 'all',
+        type: "select" as const,
+        label: "Grupo",
+        field: "supply_group_id",
+        defaultValue: "all",
         options: groupFilterOptions,
       },
     ];
@@ -197,33 +205,39 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
     setReloadKey((value) => value + 1);
   };
 
-  if (groupError === 'MISSING_TABLE') {
+  if (groupError === "MISSING_TABLE") {
     return (
       <div className="space-y-4">
         <Alert>
           <AlertTitle>Materiais básicos</AlertTitle>
           <AlertDescription>
-            Esta seção gerencia <strong>modelos de materiais</strong> (unidade, custo padrão, grupo). O estoque real é
-            cadastrado em <strong>Estoque → Insumos</strong>.
+            Esta seção gerencia <strong>modelos de materiais</strong> (unidade,
+            custo padrão, grupo). O estoque real é cadastrado em{" "}
+            <strong>Estoque → Insumos</strong>.
           </AlertDescription>
         </Alert>
-        <TableNotFoundCallout 
-          tableName="config_supply_groups" 
-          onRetry={() => window.location.reload()} 
+        <TableNotFoundCallout
+          tableName="config_supply_groups"
+          onRetry={() => window.location.reload()}
         />
       </div>
     );
   }
 
   const supplyGroupOptionsForForm: SupplyGroupOption[] = useMemo(() => {
-    const options = groupOptions.map((option) => ({ value: option.value, label: option.label }));
+    const options = groupOptions.map((option) => ({
+      value: option.value,
+      label: option.label,
+    }));
 
     if (editing?.supply_group_id) {
-      const alreadyIncluded = options.some((option) => option.value === editing.supply_group_id);
+      const alreadyIncluded = options.some(
+        (option) => option.value === editing.supply_group_id,
+      );
       if (!alreadyIncluded) {
         options.push({
           value: editing.supply_group_id,
-          label: 'Grupo atual (inativo)',
+          label: "Grupo atual (inativo)",
         });
       }
     }
@@ -235,9 +249,11 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
     if (!editing) return undefined;
     return {
       id: editing.id,
-      name: editing.name ?? '',
-      codigo: editing.codigo ?? '',
-      unit: (editing.unit as 'pc' | 'm' | 'cm' | 'mm' | 'g' | 'kg' | 'ml' | 'l') ?? 'pc',
+      name: editing.name ?? "",
+      codigo: editing.codigo ?? "",
+      unit:
+        (editing.unit as "pc" | "m" | "cm" | "mm" | "g" | "kg" | "ml" | "l") ??
+        "pc",
       default_cost: Number(editing.default_cost ?? 0),
       supply_group_id: editing.supply_group_id,
       is_active: editing.is_active,
@@ -256,8 +272,9 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
       <Alert>
         <AlertTitle>Materiais básicos</AlertTitle>
         <AlertDescription>
-          Esta seção gerencia <strong>modelos de materiais</strong> (unidade, custo padrão, grupo). O estoque real é
-          cadastrado em <strong>Estoque → Insumos</strong>.
+          Esta seção gerencia <strong>modelos de materiais</strong> (unidade,
+          custo padrão, grupo). O estoque real é cadastrado em{" "}
+          <strong>Estoque → Insumos</strong>.
         </AlertDescription>
       </Alert>
 

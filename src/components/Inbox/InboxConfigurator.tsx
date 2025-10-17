@@ -1,9 +1,21 @@
 import { useState } from "react";
 import { Palette, Send, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { SVGColorTester } from "@/components/Configurator/SVGColorTester";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -19,7 +31,10 @@ interface InboxConfiguratorProps {
   onCreateOrder?: (config: any) => void;
 }
 
-export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfiguratorProps) => {
+export const InboxConfigurator = ({
+  contactId,
+  onCreateOrder,
+}: InboxConfiguratorProps) => {
   const [open, setOpen] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<string>("");
@@ -31,10 +46,10 @@ export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfigurato
   const loadProducts = async () => {
     try {
       const { data, error } = await supabase
-        .from('products')
-        .select('id, name, unit_price')
-        .eq('is_active', true)
-        .order('name');
+        .from("products")
+        .select("id, name, unit_price")
+        .eq("is_active", true)
+        .order("name");
 
       if (error) throw error;
       setProducts(data || []);
@@ -68,13 +83,13 @@ export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfigurato
       // Aqui você pode implementar o envio via WhatsApp/Instagram
       // Por enquanto, apenas mostra sucesso
       toast.success("Preview enviado para o cliente!");
-      
+
       // Salvar configuração
-      await supabase.from('product_configurations').insert({
+      await supabase.from("product_configurations").insert({
         product_id: selectedProduct,
         config_json: configuration,
         preview_png_url: previewUrl,
-        total_price: totalPrice
+        total_price: totalPrice,
       });
     } catch (error) {
       console.error("Erro ao enviar preview:", error);
@@ -95,7 +110,7 @@ export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfigurato
       configuration,
       preview_url: previewUrl,
       total_price: totalPrice,
-      contact_id: contactId
+      contact_id: contactId,
     };
 
     onCreateOrder?.(orderData);
@@ -103,7 +118,7 @@ export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfigurato
     toast.success("Pedido pré-configurado! Complete os dados.");
   };
 
-  const selectedProductData = products.find(p => p.id === selectedProduct);
+  const selectedProductData = products.find((p) => p.id === selectedProduct);
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -128,7 +143,8 @@ export const InboxConfigurator = ({ contactId, onCreateOrder }: InboxConfigurato
               <SelectContent>
                 {products.map((product) => (
                   <SelectItem key={product.id} value={product.id}>
-                    {product.name} - R$ {product.unit_price?.toFixed(2) || '0.00'}
+                    {product.name} - R${" "}
+                    {product.unit_price?.toFixed(2) || "0.00"}
                   </SelectItem>
                 ))}
               </SelectContent>

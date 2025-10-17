@@ -1,54 +1,65 @@
-import React, { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Truck, Package, MapPin, CheckCircle2, LayoutList, LayoutGrid, Eye } from 'lucide-react';
-import { KanbanBoard, KanbanColumn } from '@/components/Kanban/KanbanBoard';
-import { KanbanCard } from '@/components/Kanban/KanbanCard';
-import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
+import React, { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Truck,
+  Package,
+  MapPin,
+  CheckCircle2,
+  LayoutList,
+  LayoutGrid,
+  Eye,
+} from "lucide-react";
+import { KanbanBoard, KanbanColumn } from "@/components/Kanban/KanbanBoard";
+import { KanbanCard } from "@/components/Kanban/KanbanCard";
+import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 const SHIPPING_COLUMNS: KanbanColumn[] = [
-  { 
-    id: 'pending', 
-    label: 'Aguardando Cotação', 
-    color: 'bg-gray-100',
-    description: 'Precisa cotar frete'
+  {
+    id: "pending",
+    label: "Aguardando Cotação",
+    color: "bg-gray-100",
+    description: "Precisa cotar frete",
   },
-  { 
-    id: 'quoted', 
-    label: 'Cotado', 
-    color: 'bg-blue-100',
-    description: 'Frete cotado'
+  {
+    id: "quoted",
+    label: "Cotado",
+    color: "bg-blue-100",
+    description: "Frete cotado",
   },
-  { 
-    id: 'label_created', 
-    label: 'Etiquetado', 
-    color: 'bg-purple-100',
-    description: 'Pronto p/ coleta'
+  {
+    id: "label_created",
+    label: "Etiquetado",
+    color: "bg-purple-100",
+    description: "Pronto p/ coleta",
   },
-  { 
-    id: 'in_transit', 
-    label: 'Em Trânsito', 
-    color: 'bg-yellow-100',
-    description: 'Em rota de entrega'
+  {
+    id: "in_transit",
+    label: "Em Trânsito",
+    color: "bg-yellow-100",
+    description: "Em rota de entrega",
   },
-  { 
-    id: 'delivered', 
-    label: 'Entregue', 
-    color: 'bg-green-100',
-    description: 'Entrega confirmada'
-  }
+  {
+    id: "delivered",
+    label: "Entregue",
+    color: "bg-green-100",
+    description: "Entrega confirmada",
+  },
 ];
 
 export default function Logistics() {
   const navigate = useNavigate();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [viewMode, setViewMode] = useState<'list' | 'kanban'>(() => {
-    return (localStorage.getItem('logistics_view_mode') as 'list' | 'kanban') || 'list';
+  const [viewMode, setViewMode] = useState<"list" | "kanban">(() => {
+    return (
+      (localStorage.getItem("logistics_view_mode") as "list" | "kanban") ||
+      "list"
+    );
   });
 
   useEffect(() => {
@@ -58,19 +69,21 @@ export default function Logistics() {
   async function loadOrders() {
     try {
       const { data, error } = await supabase
-        .from('orders')
-        .select(`
+        .from("orders")
+        .select(
+          `
           *,
           contact_id,
           contacts(name, address)
-        `)
-        .in('status', ['paid', 'in_production', 'awaiting_shipping', 'shipped'])
-        .order('created_at', { ascending: false });
+        `,
+        )
+        .in("status", ["paid", "in_production", "awaiting_shipping", "shipped"])
+        .order("created_at", { ascending: false });
 
       if (error) throw error;
       setOrders(data || []);
     } catch (error) {
-      console.error('Error loading orders:', error);
+      console.error("Error loading orders:", error);
     } finally {
       setLoading(false);
     }
@@ -78,37 +91,37 @@ export default function Logistics() {
 
   function getShippingStatus(order: any) {
     const logistics = order.logistics || {};
-    if (logistics.tracking) return 'in_transit';
-    if (logistics.label_url) return 'label_created';
-    if (logistics.quotes?.length > 0) return 'quoted';
-    return 'pending';
+    if (logistics.tracking) return "in_transit";
+    if (logistics.label_url) return "label_created";
+    if (logistics.quotes?.length > 0) return "quoted";
+    return "pending";
   }
 
   function filterOrdersByShipping(status: string) {
-    return orders.filter(o => getShippingStatus(o) === status);
+    return orders.filter((o) => getShippingStatus(o) === status);
   }
 
   async function handleStatusChange(orderId: string, newStatus: string) {
     try {
-      const order = orders.find(o => o.id === orderId);
+      const order = orders.find((o) => o.id === orderId);
       const updatedLogistics = {
         ...order?.logistics,
         shipping_status: newStatus,
-        updated_at: new Date().toISOString()
+        updated_at: new Date().toISOString(),
       };
 
       const { error } = await supabase
-        .from('orders')
+        .from("orders")
         .update({ logistics: updatedLogistics })
-        .eq('id', orderId);
+        .eq("id", orderId);
 
       if (error) throw error;
-      
+
       await loadOrders();
-      toast.success('Status atualizado com sucesso');
+      toast.success("Status atualizado com sucesso");
     } catch (error) {
-      console.error('Error updating status:', error);
-      toast.error('Erro ao atualizar status');
+      console.error("Error updating status:", error);
+      toast.error("Erro ao atualizar status");
     }
   }
 
@@ -120,9 +133,11 @@ export default function Logistics() {
         <div className="p-3 space-y-2">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <p className="font-semibold text-sm truncate">#{order.order_number}</p>
+              <p className="font-semibold text-sm truncate">
+                #{order.order_number}
+              </p>
               <p className="text-xs text-muted-foreground truncate">
-                {order.contacts?.name || 'Cliente'}
+                {order.contacts?.name || "Cliente"}
               </p>
             </div>
             <Button
@@ -149,12 +164,16 @@ export default function Logistics() {
 
           <div className="flex items-center justify-between text-xs pt-2 border-t">
             <span className="text-muted-foreground">Valor:</span>
-            <span className="font-semibold">R$ {Number(order.total || 0).toFixed(2)}</span>
+            <span className="font-semibold">
+              R$ {Number(order.total || 0).toFixed(2)}
+            </span>
           </div>
 
           {logistics.tracking && (
             <div className="text-xs bg-success/10 rounded p-2">
-              <p className="font-medium text-success">Rastreio: {logistics.tracking}</p>
+              <p className="font-medium text-success">
+                Rastreio: {logistics.tracking}
+              </p>
             </div>
           )}
 
@@ -170,16 +189,18 @@ export default function Logistics() {
   }
 
   useEffect(() => {
-    localStorage.setItem('logistics_view_mode', viewMode);
+    localStorage.setItem("logistics_view_mode", viewMode);
   }, [viewMode]);
 
-  const pendingOrders = filterOrdersByShipping('pending');
-  const quotedOrders = filterOrdersByShipping('quoted');
-  const labeledOrders = filterOrdersByShipping('label_created');
-  const transitOrders = filterOrdersByShipping('in_transit');
+  const pendingOrders = filterOrdersByShipping("pending");
+  const quotedOrders = filterOrdersByShipping("quoted");
+  const labeledOrders = filterOrdersByShipping("label_created");
+  const transitOrders = filterOrdersByShipping("in_transit");
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">Carregando...</div>
+    );
   }
 
   return (
@@ -188,33 +209,34 @@ export default function Logistics() {
         <div>
           <h1 className="text-3xl font-bold">Entregas & Logística</h1>
           <p className="text-muted-foreground mt-1">
-            Painel de envios e rastreamento (dados locais - integrações desabilitadas)
+            Painel de envios e rastreamento (dados locais - integrações
+            desabilitadas)
           </p>
         </div>
         <div className="flex gap-2">
           <Button
-            variant={viewMode === 'list' ? 'default' : 'outline'}
+            variant={viewMode === "list" ? "default" : "outline"}
             size="icon"
-            onClick={() => setViewMode('list')}
+            onClick={() => setViewMode("list")}
           >
             <LayoutList className="w-4 h-4" />
           </Button>
           <Button
-            variant={viewMode === 'kanban' ? 'default' : 'outline'}
+            variant={viewMode === "kanban" ? "default" : "outline"}
             size="icon"
-            onClick={() => setViewMode('kanban')}
+            onClick={() => setViewMode("kanban")}
           >
             <LayoutGrid className="w-4 h-4" />
           </Button>
         </div>
       </div>
 
-      {viewMode === 'kanban' ? (
+      {viewMode === "kanban" ? (
         <KanbanBoard
           columns={SHIPPING_COLUMNS}
-          items={orders.map(order => ({
+          items={orders.map((order) => ({
             ...order,
-            status: getShippingStatus(order)
+            status: getShippingStatus(order),
           }))}
           onStatusChange={handleStatusChange}
           renderCard={renderShippingCard}
@@ -224,38 +246,46 @@ export default function Logistics() {
         <Tabs defaultValue="all" className="space-y-4">
           <TabsList>
             <TabsTrigger value="all">Todos ({orders.length})</TabsTrigger>
-            <TabsTrigger value="pending">Pendentes ({pendingOrders.length})</TabsTrigger>
-            <TabsTrigger value="quoted">Cotados ({quotedOrders.length})</TabsTrigger>
-            <TabsTrigger value="labeled">Etiquetados ({labeledOrders.length})</TabsTrigger>
-            <TabsTrigger value="transit">Em Trânsito ({transitOrders.length})</TabsTrigger>
+            <TabsTrigger value="pending">
+              Pendentes ({pendingOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="quoted">
+              Cotados ({quotedOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="labeled">
+              Etiquetados ({labeledOrders.length})
+            </TabsTrigger>
+            <TabsTrigger value="transit">
+              Em Trânsito ({transitOrders.length})
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="all" className="space-y-4">
-            {orders.map(order => (
+            {orders.map((order) => (
               <ShippingCard key={order.id} order={order} />
             ))}
           </TabsContent>
 
           <TabsContent value="pending" className="space-y-4">
-            {pendingOrders.map(order => (
+            {pendingOrders.map((order) => (
               <ShippingCard key={order.id} order={order} />
             ))}
           </TabsContent>
 
           <TabsContent value="quoted" className="space-y-4">
-            {quotedOrders.map(order => (
+            {quotedOrders.map((order) => (
               <ShippingCard key={order.id} order={order} />
             ))}
           </TabsContent>
 
           <TabsContent value="labeled" className="space-y-4">
-            {labeledOrders.map(order => (
+            {labeledOrders.map((order) => (
               <ShippingCard key={order.id} order={order} />
             ))}
           </TabsContent>
 
           <TabsContent value="transit" className="space-y-4">
-            {transitOrders.map(order => (
+            {transitOrders.map((order) => (
               <ShippingCard key={order.id} order={order} />
             ))}
           </TabsContent>
@@ -277,14 +307,12 @@ function ShippingCard({ order }: { order: any }) {
         <div className="flex-1">
           <div className="flex items-center gap-3 mb-2">
             <h3 className="text-lg font-semibold">#{order.order_number}</h3>
-            <Badge variant="secondary">
-              {order.status}
-            </Badge>
+            <Badge variant="secondary">{order.status}</Badge>
           </div>
           <div className="space-y-1 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
               <Package className="w-4 h-4" />
-              <span>{order.contacts?.name || 'Cliente'}</span>
+              <span>{order.contacts?.name || "Cliente"}</span>
             </div>
             {order.contacts?.address && (
               <div className="flex items-center gap-2">
@@ -296,9 +324,11 @@ function ShippingCard({ order }: { order: any }) {
             )}
           </div>
         </div>
-        
+
         <div className="text-right">
-          <p className="text-2xl font-bold">R$ {Number(order.total || 0).toFixed(2)}</p>
+          <p className="text-2xl font-bold">
+            R$ {Number(order.total || 0).toFixed(2)}
+          </p>
         </div>
       </div>
 
@@ -334,8 +364,13 @@ function ShippingCard({ order }: { order: any }) {
           <p className="font-semibold mb-2">Cotações Disponíveis</p>
           <div className="space-y-2">
             {quotes.slice(0, 2).map((quote: any, i: number) => (
-              <div key={i} className="flex items-center justify-between text-sm">
-                <span>{quote.carrier} - {quote.service}</span>
+              <div
+                key={i}
+                className="flex items-center justify-between text-sm"
+              >
+                <span>
+                  {quote.carrier} - {quote.service}
+                </span>
                 <span className="font-semibold">R$ {quote.price}</span>
               </div>
             ))}

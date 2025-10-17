@@ -1,33 +1,33 @@
-import { useMemo, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Switch } from '@/components/ui/switch';
-import { Badge } from '@/components/ui/badge';
-import { 
-  Settings2, 
-  Plug, 
-  Palette, 
-  Bell, 
+import { useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
+import {
+  Settings2,
+  Plug,
+  Palette,
+  Bell,
   Shield,
   Info,
   Upload,
   Download,
   Truck,
-  Layers
-} from 'lucide-react';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { CategoryManager } from '@/components/Settings/CategoryManager';
-import { StatusManager } from '@/components/Settings/StatusManager';
-import { ColorLibrary } from '@/components/Settings/ColorLibrary';
-import { ImportDialog } from '@/components/ImportExport/ImportDialog';
-import { ExportDialog } from '@/components/ImportExport/ExportDialog';
-import { SupplyGroupsManager } from '@/components/Settings/SupplyGroupsManager';
-import { BasicMaterialsManager } from '@/components/Settings/BasicMaterialsManager';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+  Layers,
+} from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { CategoryManager } from "@/components/Settings/CategoryManager";
+import { StatusManager } from "@/components/Settings/StatusManager";
+import { ColorLibrary } from "@/components/Settings/ColorLibrary";
+import { ImportDialog } from "@/components/ImportExport/ImportDialog";
+import { ExportDialog } from "@/components/ImportExport/ExportDialog";
+import { SupplyGroupsManager } from "@/components/Settings/SupplyGroupsManager";
+import { BasicMaterialsManager } from "@/components/Settings/BasicMaterialsManager";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 export default function Settings() {
   const [notifications, setNotifications] = useState(true);
@@ -67,7 +67,10 @@ export default function Settings() {
 
       <Tabs defaultValue="integrations" className="space-y-6">
         <TabsList className="grid grid-cols-2 lg:grid-cols-7 gap-1">
-          <TabsTrigger value="integrations" className="gap-2 text-xs lg:text-sm">
+          <TabsTrigger
+            value="integrations"
+            className="gap-2 text-xs lg:text-sm"
+          >
             <Plug className="w-4 h-4" />
             <span className="hidden lg:inline">Integrações</span>
           </TabsTrigger>
@@ -108,7 +111,7 @@ export default function Settings() {
               </AlertDescription>
             </Alert>
           </Card>
-          
+
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Envios</h3>
             <Alert>
@@ -118,7 +121,7 @@ export default function Settings() {
               </AlertDescription>
             </Alert>
           </Card>
-          
+
           <Card className="p-6">
             <div className="flex items-start justify-between">
               <div>
@@ -158,23 +161,23 @@ export default function Settings() {
               <TabsTrigger value="lining">Cores Forro</TabsTrigger>
               <TabsTrigger value="bias">Cores Viés</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="categories" className="mt-6">
               <CategoryManager />
             </TabsContent>
-            
+
             <TabsContent value="fabric" className="mt-6">
               <ColorLibrary type="fabric" />
             </TabsContent>
-            
+
             <TabsContent value="zipper" className="mt-6">
               <ColorLibrary type="zipper" />
             </TabsContent>
-            
+
             <TabsContent value="lining" className="mt-6">
               <ColorLibrary type="lining" />
             </TabsContent>
-            
+
             <TabsContent value="bias" className="mt-6">
               <ColorLibrary type="bias" />
             </TabsContent>
@@ -186,7 +189,9 @@ export default function Settings() {
           <Tabs defaultValue="groups" className="space-y-6">
             <TabsList className="w-full sm:w-auto">
               <TabsTrigger value="groups">Grupos de insumo</TabsTrigger>
-              <TabsTrigger value="basic-materials">Materiais básicos (templates)</TabsTrigger>
+              <TabsTrigger value="basic-materials">
+                Materiais básicos (templates)
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="groups" className="space-y-6">
@@ -211,7 +216,7 @@ export default function Settings() {
             <TabsList>
               <TabsTrigger value="statuses">Status</TabsTrigger>
             </TabsList>
-            
+
             <TabsContent value="statuses" className="mt-6">
               <Tabs defaultValue="order-status">
                 <TabsList className="grid grid-cols-3">
@@ -219,15 +224,15 @@ export default function Settings() {
                   <TabsTrigger value="production-status">Produção</TabsTrigger>
                   <TabsTrigger value="shipping-status">Entregas</TabsTrigger>
                 </TabsList>
-                
+
                 <TabsContent value="order-status" className="mt-6">
                   <StatusManager type="order" />
                 </TabsContent>
-                
+
                 <TabsContent value="production-status" className="mt-6">
                   <StatusManager type="production" />
                 </TabsContent>
-                
+
                 <TabsContent value="shipping-status" className="mt-6">
                   <StatusManager type="shipping" />
                 </TabsContent>
@@ -240,34 +245,34 @@ export default function Settings() {
         <TabsContent value="system" className="space-y-6">
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Preferências Gerais</h3>
-            
+
             <div className="space-y-4">
               <div>
                 <Label>Moeda</Label>
                 <Input value="BRL" disabled />
               </div>
-              
+
               <div>
                 <Label>Timezone</Label>
                 <Input value="America/Sao_Paulo" disabled />
               </div>
-              
+
               <div>
                 <Label>Prefixo de Pedido</Label>
                 <Input defaultValue="OLIE-" />
               </div>
-              
+
               <div>
                 <Label>Lead Time de Produção (dias)</Label>
                 <Input type="number" defaultValue={7} />
               </div>
-              
+
               <div>
                 <Label>SLA Atendimento (minutos)</Label>
                 <Input type="number" defaultValue={30} />
               </div>
             </div>
-            
+
             <Button className="mt-6">Salvar Preferências</Button>
           </Card>
         </TabsContent>
@@ -291,13 +296,15 @@ export default function Settings() {
                   Escolha a cor principal do sistema
                 </p>
                 <div className="flex gap-2 mt-2">
-                  {['#8B5CF6', '#EC4899', '#10B981', '#F59E0B', '#3B82F6'].map(color => (
-                    <button
-                      key={color}
-                      className="w-10 h-10 rounded-lg border-2 border-border hover:scale-110 transition-smooth"
-                      style={{ backgroundColor: color }}
-                    />
-                  ))}
+                  {["#8B5CF6", "#EC4899", "#10B981", "#F59E0B", "#3B82F6"].map(
+                    (color) => (
+                      <button
+                        key={color}
+                        className="w-10 h-10 rounded-lg border-2 border-border hover:scale-110 transition-smooth"
+                        style={{ backgroundColor: color }}
+                      />
+                    ),
+                  )}
                 </div>
               </div>
             </div>
@@ -307,9 +314,12 @@ export default function Settings() {
         {/* G) Segurança */}
         <TabsContent value="security" className="space-y-6">
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Diagnóstico do Sistema</h3>
+            <h3 className="text-lg font-semibold mb-4">
+              Diagnóstico do Sistema
+            </h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Verificar integridade das configurações e tabelas do banco de dados
+              Verificar integridade das configurações e tabelas do banco de
+              dados
             </p>
             <Button asChild variant="outline">
               <a href="/admin/diagnostics/configs">
@@ -318,7 +328,7 @@ export default function Settings() {
               </a>
             </Button>
           </Card>
-          
+
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Notificações</h3>
             <div className="space-y-4">
@@ -337,7 +347,7 @@ export default function Settings() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-6">
             <h3 className="text-lg font-semibold mb-4">Segurança e Acesso</h3>
             <div className="space-y-4">
@@ -361,15 +371,12 @@ export default function Settings() {
         </TabsContent>
       </Tabs>
 
-      <ImportDialog 
-        open={importOpen} 
+      <ImportDialog
+        open={importOpen}
         onOpenChange={setImportOpen}
         onSuccess={() => {}}
       />
-      <ExportDialog 
-        open={exportOpen} 
-        onOpenChange={setExportOpen}
-      />
+      <ExportDialog open={exportOpen} onOpenChange={setExportOpen} />
     </div>
   );
 }

@@ -1,17 +1,23 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { MessageSquare, Instagram, Send, Settings } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
-import { InboxConfigurator } from '@/components/Inbox/InboxConfigurator';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { MessageSquare, Instagram, Send, Settings } from "lucide-react";
+import { toast } from "@/hooks/use-toast";
+import { InboxConfigurator } from "@/components/Inbox/InboxConfigurator";
 
-type Channel = 'wa' | 'ig';
+type Channel = "wa" | "ig";
 
 interface Message {
   id: string;
@@ -24,15 +30,15 @@ interface Message {
 }
 
 const CHANNEL_LABELS = {
-  wa: 'WhatsApp',
-  ig: 'Instagram',
+  wa: "WhatsApp",
+  ig: "Instagram",
 };
 
 export default function Inbox() {
-  const [activeChannel, setActiveChannel] = useState<Channel>('wa');
+  const [activeChannel, setActiveChannel] = useState<Channel>("wa");
   const [messages, setMessages] = useState<Message[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState('all');
+  const [filter, setFilter] = useState("all");
   const [waEnabled, setWaEnabled] = useState(false);
   const [igEnabled, setIgEnabled] = useState(false);
 
@@ -43,8 +49,8 @@ export default function Inbox() {
 
   const checkIntegrations = () => {
     // Check if WA/IG tokens are configured (placeholder logic)
-    const waToken = localStorage.getItem('WA_TOKEN');
-    const igToken = localStorage.getItem('IG_APP_TOKEN');
+    const waToken = localStorage.getItem("WA_TOKEN");
+    const igToken = localStorage.getItem("IG_APP_TOKEN");
     setWaEnabled(!!waToken);
     setIgEnabled(!!igToken);
   };
@@ -53,28 +59,32 @@ export default function Inbox() {
     try {
       setLoading(true);
       const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('channel', activeChannel)
-        .order('created_at', { ascending: false })
+        .from("messages")
+        .select("*")
+        .eq("channel", activeChannel)
+        .order("created_at", { ascending: false })
         .limit(50);
 
       if (error) throw error;
       setMessages(data || []);
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
   };
 
   const filteredMessages = messages.filter((msg) => {
-    if (filter === 'all') return true;
+    if (filter === "all") return true;
     // Add more filter logic later (priority, assigned, bot, etc.)
     return true;
   });
 
-  const isChannelEnabled = activeChannel === 'wa' ? waEnabled : igEnabled;
+  const isChannelEnabled = activeChannel === "wa" ? waEnabled : igEnabled;
 
   return (
     <div className="space-y-6">
@@ -93,17 +103,28 @@ export default function Inbox() {
         </div>
       </div>
 
-      <Tabs value={activeChannel} onValueChange={(v) => setActiveChannel(v as Channel)}>
+      <Tabs
+        value={activeChannel}
+        onValueChange={(v) => setActiveChannel(v as Channel)}
+      >
         <TabsList className="grid w-full grid-cols-2">
           <TabsTrigger value="wa">
             <MessageSquare className="w-4 h-4 mr-2" />
             WhatsApp
-            {!waEnabled && <Badge variant="outline" className="ml-2 text-xs">Inativo</Badge>}
+            {!waEnabled && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Inativo
+              </Badge>
+            )}
           </TabsTrigger>
           <TabsTrigger value="ig">
             <Instagram className="w-4 h-4 mr-2" />
             Instagram
-            {!igEnabled && <Badge variant="outline" className="ml-2 text-xs">Inativo</Badge>}
+            {!igEnabled && (
+              <Badge variant="outline" className="ml-2 text-xs">
+                Inativo
+              </Badge>
+            )}
           </TabsTrigger>
         </TabsList>
 
@@ -111,9 +132,12 @@ export default function Inbox() {
           {!waEnabled && (
             <Card className="border-yellow-500/50 bg-yellow-500/5">
               <CardHeader>
-                <CardTitle className="text-sm">WhatsApp não configurado</CardTitle>
+                <CardTitle className="text-sm">
+                  WhatsApp não configurado
+                </CardTitle>
                 <CardDescription>
-                  Configure o token do WhatsApp Business API nas configurações para ativar esta integração.
+                  Configure o token do WhatsApp Business API nas configurações
+                  para ativar esta integração.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -135,9 +159,12 @@ export default function Inbox() {
           {!igEnabled && (
             <Card className="border-yellow-500/50 bg-yellow-500/5">
               <CardHeader>
-                <CardTitle className="text-sm">Instagram não configurado</CardTitle>
+                <CardTitle className="text-sm">
+                  Instagram não configurado
+                </CardTitle>
                 <CardDescription>
-                  Configure o token do Instagram Graph API nas configurações para ativar esta integração.
+                  Configure o token do Instagram Graph API nas configurações
+                  para ativar esta integração.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -166,7 +193,12 @@ interface InboxContentProps {
   channel: Channel;
 }
 
-function InboxContent({ messages, loading, enabled, channel }: InboxContentProps) {
+function InboxContent({
+  messages,
+  loading,
+  enabled,
+  channel,
+}: InboxContentProps) {
   if (loading) {
     return (
       <Card>
@@ -209,19 +241,22 @@ function InboxContent({ messages, loading, enabled, channel }: InboxContentProps
         <ScrollArea className="h-[500px] pr-4">
           <div className="space-y-4">
             {messages.map((msg) => (
-              <div key={msg.id} className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors">
+              <div
+                key={msg.id}
+                className="flex gap-3 p-3 rounded-lg hover:bg-muted/50 transition-colors"
+              >
                 <Avatar className="w-10 h-10">
                   <AvatarFallback>
-                    {channel === 'wa' ? '📱' : '📷'}
+                    {channel === "wa" ? "📱" : "📷"}
                   </AvatarFallback>
                 </Avatar>
                 <div className="flex-1 space-y-1">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">
-                      {msg.sender_id ? 'Agente' : 'Cliente'}
+                      {msg.sender_id ? "Agente" : "Cliente"}
                     </span>
                     <span className="text-xs text-muted-foreground">
-                      {new Date(msg.created_at).toLocaleString('pt-BR')}
+                      {new Date(msg.created_at).toLocaleString("pt-BR")}
                     </span>
                   </div>
                   <p className="text-sm">{msg.content}</p>

@@ -5,7 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
@@ -21,7 +27,7 @@ interface Color {
 }
 
 interface ColorLibraryProps {
-  type: 'fabric' | 'zipper' | 'lining' | 'bias';
+  type: "fabric" | "zipper" | "lining" | "bias";
 }
 
 export const ColorLibrary = ({ type }: ColorLibraryProps) => {
@@ -29,7 +35,7 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
   const [loading, setLoading] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingColor, setEditingColor] = useState<Color | null>(null);
-  
+
   const [formData, setFormData] = useState({
     name: "",
     hex: "#000000",
@@ -38,13 +44,14 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
     y: "0",
     k: "100",
     price: "0",
-    is_active: true
+    is_active: true,
   });
 
   const tableName = `${type}_colors`;
-  const priceField = type === 'fabric' || type === 'lining' || type === 'bias' 
-    ? 'price_per_meter' 
-    : 'price_delta';
+  const priceField =
+    type === "fabric" || type === "lining" || type === "bias"
+      ? "price_per_meter"
+      : "price_delta";
 
   useEffect(() => {
     loadColors();
@@ -55,8 +62,8 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
     try {
       const { data, error } = await supabase
         .from(tableName as any)
-        .select('*')
-        .order('name');
+        .select("*")
+        .order("name");
 
       if (error) throw error;
       setColors((data as unknown as Color[]) || []);
@@ -77,13 +84,13 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
       y: "0",
       k: "100",
       price: "0",
-      is_active: true
+      is_active: true,
     });
     setEditingColor(null);
   };
 
   const openEditDialog = (color: Color) => {
-    const [c, m, y, k] = color.cmyk.split(',');
+    const [c, m, y, k] = color.cmyk.split(",");
     setFormData({
       name: color.name,
       hex: color.hex,
@@ -92,7 +99,7 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
       y: y || "0",
       k: k || "0",
       price: String(color.price_per_meter || color.price_delta || 0),
-      is_active: color.is_active
+      is_active: color.is_active,
     });
     setEditingColor(color);
     setDialogOpen(true);
@@ -111,14 +118,14 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
         hex: formData.hex,
         cmyk: `${formData.c},${formData.m},${formData.y},${formData.k}`,
         [priceField]: parseFloat(formData.price) || 0,
-        is_active: formData.is_active
+        is_active: formData.is_active,
       };
 
       if (editingColor) {
         const { error } = await supabase
           .from(tableName as any)
           .update(colorData)
-          .eq('id', editingColor.id);
+          .eq("id", editingColor.id);
 
         if (error) throw error;
         toast.success("Cor atualizada com sucesso!");
@@ -150,7 +157,7 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
       const { error } = await supabase
         .from(tableName as any)
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
       toast.success("Cor deletada com sucesso!");
@@ -164,25 +171,29 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
   };
 
   const typeLabels = {
-    fabric: 'Tecido',
-    zipper: 'Zíper',
-    lining: 'Forro',
-    bias: 'Viés'
+    fabric: "Tecido",
+    zipper: "Zíper",
+    lining: "Forro",
+    bias: "Viés",
   };
 
-  const priceLabel = type === 'fabric' || type === 'lining' || type === 'bias'
-    ? 'Preço por Metro (R$)'
-    : 'Delta de Preço (R$)';
+  const priceLabel =
+    type === "fabric" || type === "lining" || type === "bias"
+      ? "Preço por Metro (R$)"
+      : "Delta de Preço (R$)";
 
   return (
     <Card>
       <CardHeader>
         <div className="flex justify-between items-center">
           <CardTitle>Cores de {typeLabels[type]}</CardTitle>
-          <Dialog open={dialogOpen} onOpenChange={(open) => {
-            setDialogOpen(open);
-            if (!open) resetForm();
-          }}>
+          <Dialog
+            open={dialogOpen}
+            onOpenChange={(open) => {
+              setDialogOpen(open);
+              if (!open) resetForm();
+            }}
+          >
             <DialogTrigger asChild>
               <Button size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -192,7 +203,7 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
             <DialogContent className="max-w-md">
               <DialogHeader>
                 <DialogTitle>
-                  {editingColor ? 'Editar Cor' : 'Nova Cor'}
+                  {editingColor ? "Editar Cor" : "Nova Cor"}
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-4">
@@ -201,7 +212,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                   <Input
                     id="name"
                     value={formData.name}
-                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, name: e.target.value })
+                    }
                     placeholder="Ex: Azul Marinho"
                   />
                 </div>
@@ -213,12 +226,16 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       id="hex"
                       type="color"
                       value={formData.hex}
-                      onChange={(e) => setFormData({ ...formData, hex: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hex: e.target.value })
+                      }
                       className="w-20 h-10"
                     />
                     <Input
                       value={formData.hex}
-                      onChange={(e) => setFormData({ ...formData, hex: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, hex: e.target.value })
+                      }
                       placeholder="#000000"
                     />
                   </div>
@@ -233,7 +250,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       min="0"
                       max="100"
                       value={formData.c}
-                      onChange={(e) => setFormData({ ...formData, c: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, c: e.target.value })
+                      }
                     />
                   </div>
                   <div>
@@ -244,7 +263,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       min="0"
                       max="100"
                       value={formData.m}
-                      onChange={(e) => setFormData({ ...formData, m: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, m: e.target.value })
+                      }
                     />
                   </div>
                   <div>
@@ -255,7 +276,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       min="0"
                       max="100"
                       value={formData.y}
-                      onChange={(e) => setFormData({ ...formData, y: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, y: e.target.value })
+                      }
                     />
                   </div>
                   <div>
@@ -266,7 +289,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       min="0"
                       max="100"
                       value={formData.k}
-                      onChange={(e) => setFormData({ ...formData, k: e.target.value })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, k: e.target.value })
+                      }
                     />
                   </div>
                 </div>
@@ -279,7 +304,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                     step="0.01"
                     min="0"
                     value={formData.price}
-                    onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, price: e.target.value })
+                    }
                   />
                 </div>
 
@@ -287,12 +314,18 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                   <Switch
                     id="is_active"
                     checked={formData.is_active}
-                    onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                    onCheckedChange={(checked) =>
+                      setFormData({ ...formData, is_active: checked })
+                    }
                   />
                   <Label htmlFor="is_active">Cor Ativa</Label>
                 </div>
 
-                <Button onClick={handleSave} disabled={loading} className="w-full">
+                <Button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="w-full"
+                >
                   {loading ? "Salvando..." : "Salvar"}
                 </Button>
               </div>
@@ -304,7 +337,9 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
         {loading && colors.length === 0 ? (
           <p className="text-sm text-muted-foreground">Carregando...</p>
         ) : colors.length === 0 ? (
-          <p className="text-sm text-muted-foreground">Nenhuma cor cadastrada</p>
+          <p className="text-sm text-muted-foreground">
+            Nenhuma cor cadastrada
+          </p>
         ) : (
           <div className="space-y-2">
             {colors.map((color) => (
@@ -323,7 +358,12 @@ export const ColorLibrary = ({ type }: ColorLibraryProps) => {
                       HEX: {color.hex} | CMYK: {color.cmyk}
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      {priceLabel}: R$ {(color.price_per_meter || color.price_delta || 0).toFixed(2)}
+                      {priceLabel}: R${" "}
+                      {(
+                        color.price_per_meter ||
+                        color.price_delta ||
+                        0
+                      ).toFixed(2)}
                     </p>
                   </div>
                 </div>

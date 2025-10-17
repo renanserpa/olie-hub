@@ -1,7 +1,7 @@
 // IndexedDB cache for Tiny API responses (TTL: 15 min)
 
-const DB_NAME = 'TinyCache';
-const STORE_NAME = 'responses';
+const DB_NAME = "TinyCache";
+const STORE_NAME = "responses";
 const TTL = 15 * 60 * 1000; // 15 min
 
 interface CacheEntry {
@@ -30,7 +30,7 @@ const initDB = (): Promise<IDBDatabase> => {
     request.onupgradeneeded = (event) => {
       const database = (event.target as IDBOpenDBRequest).result;
       if (!database.objectStoreNames.contains(STORE_NAME)) {
-        database.createObjectStore(STORE_NAME, { keyPath: 'key' });
+        database.createObjectStore(STORE_NAME, { keyPath: "key" });
       }
     };
   });
@@ -40,7 +40,7 @@ export const getCached = async (key: string): Promise<any | null> => {
   try {
     const database = await initDB();
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readonly');
+      const transaction = database.transaction([STORE_NAME], "readonly");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.get(key);
 
@@ -54,7 +54,10 @@ export const getCached = async (key: string): Promise<any | null> => {
         // Check TTL
         if (Date.now() - entry.timestamp > TTL) {
           // Expired - delete it
-          const deleteTransaction = database.transaction([STORE_NAME], 'readwrite');
+          const deleteTransaction = database.transaction(
+            [STORE_NAME],
+            "readwrite",
+          );
           const deleteStore = deleteTransaction.objectStore(STORE_NAME);
           deleteStore.delete(key);
           resolve(null);
@@ -67,7 +70,7 @@ export const getCached = async (key: string): Promise<any | null> => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('[tinyCache] getCached error:', error);
+    console.error("[tinyCache] getCached error:", error);
     return null;
   }
 };
@@ -76,7 +79,7 @@ export const setCache = async (key: string, data: any): Promise<void> => {
   try {
     const database = await initDB();
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const transaction = database.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const entry: CacheEntry = {
         key,
@@ -89,7 +92,7 @@ export const setCache = async (key: string, data: any): Promise<void> => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('[tinyCache] setCache error:', error);
+    console.error("[tinyCache] setCache error:", error);
   }
 };
 
@@ -97,7 +100,7 @@ export const clearCache = async (): Promise<void> => {
   try {
     const database = await initDB();
     return new Promise((resolve, reject) => {
-      const transaction = database.transaction([STORE_NAME], 'readwrite');
+      const transaction = database.transaction([STORE_NAME], "readwrite");
       const store = transaction.objectStore(STORE_NAME);
       const request = store.clear();
 
@@ -105,6 +108,6 @@ export const clearCache = async (): Promise<void> => {
       request.onerror = () => reject(request.error);
     });
   } catch (error) {
-    console.error('[tinyCache] clearCache error:', error);
+    console.error("[tinyCache] clearCache error:", error);
   }
 };

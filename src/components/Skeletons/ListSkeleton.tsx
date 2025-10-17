@@ -1,5 +1,5 @@
-import { Card } from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export function ListSkeleton({ count = 5 }: { count?: number }) {
   return (

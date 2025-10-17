@@ -6,7 +6,7 @@ interface ViewPreferences {
   };
 }
 
-const STORAGE_KEY = 'view_preferences';
+const STORAGE_KEY = "view_preferences";
 
 export function getViewPreferences(): ViewPreferences {
   try {
@@ -31,26 +31,39 @@ export function saveViewPreference(pageId: string, prefs: any) {
 function getDefaultPreference(pageId: string) {
   const defaults: Record<string, any> = {
     production: {
-      mode: 'kanban',
-      properties: ['product_name', 'customer', 'quantity', 'priority', 'due_date', 'config']
+      mode: "kanban",
+      properties: [
+        "product_name",
+        "customer",
+        "quantity",
+        "priority",
+        "due_date",
+        "config",
+      ],
     },
     inventory: {
-      mode: 'grid',
-      properties: ['name', 'sku', 'stock_quantity', 'unit_price', 'category']
+      mode: "grid",
+      properties: ["name", "sku", "stock_quantity", "unit_price", "category"],
     },
     products: {
-      mode: 'grid',
-      properties: ['name', 'sku', 'category', 'unit_price', 'stock_quantity']
+      mode: "grid",
+      properties: ["name", "sku", "category", "unit_price", "stock_quantity"],
     },
     orders: {
-      mode: 'list',
-      properties: ['order_number', 'contact', 'total', 'status', 'created_at']
+      mode: "list",
+      properties: ["order_number", "contact", "total", "status", "created_at"],
     },
     logistics: {
-      mode: 'list',
-      properties: ['order_number', 'contact', 'destination', 'carrier', 'tracking']
+      mode: "list",
+      properties: [
+        "order_number",
+        "contact",
+        "destination",
+        "carrier",
+        "tracking",
+      ],
     },
   };
-  
-  return defaults[pageId] || { mode: 'list', properties: [] };
+
+  return defaults[pageId] || { mode: "list", properties: [] };
 }

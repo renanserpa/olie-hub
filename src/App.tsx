@@ -28,18 +28,19 @@ import NotFound from "./pages/NotFound";
 import Settings from "./pages/Settings";
 import DiagnosticsConfigs from "./pages/DiagnosticsConfigs";
 import DiagnosticsConnectivity from "./pages/DiagnosticsConnectivity";
-import { 
-  MessageSquare, 
-  Factory, 
-  Package, 
-  Truck, 
-  Users, 
-  Settings as SettingsIcon 
+import {
+  MessageSquare,
+  Factory,
+  Package,
+  Truck,
+  Users,
+  Settings as SettingsIcon,
 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 // Auth Provider Component
+// Nota: comentário auxiliar para forçar rebuild do preview.
 const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
@@ -47,12 +48,12 @@ const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     // Setup auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+    });
 
     // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -89,11 +90,11 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -127,11 +128,11 @@ const PublicRoute = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (_event, session) => {
-        setSession(session);
-      }
-    );
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+    });
 
     return () => subscription.unsubscribe();
   }, []);
@@ -162,106 +163,166 @@ const App = () => (
       <BrowserRouter>
         <AuthProvider>
           <Routes>
-            <Route path="/auth" element={
-              <PublicRoute>
-                <Auth />
-              </PublicRoute>
-            } />
-            <Route path="/" element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            } />
-            <Route path="/orders" element={
-              <ProtectedRoute>
-                <Orders />
-              </ProtectedRoute>
-            } />
-            <Route path="/orders/:id" element={
-              <ProtectedRoute>
-                <OrderDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/inbox" element={
-              <ProtectedRoute>
-                <Inbox />
-              </ProtectedRoute>
-            } />
-            <Route path="/contacts" element={
-              <ProtectedRoute>
-                <Contacts />
-              </ProtectedRoute>
-            } />
-            <Route path="/contacts/:id" element={
-              <ProtectedRoute>
-                <ContactDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/production" element={
-              <ProtectedRoute>
-                <Production />
-              </ProtectedRoute>
-            } />
-            <Route path="/production/:id" element={
-              <ProtectedRoute>
-                <ProductionDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/inventory" element={
-              <ProtectedRoute>
-                <Inventory />
-              </ProtectedRoute>
-            } />
-            <Route path="/logistics" element={
-              <ProtectedRoute>
-                <Logistics />
-              </ProtectedRoute>
-            } />
-            <Route path="/catalog" element={
-              <ProtectedRoute>
-                <Catalog />
-              </ProtectedRoute>
-            } />
-            <Route path="/p/:slug" element={
-              <ProtectedRoute>
-                <ProductDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/products/:id" element={
-              <ProtectedRoute>
-                <ProductDetail />
-              </ProtectedRoute>
-            } />
-            <Route path="/cart" element={
-              <ProtectedRoute>
-                <Cart />
-              </ProtectedRoute>
-            } />
-            <Route path="/products" element={
-              <ProtectedRoute>
-                <Products />
-              </ProtectedRoute>
-            } />
-            <Route path="/team" element={
-              <ProtectedRoute>
-                <Team />
-              </ProtectedRoute>
-            } />
-            <Route path="/settings" element={
-              <ProtectedRoute>
-                <Settings />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/diagnostics/configs" element={
-              <ProtectedRoute>
-                <DiagnosticsConfigs />
-              </ProtectedRoute>
-            } />
-            <Route path="/admin/diagnostics/connectivity" element={
-              <ProtectedRoute>
-                <DiagnosticsConnectivity />
-              </ProtectedRoute>
-            } />
+            <Route
+              path="/auth"
+              element={
+                <PublicRoute>
+                  <Auth />
+                </PublicRoute>
+              }
+            />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Dashboard />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders"
+              element={
+                <ProtectedRoute>
+                  <Orders />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/orders/:id"
+              element={
+                <ProtectedRoute>
+                  <OrderDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inbox"
+              element={
+                <ProtectedRoute>
+                  <Inbox />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contacts"
+              element={
+                <ProtectedRoute>
+                  <Contacts />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/contacts/:id"
+              element={
+                <ProtectedRoute>
+                  <ContactDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/production"
+              element={
+                <ProtectedRoute>
+                  <Production />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/production/:id"
+              element={
+                <ProtectedRoute>
+                  <ProductionDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/inventory"
+              element={
+                <ProtectedRoute>
+                  <Inventory />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/logistics"
+              element={
+                <ProtectedRoute>
+                  <Logistics />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/catalog"
+              element={
+                <ProtectedRoute>
+                  <Catalog />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/p/:slug"
+              element={
+                <ProtectedRoute>
+                  <ProductDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products/:id"
+              element={
+                <ProtectedRoute>
+                  <ProductDetail />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/cart"
+              element={
+                <ProtectedRoute>
+                  <Cart />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/products"
+              element={
+                <ProtectedRoute>
+                  <Products />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/team"
+              element={
+                <ProtectedRoute>
+                  <Team />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/diagnostics/configs"
+              element={
+                <ProtectedRoute>
+                  <DiagnosticsConfigs />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/diagnostics/connectivity"
+              element={
+                <ProtectedRoute>
+                  <DiagnosticsConnectivity />
+                </ProtectedRoute>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </AuthProvider>

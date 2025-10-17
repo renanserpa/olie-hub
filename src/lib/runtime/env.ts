@@ -11,19 +11,19 @@ function readPublicEnv(key: keyof ImportMetaEnv): string {
   return "";
 }
 
-const supabaseUrl = readPublicEnv("NEXT_PUBLIC_SUPABASE_URL");
+const supabaseUrl = readPublicEnv("VITE_SUPABASE_URL") || readPublicEnv("NEXT_PUBLIC_SUPABASE_URL");
 
 export const runtimeEnv = {
   supabaseUrl,
   supabaseRef: extractSupabaseRef(supabaseUrl),
   allowedRef:
-    readPublicEnv("NEXT_PUBLIC_SUPABASE_ALLOWED_REF") || "qrfvdoecpmcnlpxklcsu",
+    readPublicEnv("VITE_SUPABASE_ALLOWED_REF") || readPublicEnv("NEXT_PUBLIC_SUPABASE_ALLOWED_REF") || "ivhccupahlyrwqilzasa",
   appEnv: import.meta.env.MODE || "development",
   isProduction: import.meta.env.PROD,
 } as const;
 
 function extractSupabaseRef(url: string): string {
-  const match = url?.match(/https:\/\/([a-z]+)\.supabase\.co/);
+  const match = url?.match(/https:\/\/([a-z0-9]+)\.supabase\.co/);
   return match?.[1] || "unknown";
 }
 

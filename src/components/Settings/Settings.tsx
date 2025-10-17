@@ -1,12 +1,12 @@
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ColorPaletteManager } from './ColorPaletteManager';
-import { FabricTextureManager } from './FabricTextureManager';
-import { BasicMaterialManager } from './BasicMaterialManager';
-import { SupplyGroupManager } from './SupplyGroupManager';
-import { PackagingTypeManager } from './PackagingTypeManager';
-import { BondTypeManager } from './BondTypeManager';
-import { CustomizationComponentManager } from './CustomizationComponentManager';
-import { ComponentOptionManager } from './ComponentOptionManager';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ColorPaletteManager } from "./ColorPaletteManager";
+import { FabricTextureManager } from "./FabricTextureManager";
+import { BasicMaterialManager } from "./BasicMaterialManager";
+import { SupplyGroupManager } from "./SupplyGroupManager";
+import { PackagingTypeManager } from "./PackagingTypeManager";
+import { BondTypeManager } from "./BondTypeManager";
+import { CustomizationComponentManager } from "./CustomizationComponentManager";
+import { ComponentOptionManager } from "./ComponentOptionManager";
 
 export function SettingsManagers() {
   return (
@@ -18,8 +18,12 @@ export function SettingsManagers() {
         <TabsTrigger value="supply-groups">Grupos de insumo</TabsTrigger>
         <TabsTrigger value="packaging-types">Tipos de embalagem</TabsTrigger>
         <TabsTrigger value="bond-types">Tipos de vínculo</TabsTrigger>
-        <TabsTrigger value="customization-components">Componentes de customização</TabsTrigger>
-        <TabsTrigger value="component-options">Opções de componentes</TabsTrigger>
+        <TabsTrigger value="customization-components">
+          Componentes de customização
+        </TabsTrigger>
+        <TabsTrigger value="component-options">
+          Opções de componentes
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="color-palettes" className="space-y-6">

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { humanize } from '@/lib/supabase/errors';
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { humanize } from "@/lib/supabase/errors";
 
 interface AdminAccessState {
   isAdmin: boolean;
@@ -34,7 +34,7 @@ async function loadRoles(): Promise<string[] | null> {
   }
 
   inflightPromise = (async () => {
-    const { data, error } = await supabase.rpc('whoami' as any);
+    const { data, error } = await supabase.rpc("whoami" as any);
 
     if (error) {
       cachedError = humanize(error);
@@ -42,7 +42,9 @@ async function loadRoles(): Promise<string[] | null> {
       return null;
     }
 
-    const roles = Array.isArray((data as any)?.roles) ? ((data as any).roles as string[]) : [];
+    const roles = Array.isArray((data as any)?.roles)
+      ? ((data as any).roles as string[])
+      : [];
     cachedRoles = roles;
     cachedError = null;
     return roles;
@@ -69,14 +71,17 @@ export function useAdminAccess(): AdminAccessState {
         if (!mounted) return;
 
         setState({
-          isAdmin: Boolean(roles?.includes('admin')),
+          isAdmin: Boolean(roles?.includes("admin")),
           loading: false,
           error: cachedError,
         });
       } catch (err) {
         if (!mounted) return;
 
-        const message = err instanceof Error ? err.message : 'Não foi possível verificar permissões';
+        const message =
+          err instanceof Error
+            ? err.message
+            : "Não foi possível verificar permissões";
         cachedError = message;
         cachedRoles = null;
         setState({

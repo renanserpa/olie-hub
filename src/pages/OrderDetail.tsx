@@ -1,14 +1,27 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
-import { useTinyApi } from '@/hooks/useTinyApi';
-import { ArrowLeft, CreditCard, FileText, Truck, ExternalLink, Loader2 } from 'lucide-react';
-import { toast } from '@/hooks/use-toast';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
+import { useTinyApi } from "@/hooks/useTinyApi";
+import {
+  ArrowLeft,
+  CreditCard,
+  FileText,
+  Truck,
+  ExternalLink,
+  Loader2,
+} from "lucide-react";
+import { toast } from "@/hooks/use-toast";
 
 export default function OrderDetail() {
   const { id } = useParams();
@@ -25,15 +38,19 @@ export default function OrderDetail() {
   const fetchOrder = async () => {
     try {
       const { data, error } = await supabase
-        .from('orders')
-        .select('*, contacts(name, email, phone, address)')
-        .eq('id', id)
+        .from("orders")
+        .select("*, contacts(name, email, phone, address)")
+        .eq("id", id)
         .single();
 
       if (error) throw error;
       setOrder(data);
     } catch (error: any) {
-      toast({ title: 'Erro', description: error.message, variant: 'destructive' });
+      toast({
+        title: "Erro",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setLoading(false);
     }
@@ -50,11 +67,11 @@ export default function OrderDetail() {
           name: order.contacts?.name,
           email: order.contacts?.email,
           phone: order.contacts?.phone,
-        }
+        },
       );
-      toast({ title: 'Sucesso', description: 'Link de pagamento criado!' });
+      toast({ title: "Sucesso", description: "Link de pagamento criado!" });
       await fetchOrder();
-      if (result.checkoutUrl) window.open(result.checkoutUrl, '_blank');
+      if (result.checkoutUrl) window.open(result.checkoutUrl, "_blank");
     } catch (error) {
       // Error handled in hook
     }
@@ -64,7 +81,7 @@ export default function OrderDetail() {
     if (!order) return;
     try {
       const result = await tinyApi.issueNFe(order.id);
-      toast({ title: 'Sucesso', description: 'NFe emitida com sucesso!' });
+      toast({ title: "Sucesso", description: "NFe emitida com sucesso!" });
       await fetchOrder();
     } catch (error) {
       // Error handled in hook
@@ -73,7 +90,11 @@ export default function OrderDetail() {
 
   const handleGetQuotes = async () => {
     if (!order || !order.contacts?.address?.cep) {
-      toast({ title: 'Erro', description: 'CEP do cliente não encontrado', variant: 'destructive' });
+      toast({
+        title: "Erro",
+        description: "CEP do cliente não encontrado",
+        variant: "destructive",
+      });
       return;
     }
     try {
@@ -81,10 +102,13 @@ export default function OrderDetail() {
         order.id,
         order.contacts.address.cep,
         1,
-        order.total
+        order.total,
       );
       setQuotes(result);
-      toast({ title: 'Sucesso', description: `${result.length} opções encontradas` });
+      toast({
+        title: "Sucesso",
+        description: `${result.length} opções encontradas`,
+      });
     } catch (error) {
       // Error handled in hook
     }
@@ -98,11 +122,11 @@ export default function OrderDetail() {
         quote.serviceId,
         quote.carrier,
         quote.service,
-        quote.price
+        quote.price,
       );
-      toast({ title: 'Sucesso', description: 'Etiqueta criada!' });
+      toast({ title: "Sucesso", description: "Etiqueta criada!" });
       await fetchOrder();
-      if (result.labelUrl) window.open(result.labelUrl, '_blank');
+      if (result.labelUrl) window.open(result.labelUrl, "_blank");
     } catch (error) {
       // Error handled in hook
     }
@@ -120,7 +144,7 @@ export default function OrderDetail() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">Pedido não encontrado</p>
-        <Button onClick={() => navigate('/orders')} className="mt-4">
+        <Button onClick={() => navigate("/orders")} className="mt-4">
           Voltar para Pedidos
         </Button>
       </div>
@@ -134,13 +158,13 @@ export default function OrderDetail() {
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
-        <Button variant="ghost" size="icon" onClick={() => navigate('/orders')}>
+        <Button variant="ghost" size="icon" onClick={() => navigate("/orders")}>
           <ArrowLeft className="w-4 h-4" />
         </Button>
         <div>
           <h1 className="text-3xl font-bold">Pedido {order.order_number}</h1>
           <p className="text-muted-foreground">
-            Cliente: {order.contacts?.name || 'N/A'}
+            Cliente: {order.contacts?.name || "N/A"}
           </p>
         </div>
         <Badge className="ml-auto">{order.status}</Badge>
@@ -152,23 +176,29 @@ export default function OrderDetail() {
           <CardTitle>Itens do Pedido</CardTitle>
         </CardHeader>
         <CardContent>
-          {order.items && Array.isArray(order.items) && order.items.length > 0 ? (
+          {order.items &&
+          Array.isArray(order.items) &&
+          order.items.length > 0 ? (
             <div className="space-y-3">
               {order.items.map((item: any, index: number) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="flex items-start justify-between p-4 border rounded-lg hover:bg-muted/50 transition-smooth"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold">{item.product_name || item.name}</p>
+                    <p className="font-semibold">
+                      {item.product_name || item.name}
+                    </p>
                     {item.config_json && (
                       <div className="text-xs text-muted-foreground mt-2 space-y-1">
                         {item.config_json.color && (
                           <div className="flex items-center gap-2">
                             <span>Cor:</span>
-                            <div 
-                              className="w-4 h-4 rounded border" 
-                              style={{ backgroundColor: item.config_json.color }}
+                            <div
+                              className="w-4 h-4 rounded border"
+                              style={{
+                                backgroundColor: item.config_json.color,
+                              }}
                             />
                           </div>
                         )}
@@ -180,12 +210,17 @@ export default function OrderDetail() {
                         )}
                         {item.config_json.width && (
                           <div>
-                            Dimensões: {item.config_json.width}x{item.config_json.height}
-                            {item.config_json.thickness && `x${item.config_json.thickness}`}cm
+                            Dimensões: {item.config_json.width}x
+                            {item.config_json.height}
+                            {item.config_json.thickness &&
+                              `x${item.config_json.thickness}`}
+                            cm
                           </div>
                         )}
                         {item.config_json.notes && (
-                          <div className="italic">Obs: {item.config_json.notes}</div>
+                          <div className="italic">
+                            Obs: {item.config_json.notes}
+                          </div>
                         )}
                       </div>
                     )}
@@ -195,14 +230,17 @@ export default function OrderDetail() {
                       {item.quantity}x R$ {Number(item.unit_price).toFixed(2)}
                     </p>
                     <p className="font-bold">
-                      R$ {Number(item.total || item.quantity * item.unit_price).toFixed(2)}
+                      R${" "}
+                      {Number(
+                        item.total || item.quantity * item.unit_price,
+                      ).toFixed(2)}
                     </p>
                   </div>
                 </div>
               ))}
-              
+
               <Separator className="my-4" />
-              
+
               {/* Totais */}
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
@@ -256,12 +294,19 @@ export default function OrderDetail() {
           <Card>
             <CardHeader>
               <CardTitle>Pagamento</CardTitle>
-              <CardDescription>Gerar e gerenciar link de pagamento via Tiny</CardDescription>
+              <CardDescription>
+                Gerar e gerenciar link de pagamento via Tiny
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!payment && (
-                <Button onClick={handleCreatePaymentLink} disabled={tinyApi.loading}>
-                  {tinyApi.loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                <Button
+                  onClick={handleCreatePaymentLink}
+                  disabled={tinyApi.loading}
+                >
+                  {tinyApi.loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : null}
                   Gerar Link de Pagamento (Tiny)
                 </Button>
               )}
@@ -269,7 +314,11 @@ export default function OrderDetail() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">Status:</span>
-                    <Badge variant={payment.status === 'paid' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        payment.status === "paid" ? "default" : "secondary"
+                      }
+                    >
                       {payment.status}
                     </Badge>
                   </div>
@@ -279,7 +328,11 @@ export default function OrderDetail() {
                   </div>
                   {payment.checkoutUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={payment.checkoutUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={payment.checkoutUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Abrir Link de Pagamento
                       </a>
@@ -304,7 +357,9 @@ export default function OrderDetail() {
             <CardContent className="space-y-4">
               {!fiscal && (
                 <Button onClick={handleIssueNFe} disabled={tinyApi.loading}>
-                  {tinyApi.loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                  {tinyApi.loading ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : null}
                   Emitir NFe (Tiny)
                 </Button>
               )}
@@ -312,7 +367,11 @@ export default function OrderDetail() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <span className="font-medium">Status:</span>
-                    <Badge variant={fiscal.status === 'authorized' ? 'default' : 'secondary'}>
+                    <Badge
+                      variant={
+                        fiscal.status === "authorized" ? "default" : "secondary"
+                      }
+                    >
                       {fiscal.status}
                     </Badge>
                   </div>
@@ -326,7 +385,11 @@ export default function OrderDetail() {
                   </div>
                   {fiscal.pdfUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={fiscal.pdfUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={fiscal.pdfUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         DANFE (PDF)
                       </a>
@@ -334,7 +397,11 @@ export default function OrderDetail() {
                   )}
                   {fiscal.xmlUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={fiscal.xmlUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={fiscal.xmlUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         XML
                       </a>
@@ -350,13 +417,17 @@ export default function OrderDetail() {
           <Card>
             <CardHeader>
               <CardTitle>Frete & Logística</CardTitle>
-              <CardDescription>Cotação, etiqueta e rastreamento via Tiny</CardDescription>
+              <CardDescription>
+                Cotação, etiqueta e rastreamento via Tiny
+              </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               {!logistics && (
                 <>
                   <Button onClick={handleGetQuotes} disabled={tinyApi.loading}>
-                    {tinyApi.loading ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
+                    {tinyApi.loading ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : null}
                     Cotação (Tiny)
                   </Button>
                   {quotes.length > 0 && (
@@ -366,12 +437,18 @@ export default function OrderDetail() {
                         <Card key={i}>
                           <CardContent className="flex items-center justify-between p-4">
                             <div>
-                              <p className="font-medium">{q.carrier} - {q.service}</p>
+                              <p className="font-medium">
+                                {q.carrier} - {q.service}
+                              </p>
                               <p className="text-sm text-muted-foreground">
                                 R$ {q.price.toFixed(2)} • {q.prazoDias} dias
                               </p>
                             </div>
-                            <Button size="sm" onClick={() => handleCreateLabel(q)} disabled={tinyApi.loading}>
+                            <Button
+                              size="sm"
+                              onClick={() => handleCreateLabel(q)}
+                              disabled={tinyApi.loading}
+                            >
                               Gerar Etiqueta
                             </Button>
                           </CardContent>
@@ -397,11 +474,17 @@ export default function OrderDetail() {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="font-medium">Rastreamento:</span>
-                    <span className="font-mono text-sm">{logistics.tracking}</span>
+                    <span className="font-mono text-sm">
+                      {logistics.tracking}
+                    </span>
                   </div>
                   {logistics.labelUrl && (
                     <Button variant="outline" size="sm" asChild>
-                      <a href={logistics.labelUrl} target="_blank" rel="noopener noreferrer">
+                      <a
+                        href={logistics.labelUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         <ExternalLink className="w-4 h-4 mr-2" />
                         Etiqueta (PDF)
                       </a>

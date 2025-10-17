@@ -1,20 +1,20 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Search, Plus, RefreshCw, Package2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { ProductDialog } from '@/components/Inventory/ProductDialog';
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { Search, Plus, RefreshCw, Package2 } from "lucide-react";
+import { toast } from "sonner";
+import { ProductDialog } from "@/components/Inventory/ProductDialog";
 
 export default function Products() {
   const navigate = useNavigate();
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
@@ -24,15 +24,15 @@ export default function Products() {
   async function loadProducts() {
     try {
       const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('name');
+        .from("products")
+        .select("*")
+        .order("name");
 
       if (error) throw error;
       setProducts(data || []);
     } catch (error) {
-      console.error('Error loading products:', error);
-      toast.error('Erro ao carregar produtos');
+      console.error("Error loading products:", error);
+      toast.error("Erro ao carregar produtos");
     } finally {
       setLoading(false);
     }
@@ -41,69 +41,79 @@ export default function Products() {
   async function handleTinySync(dryRun: boolean) {
     setSyncing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
       const supabaseUrl =
         import.meta.env.NEXT_PUBLIC_SUPABASE_URL ||
-        (typeof window !== 'undefined' ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_URL : '');
+        (typeof window !== "undefined"
+          ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_URL
+          : "");
 
       if (!supabaseUrl) {
-        toast.error('Variável NEXT_PUBLIC_SUPABASE_URL não configurada.');
+        toast.error("Variável NEXT_PUBLIC_SUPABASE_URL não configurada.");
         setSyncing(false);
         return;
       }
 
-      const response = await fetch(
-        `${supabaseUrl}/functions/v1/tiny-sync`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${
-              session?.access_token ??
-              import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
-              (typeof window !== 'undefined' ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_ANON_KEY : '') ??
-              ''
-            }`
-          },
-          body: JSON.stringify({
-            entity: 'products',
-            dryRun
-          })
-        }
-      );
+      const response = await fetch(`${supabaseUrl}/functions/v1/tiny-sync`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${
+            session?.access_token ??
+            import.meta.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??
+            (typeof window !== "undefined"
+              ? (window as any).ENV?.NEXT_PUBLIC_SUPABASE_ANON_KEY
+              : "") ??
+            ""
+          }`,
+        },
+        body: JSON.stringify({
+          entity: "products",
+          dryRun,
+        }),
+      });
 
       const result = await response.json();
       if (!result.ok) throw new Error(result.error);
 
       if (dryRun) {
         toast.success(
-          `Pré-visualização: ${result.stats.itemsCreated} novos, ${result.stats.itemsUpdated} atualizações, ${result.stats.itemsSkipped} sem mudanças`
+          `Pré-visualização: ${result.stats.itemsCreated} novos, ${result.stats.itemsUpdated} atualizações, ${result.stats.itemsSkipped} sem mudanças`,
         );
       } else {
         toast.success(
-          `Sincronização concluída: ${result.stats.itemsCreated + result.stats.itemsUpdated} produtos atualizados`
+          `Sincronização concluída: ${result.stats.itemsCreated + result.stats.itemsUpdated} produtos atualizados`,
         );
         loadProducts();
       }
 
-      console.log('[TinySync]', `Calls used: ${result.stats.apiCallsUsed}/${result.stats.maxCalls}`);
+      console.log(
+        "[TinySync]",
+        `Calls used: ${result.stats.apiCallsUsed}/${result.stats.maxCalls}`,
+      );
     } catch (error: unknown) {
-      console.error('Sync error:', error);
-      const message = error instanceof Error ? error.message : 'Erro ao sincronizar';
+      console.error("Sync error:", error);
+      const message =
+        error instanceof Error ? error.message : "Erro ao sincronizar";
       toast.error(message);
     } finally {
       setSyncing(false);
     }
   }
 
-  const filteredProducts = products.filter(p =>
-    p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredProducts = products.filter(
+    (p) =>
+      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">Carregando...</div>
+    );
   }
 
   return (
@@ -111,7 +121,9 @@ export default function Products() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Produtos</h1>
-          <p className="text-muted-foreground mt-1">Gestão de produtos e catálogo</p>
+          <p className="text-muted-foreground mt-1">
+            Gestão de produtos e catálogo
+          </p>
         </div>
         <div className="flex gap-2">
           <Button
@@ -119,14 +131,15 @@ export default function Products() {
             onClick={() => handleTinySync(true)}
             disabled={syncing}
           >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
             Sync (Pré-visualização)
           </Button>
-          <Button
-            onClick={() => handleTinySync(false)}
-            disabled={syncing}
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${syncing ? 'animate-spin' : ''}`} />
+          <Button onClick={() => handleTinySync(false)} disabled={syncing}>
+            <RefreshCw
+              className={`w-4 h-4 mr-2 ${syncing ? "animate-spin" : ""}`}
+            />
             Sync (Aplicar)
           </Button>
           <Button onClick={() => setDialogOpen(true)}>
@@ -149,9 +162,9 @@ export default function Products() {
 
       {/* Product Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.map(product => (
-          <Card 
-            key={product.id} 
+        {filteredProducts.map((product) => (
+          <Card
+            key={product.id}
             className="p-4 hover:shadow-lg transition-shadow cursor-pointer"
             onClick={() => navigate(`/products/${product.id}`)}
           >
@@ -171,9 +184,11 @@ export default function Products() {
               <div className="flex-1 min-w-0">
                 <h3 className="font-semibold truncate">{product.name}</h3>
                 {product.sku && (
-                  <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
+                  <p className="text-sm text-muted-foreground">
+                    SKU: {product.sku}
+                  </p>
                 )}
-                
+
                 <div className="flex items-center gap-2 mt-2">
                   {product.tiny_product_id && (
                     <Badge variant="outline" className="text-xs">
@@ -199,7 +214,8 @@ export default function Products() {
 
                 {product.tiny_synced_at && (
                   <p className="text-xs text-muted-foreground mt-1">
-                    Sync: {new Date(product.tiny_synced_at).toLocaleDateString()}
+                    Sync:{" "}
+                    {new Date(product.tiny_synced_at).toLocaleDateString()}
                   </p>
                 )}
               </div>

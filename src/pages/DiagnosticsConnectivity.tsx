@@ -1,12 +1,12 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, RefreshCw, ShieldCheck } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
-import { humanize } from '@/lib/supabase/errors';
-import { runtimeEnv } from '@/lib/runtime/env';
+import { useEffect, useMemo, useState } from "react";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import { Loader2, RefreshCw, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { humanize } from "@/lib/supabase/errors";
+import { runtimeEnv } from "@/lib/runtime/env";
 
 type JsonRecord = Record<string, unknown>;
 
@@ -45,10 +45,10 @@ interface DiagnosticsState {
 const initialState: DiagnosticsState = {
   loading: true,
   env: {
-    url: '',
-    allowedRef: '',
+    url: "",
+    allowedRef: "",
     debug: false,
-    currentRef: 'desconhecido',
+    currentRef: "desconhecido",
   },
   whoami: { data: null, error: null },
   health: { data: null, error: null },
@@ -59,7 +59,9 @@ const initialState: DiagnosticsState = {
 function readPublicEnv(key: keyof ImportMetaEnv): string | undefined {
   return (
     import.meta.env[key] ??
-    (typeof window !== 'undefined' ? (window as any).ENV?.[key as string] : undefined)
+    (typeof window !== "undefined"
+      ? (window as any).ENV?.[key as string]
+      : undefined)
   );
 }
 
@@ -68,14 +70,16 @@ export default function DiagnosticsConnectivity() {
   const [refreshToken, setRefreshToken] = useState(0);
 
   const envInfo = useMemo(() => {
-    const url = readPublicEnv('NEXT_PUBLIC_SUPABASE_URL') ?? runtimeEnv.supabaseUrl;
+    const url =
+      readPublicEnv("NEXT_PUBLIC_SUPABASE_URL") ?? runtimeEnv.supabaseUrl;
     const allowedRef =
-      readPublicEnv('NEXT_PUBLIC_SUPABASE_ALLOWED_REF') ?? runtimeEnv.allowedRef;
-    const debugFlag = readPublicEnv('NEXT_PUBLIC_DEBUG_SUPABASE') === 'true';
+      readPublicEnv("NEXT_PUBLIC_SUPABASE_ALLOWED_REF") ??
+      runtimeEnv.allowedRef;
+    const debugFlag = readPublicEnv("NEXT_PUBLIC_DEBUG_SUPABASE") === "true";
 
     return {
-      url: url || 'Não configurado',
-      allowedRef: allowedRef || 'Não definido',
+      url: url || "Não configurado",
+      allowedRef: allowedRef || "Não definido",
       currentRef: runtimeEnv.supabaseRef,
       debug: debugFlag,
     };
@@ -88,10 +92,16 @@ export default function DiagnosticsConnectivity() {
       setState((prev) => ({ ...prev, loading: true }));
 
       const [whoami, health, palettes, textures] = await Promise.all([
-        supabase.rpc('whoami' as any),
-        supabase.rpc('health_probe' as any),
-        supabase.from('config_color_palettes' as any).select('*').limit(5),
-        supabase.from('config_fabric_textures' as any).select('*').limit(5),
+        supabase.rpc("whoami" as any),
+        supabase.rpc("health_probe" as any),
+        supabase
+          .from("config_color_palettes" as any)
+          .select("*")
+          .limit(5),
+        supabase
+          .from("config_fabric_textures" as any)
+          .select("*")
+          .limit(5),
       ]);
 
       if (!active) return;
@@ -127,7 +137,11 @@ export default function DiagnosticsConnectivity() {
 
   const renderRowsPreview = (rows: JsonRecord[]) => {
     if (!rows || rows.length === 0) {
-      return <p className="text-sm text-muted-foreground">Nenhum registro retornado.</p>;
+      return (
+        <p className="text-sm text-muted-foreground">
+          Nenhum registro retornado.
+        </p>
+      );
     }
 
     return (
@@ -151,7 +165,8 @@ export default function DiagnosticsConnectivity() {
             Diagnóstico de Conectividade
           </h1>
           <p className="text-muted-foreground">
-            Verifique variáveis de ambiente, permissões e disponibilidade de tabelas no Supabase.
+            Verifique variáveis de ambiente, permissões e disponibilidade de
+            tabelas no Supabase.
           </p>
         </div>
         <Button
@@ -171,7 +186,13 @@ export default function DiagnosticsConnectivity() {
       <Card className="p-6 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-xl font-semibold">Ambiente</h2>
-          <Badge variant={state.env.allowedRef === state.env.currentRef ? 'secondary' : 'destructive'}>
+          <Badge
+            variant={
+              state.env.allowedRef === state.env.currentRef
+                ? "secondary"
+                : "destructive"
+            }
+          >
             ref atual: {state.env.currentRef}
           </Badge>
         </div>
@@ -180,10 +201,11 @@ export default function DiagnosticsConnectivity() {
             <span className="font-medium">Supabase URL:</span> {state.env.url}
           </div>
           <div>
-            <span className="font-medium">Projeto esperado:</span> {state.env.allowedRef}
+            <span className="font-medium">Projeto esperado:</span>{" "}
+            {state.env.allowedRef}
           </div>
           <div>
-            <span className="font-medium">Debug Supabase:</span>{' '}
+            <span className="font-medium">Debug Supabase:</span>{" "}
             {state.env.debug ? (
               <Badge variant="outline" className="text-amber-600">
                 ativo
@@ -202,11 +224,14 @@ export default function DiagnosticsConnectivity() {
         ) : (
           <div className="space-y-2 text-sm">
             <div>
-              <span className="font-medium">User ID:</span> {state.whoami.data?.user_id ?? 'desconhecido'}
+              <span className="font-medium">User ID:</span>{" "}
+              {state.whoami.data?.user_id ?? "desconhecido"}
             </div>
             <div>
-              <span className="font-medium">Roles:</span>{' '}
-              {Array.isArray(roles) && roles.length > 0 ? roles.join(', ') : 'nenhum papel retornado'}
+              <span className="font-medium">Roles:</span>{" "}
+              {Array.isArray(roles) && roles.length > 0
+                ? roles.join(", ")
+                : "nenhum papel retornado"}
             </div>
           </div>
         )}
@@ -232,7 +257,9 @@ export default function DiagnosticsConnectivity() {
               {state.palettes.error ? (
                 <Badge variant="destructive">erro</Badge>
               ) : (
-                <Badge variant="secondary">{state.palettes.rows.length} linhas</Badge>
+                <Badge variant="secondary">
+                  {state.palettes.rows.length} linhas
+                </Badge>
               )}
             </div>
             {renderError(state.palettes.error)}
@@ -247,7 +274,9 @@ export default function DiagnosticsConnectivity() {
               {state.textures.error ? (
                 <Badge variant="destructive">erro</Badge>
               ) : (
-                <Badge variant="secondary">{state.textures.rows.length} linhas</Badge>
+                <Badge variant="secondary">
+                  {state.textures.rows.length} linhas
+                </Badge>
               )}
             </div>
             {renderError(state.textures.error)}

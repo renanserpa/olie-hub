@@ -1,17 +1,29 @@
-import { useState, useEffect } from 'react';
-import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Badge } from '@/components/ui/badge';
-import { Switch } from '@/components/ui/switch';
-import { Plus, Edit, Trash2, Lock } from 'lucide-react';
-import { toast } from 'sonner';
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Switch } from "@/components/ui/switch";
+import { Plus, Edit, Trash2, Lock } from "lucide-react";
+import { toast } from "sonner";
 
 interface StatusManagerProps {
-  type: 'order' | 'production' | 'shipping';
+  type: "order" | "production" | "shipping";
 }
 
 interface Status {
@@ -31,32 +43,32 @@ export function StatusManager({ type }: StatusManagerProps) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingStatus, setEditingStatus] = useState<Status | null>(null);
   const [formData, setFormData] = useState({
-    name: '',
-    label: '',
-    color: 'bg-gray-500',
-    icon: '',
+    name: "",
+    label: "",
+    color: "bg-gray-500",
+    icon: "",
     sort_order: 0,
     is_active: true,
   });
 
   const tableName = `${type}_statuses`;
   const typeLabel = {
-    order: 'Pedidos',
-    production: 'Produção',
-    shipping: 'Entregas',
+    order: "Pedidos",
+    production: "Produção",
+    shipping: "Entregas",
   }[type];
 
   const colorOptions = [
-    { name: 'Cinza', value: 'bg-gray-500' },
-    { name: 'Vermelho', value: 'bg-red-500' },
-    { name: 'Laranja', value: 'bg-orange-500' },
-    { name: 'Amarelo', value: 'bg-yellow-500' },
-    { name: 'Verde', value: 'bg-green-500' },
-    { name: 'Azul', value: 'bg-blue-500' },
-    { name: 'Roxo', value: 'bg-purple-500' },
-    { name: 'Rosa', value: 'bg-pink-500' },
-    { name: 'Indigo', value: 'bg-indigo-500' },
-    { name: 'Teal', value: 'bg-teal-500' },
+    { name: "Cinza", value: "bg-gray-500" },
+    { name: "Vermelho", value: "bg-red-500" },
+    { name: "Laranja", value: "bg-orange-500" },
+    { name: "Amarelo", value: "bg-yellow-500" },
+    { name: "Verde", value: "bg-green-500" },
+    { name: "Azul", value: "bg-blue-500" },
+    { name: "Roxo", value: "bg-purple-500" },
+    { name: "Rosa", value: "bg-pink-500" },
+    { name: "Indigo", value: "bg-indigo-500" },
+    { name: "Teal", value: "bg-teal-500" },
   ];
 
   useEffect(() => {
@@ -67,14 +79,14 @@ export function StatusManager({ type }: StatusManagerProps) {
     try {
       const { data, error } = await supabase
         .from(tableName as any)
-        .select('*')
-        .order('sort_order');
+        .select("*")
+        .order("sort_order");
 
       if (error) throw error;
       setStatuses((data as unknown as Status[]) || []);
     } catch (error: any) {
-      console.error('Error loading statuses:', error);
-      toast.error('Erro ao carregar status');
+      console.error("Error loading statuses:", error);
+      toast.error("Erro ao carregar status");
     } finally {
       setLoading(false);
     }
@@ -83,10 +95,10 @@ export function StatusManager({ type }: StatusManagerProps) {
   function handleNew() {
     setEditingStatus(null);
     setFormData({
-      name: '',
-      label: '',
-      color: 'bg-gray-500',
-      icon: '',
+      name: "",
+      label: "",
+      color: "bg-gray-500",
+      icon: "",
       sort_order: statuses.length,
       is_active: true,
     });
@@ -99,7 +111,7 @@ export function StatusManager({ type }: StatusManagerProps) {
       name: status.name,
       label: status.label,
       color: status.color,
-      icon: status.icon || '',
+      icon: status.icon || "",
       sort_order: status.sort_order,
       is_active: status.is_active,
     });
@@ -108,7 +120,7 @@ export function StatusManager({ type }: StatusManagerProps) {
 
   async function handleSave() {
     if (!formData.name || !formData.label) {
-      toast.error('Preencha todos os campos obrigatórios');
+      toast.error("Preencha todos os campos obrigatórios");
       return;
     }
 
@@ -124,43 +136,43 @@ export function StatusManager({ type }: StatusManagerProps) {
             sort_order: formData.sort_order,
             is_active: formData.is_active,
           })
-          .eq('id', editingStatus.id);
+          .eq("id", editingStatus.id);
 
         if (error) throw error;
-        toast.success('Status atualizado com sucesso');
+        toast.success("Status atualizado com sucesso");
       } else {
         // Criar
-        const { error } = await supabase
-          .from(tableName as any)
-          .insert([{
-            name: formData.name.toLowerCase().replace(/\s+/g, '_'),
+        const { error } = await supabase.from(tableName as any).insert([
+          {
+            name: formData.name.toLowerCase().replace(/\s+/g, "_"),
             label: formData.label,
             color: formData.color,
             icon: formData.icon || null,
             sort_order: formData.sort_order,
             is_active: formData.is_active,
             is_system: false,
-          }]);
+          },
+        ]);
 
         if (error) throw error;
-        toast.success('Status criado com sucesso');
+        toast.success("Status criado com sucesso");
       }
 
       loadStatuses();
       setDialogOpen(false);
     } catch (error: any) {
-      console.error('Error saving status:', error);
+      console.error("Error saving status:", error);
       toast.error(error.message);
     }
   }
 
   async function handleDelete(id: string, isSystem: boolean) {
     if (isSystem) {
-      toast.error('Status do sistema não podem ser deletados');
+      toast.error("Status do sistema não podem ser deletados");
       return;
     }
 
-    if (!confirm('Tem certeza que deseja deletar este status?')) {
+    if (!confirm("Tem certeza que deseja deletar este status?")) {
       return;
     }
 
@@ -168,13 +180,13 @@ export function StatusManager({ type }: StatusManagerProps) {
       const { error } = await supabase
         .from(tableName as any)
         .delete()
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
-      toast.success('Status deletado com sucesso');
+      toast.success("Status deletado com sucesso");
       loadStatuses();
     } catch (error: any) {
-      console.error('Error deleting status:', error);
+      console.error("Error deleting status:", error);
       toast.error(error.message);
     }
   }
@@ -184,12 +196,12 @@ export function StatusManager({ type }: StatusManagerProps) {
       const { error } = await supabase
         .from(tableName as any)
         .update({ is_active: !isActive })
-        .eq('id', id);
+        .eq("id", id);
 
       if (error) throw error;
       loadStatuses();
     } catch (error: any) {
-      console.error('Error toggling status:', error);
+      console.error("Error toggling status:", error);
       toast.error(error.message);
     }
   }
@@ -226,7 +238,9 @@ export function StatusManager({ type }: StatusManagerProps) {
                   <div className={`w-3 h-3 rounded-full ${status.color}`} />
                   <div>
                     <p className="font-medium">{status.label}</p>
-                    <p className="text-sm text-muted-foreground">{status.name}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {status.name}
+                    </p>
                   </div>
                   {status.is_system && (
                     <Badge variant="outline" className="gap-1">
@@ -241,7 +255,9 @@ export function StatusManager({ type }: StatusManagerProps) {
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={status.is_active}
-                    onCheckedChange={() => handleToggleActive(status.id, status.is_active)}
+                    onCheckedChange={() =>
+                      handleToggleActive(status.id, status.is_active)
+                    }
                   />
                   <Button
                     variant="ghost"
@@ -270,7 +286,7 @@ export function StatusManager({ type }: StatusManagerProps) {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingStatus ? 'Editar Status' : 'Novo Status'}
+              {editingStatus ? "Editar Status" : "Novo Status"}
             </DialogTitle>
           </DialogHeader>
           <div className="space-y-4">
@@ -278,7 +294,9 @@ export function StatusManager({ type }: StatusManagerProps) {
               <Label>Identificador *</Label>
               <Input
                 value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="ex: em_analise"
                 disabled={!!editingStatus}
               />
@@ -290,7 +308,9 @@ export function StatusManager({ type }: StatusManagerProps) {
               <Label>Nome de Exibição *</Label>
               <Input
                 value={formData.label}
-                onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, label: e.target.value })
+                }
                 placeholder="ex: Em Análise"
               />
             </div>
@@ -301,9 +321,13 @@ export function StatusManager({ type }: StatusManagerProps) {
                   <button
                     key={color.value}
                     type="button"
-                    onClick={() => setFormData({ ...formData, color: color.value })}
+                    onClick={() =>
+                      setFormData({ ...formData, color: color.value })
+                    }
                     className={`h-10 rounded border-2 transition-all ${color.value} ${
-                      formData.color === color.value ? 'ring-2 ring-primary scale-110' : ''
+                      formData.color === color.value
+                        ? "ring-2 ring-primary scale-110"
+                        : ""
                     }`}
                     title={color.name}
                   />
@@ -315,14 +339,21 @@ export function StatusManager({ type }: StatusManagerProps) {
               <Input
                 type="number"
                 value={formData.sort_order}
-                onChange={(e) => setFormData({ ...formData, sort_order: parseInt(e.target.value) || 0 })}
+                onChange={(e) =>
+                  setFormData({
+                    ...formData,
+                    sort_order: parseInt(e.target.value) || 0,
+                  })
+                }
               />
             </div>
             <div className="flex items-center justify-between">
               <Label>Ativo</Label>
               <Switch
                 checked={formData.is_active}
-                onCheckedChange={(checked) => setFormData({ ...formData, is_active: checked })}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, is_active: checked })
+                }
               />
             </div>
           </div>
@@ -330,9 +361,7 @@ export function StatusManager({ type }: StatusManagerProps) {
             <Button variant="outline" onClick={() => setDialogOpen(false)}>
               Cancelar
             </Button>
-            <Button onClick={handleSave}>
-              Salvar
-            </Button>
+            <Button onClick={handleSave}>Salvar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

@@ -1,12 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ContactDialog } from '@/components/Contacts/ContactDialog';
-import { 
+import React, { useState, useEffect } from "react";
+import { useParams, Link, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ContactDialog } from "@/components/Contacts/ContactDialog";
+import {
   ArrowLeft,
   Edit,
   Mail,
@@ -18,13 +18,21 @@ import {
   ShoppingBag,
   DollarSign,
   Package,
-  TrendingUp
-} from 'lucide-react';
-import { Skeleton } from '@/components/ui/skeleton';
-import { toast } from '@/hooks/use-toast';
-import { format } from 'date-fns';
-import { ptBR } from 'date-fns/locale';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+  TrendingUp,
+} from "lucide-react";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "@/hooks/use-toast";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import {
+  AreaChart,
+  Area,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
 
 interface Contact {
   id: string;
@@ -68,9 +76,9 @@ export default function ContactDetail() {
     try {
       // Fetch contact
       const { data: contactData, error: contactError } = await supabase
-        .from('contacts')
-        .select('*')
-        .eq('id', id)
+        .from("contacts")
+        .select("*")
+        .eq("id", id)
         .single();
 
       if (contactError) throw contactError;
@@ -78,19 +86,19 @@ export default function ContactDetail() {
 
       // Fetch orders
       const { data: ordersData, error: ordersError } = await supabase
-        .from('orders')
-        .select('*')
-        .eq('contact_id', id)
-        .order('created_at', { ascending: false });
+        .from("orders")
+        .select("*")
+        .eq("contact_id", id)
+        .order("created_at", { ascending: false });
 
       if (ordersError) throw ordersError;
       setOrders(ordersData || []);
     } catch (error: any) {
-      console.error('Error fetching contact data:', error);
-      toast({ 
-        title: 'Erro ao carregar dados', 
+      console.error("Error fetching contact data:", error);
+      toast({
+        title: "Erro ao carregar dados",
         description: error.message,
-        variant: 'destructive' 
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
@@ -99,26 +107,41 @@ export default function ContactDetail() {
 
   const metrics = {
     totalOrders: orders.length,
-    totalSpent: orders.reduce((sum, o) => sum + parseFloat(o.total.toString()), 0),
-    avgTicket: orders.length > 0 
-      ? orders.reduce((sum, o) => sum + parseFloat(o.total.toString()), 0) / orders.length 
-      : 0,
+    totalSpent: orders.reduce(
+      (sum, o) => sum + parseFloat(o.total.toString()),
+      0,
+    ),
+    avgTicket:
+      orders.length > 0
+        ? orders.reduce((sum, o) => sum + parseFloat(o.total.toString()), 0) /
+          orders.length
+        : 0,
     lastOrder: orders[0],
-    daysSinceLastOrder: orders[0] 
-      ? Math.floor((Date.now() - new Date(orders[0].created_at).getTime()) / (1000 * 60 * 60 * 24))
-      : null
+    daysSinceLastOrder: orders[0]
+      ? Math.floor(
+          (Date.now() - new Date(orders[0].created_at).getTime()) /
+            (1000 * 60 * 60 * 24),
+        )
+      : null,
   };
 
   // Top products
-  const productCounts = new Map<string, { count: number, total: number, name: string }>();
-  orders.forEach(order => {
+  const productCounts = new Map<
+    string,
+    { count: number; total: number; name: string }
+  >();
+  orders.forEach((order) => {
     const items = order.items as any[];
-    items?.forEach(item => {
-      const current = productCounts.get(item.product_id) || { count: 0, total: 0, name: item.name };
+    items?.forEach((item) => {
+      const current = productCounts.get(item.product_id) || {
+        count: 0,
+        total: 0,
+        name: item.name,
+      };
       productCounts.set(item.product_id, {
         count: current.count + (item.quantity || 0),
         total: current.total + 1,
-        name: item.name
+        name: item.name,
       });
     });
   });
@@ -128,9 +151,14 @@ export default function ContactDetail() {
 
   // Monthly data for chart
   const monthlyDataMap = new Map<string, number>();
-  orders.forEach(order => {
-    const month = format(new Date(order.created_at), 'MMM/yy', { locale: ptBR });
-    monthlyDataMap.set(month, (monthlyDataMap.get(month) || 0) + parseFloat(order.total.toString()));
+  orders.forEach((order) => {
+    const month = format(new Date(order.created_at), "MMM/yy", {
+      locale: ptBR,
+    });
+    monthlyDataMap.set(
+      month,
+      (monthlyDataMap.get(month) || 0) + parseFloat(order.total.toString()),
+    );
   });
   const monthlyData = Array.from(monthlyDataMap.entries())
     .map(([month, total]) => ({ month, total }))
@@ -139,31 +167,36 @@ export default function ContactDetail() {
     .reverse();
 
   const getInitials = (name: string) => {
-    return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
   };
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-      pending_payment: 'bg-yellow-500',
-      paid: 'bg-green-500',
-      in_production: 'bg-blue-500',
-      ready_to_ship: 'bg-purple-500',
-      shipped: 'bg-indigo-500',
-      delivered: 'bg-emerald-500',
-      cancelled: 'bg-red-500'
+      pending_payment: "bg-yellow-500",
+      paid: "bg-green-500",
+      in_production: "bg-blue-500",
+      ready_to_ship: "bg-purple-500",
+      shipped: "bg-indigo-500",
+      delivered: "bg-emerald-500",
+      cancelled: "bg-red-500",
     };
-    return colors[status] || 'bg-gray-500';
+    return colors[status] || "bg-gray-500";
   };
 
   const getStatusLabel = (status: string) => {
     const labels: Record<string, string> = {
-      pending_payment: 'Aguardando Pagamento',
-      paid: 'Pago',
-      in_production: 'Em Produção',
-      ready_to_ship: 'Pronto para Envio',
-      shipped: 'Enviado',
-      delivered: 'Entregue',
-      cancelled: 'Cancelado'
+      pending_payment: "Aguardando Pagamento",
+      paid: "Pago",
+      in_production: "Em Produção",
+      ready_to_ship: "Pronto para Envio",
+      shipped: "Enviado",
+      delivered: "Entregue",
+      cancelled: "Cancelado",
     };
     return labels[status] || status;
   };
@@ -173,7 +206,7 @@ export default function ContactDetail() {
       <div className="space-y-6">
         <Skeleton className="h-8 w-64" />
         <div className="grid grid-cols-4 gap-4">
-          {[1, 2, 3, 4].map(i => (
+          {[1, 2, 3, 4].map((i) => (
             <Skeleton key={i} className="h-32" />
           ))}
         </div>
@@ -186,7 +219,7 @@ export default function ContactDetail() {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground mb-4">Contato não encontrado</p>
-        <Button onClick={() => navigate('/contacts')}>
+        <Button onClick={() => navigate("/contacts")}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Voltar para Contatos
         </Button>
@@ -199,7 +232,11 @@ export default function ContactDetail() {
       {/* Header */}
       <div className="flex items-start justify-between">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="sm" onClick={() => navigate('/contacts')}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate("/contacts")}
+          >
             <ArrowLeft className="w-4 h-4" />
           </Button>
           <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold text-xl">
@@ -209,7 +246,7 @@ export default function ContactDetail() {
             <h1 className="text-3xl font-bold">{contact.name}</h1>
             <div className="flex items-center gap-4 mt-2">
               {contact.email && (
-                <a 
+                <a
                   href={`mailto:${contact.email}`}
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth"
                 >
@@ -218,8 +255,8 @@ export default function ContactDetail() {
                 </a>
               )}
               {contact.whatsapp && (
-                <a 
-                  href={`https://wa.me/55${contact.whatsapp.replace(/\D/g, '')}`}
+                <a
+                  href={`https://wa.me/55${contact.whatsapp.replace(/\D/g, "")}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth"
@@ -229,14 +266,13 @@ export default function ContactDetail() {
                 </a>
               )}
               {contact.instagram && (
-                <a 
+                <a
                   href={`https://instagram.com/${contact.instagram}`}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-smooth"
                 >
-                  <Instagram className="w-4 h-4" />
-                  @{contact.instagram}
+                  <Instagram className="w-4 h-4" />@{contact.instagram}
                 </a>
               )}
             </div>
@@ -269,7 +305,9 @@ export default function ContactDetail() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Valor Total</p>
-              <p className="text-2xl font-bold">R$ {metrics.totalSpent.toFixed(2)}</p>
+              <p className="text-2xl font-bold">
+                R$ {metrics.totalSpent.toFixed(2)}
+              </p>
             </div>
           </div>
         </Card>
@@ -281,7 +319,9 @@ export default function ContactDetail() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground">Ticket Médio</p>
-              <p className="text-2xl font-bold">R$ {metrics.avgTicket.toFixed(2)}</p>
+              <p className="text-2xl font-bold">
+                R$ {metrics.avgTicket.toFixed(2)}
+              </p>
             </div>
           </div>
         </Card>
@@ -294,9 +334,9 @@ export default function ContactDetail() {
             <div>
               <p className="text-sm text-muted-foreground">Última Compra</p>
               <p className="text-2xl font-bold">
-                {metrics.daysSinceLastOrder !== null 
-                  ? `${metrics.daysSinceLastOrder}d` 
-                  : 'Nunca'}
+                {metrics.daysSinceLastOrder !== null
+                  ? `${metrics.daysSinceLastOrder}d`
+                  : "Nunca"}
               </p>
             </div>
           </div>
@@ -321,7 +361,9 @@ export default function ContactDetail() {
                   <div className="flex items-center gap-2">
                     <Calendar className="w-4 h-4 text-muted-foreground" />
                     <span className="text-muted-foreground">Nascimento:</span>
-                    <span>{format(new Date(contact.birthdate), 'dd/MM/yyyy')}</span>
+                    <span>
+                      {format(new Date(contact.birthdate), "dd/MM/yyyy")}
+                    </span>
                   </div>
                 )}
                 {contact.cpf_cnpj && (
@@ -346,11 +388,19 @@ export default function ContactDetail() {
                   Endereço
                 </h3>
                 <div className="text-sm space-y-1">
-                  <p>{contact.address.logradouro}, {contact.address.numero}</p>
-                  {contact.address.complemento && <p>{contact.address.complemento}</p>}
+                  <p>
+                    {contact.address.logradouro}, {contact.address.numero}
+                  </p>
+                  {contact.address.complemento && (
+                    <p>{contact.address.complemento}</p>
+                  )}
                   <p>{contact.address.bairro}</p>
-                  <p>{contact.address.cidade} - {contact.address.estado}</p>
-                  <p className="text-muted-foreground">CEP: {contact.address.cep}</p>
+                  <p>
+                    {contact.address.cidade} - {contact.address.estado}
+                  </p>
+                  <p className="text-muted-foreground">
+                    CEP: {contact.address.cep}
+                  </p>
                 </div>
               </Card>
             )}
@@ -362,22 +412,25 @@ export default function ContactDetail() {
               <h3 className="font-semibold mb-4">Pedidos por Mês</h3>
               <ResponsiveContainer width="100%" height={300}>
                 <AreaChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    className="stroke-muted"
+                  />
                   <XAxis dataKey="month" className="text-xs" />
                   <YAxis className="text-xs" />
-                  <Tooltip 
+                  <Tooltip
                     formatter={(value: any) => `R$ ${Number(value).toFixed(2)}`}
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--card))',
-                      border: '1px solid hsl(var(--border))',
-                      borderRadius: '8px'
+                    contentStyle={{
+                      backgroundColor: "hsl(var(--card))",
+                      border: "1px solid hsl(var(--border))",
+                      borderRadius: "8px",
                     }}
                   />
-                  <Area 
-                    type="monotone" 
-                    dataKey="total" 
-                    stroke="hsl(var(--primary))" 
-                    fill="hsl(var(--primary))" 
+                  <Area
+                    type="monotone"
+                    dataKey="total"
+                    stroke="hsl(var(--primary))"
+                    fill="hsl(var(--primary))"
                     fillOpacity={0.2}
                   />
                 </AreaChart>
@@ -401,19 +454,22 @@ export default function ContactDetail() {
             </Card>
           ) : (
             <div className="space-y-4">
-              {orders.map(order => (
+              {orders.map((order) => (
                 <Card key={order.id} className="p-6">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div>
-                        <Link 
+                        <Link
                           to={`/orders/${order.id}`}
                           className="font-semibold hover:text-primary transition-smooth"
                         >
                           {order.order_number}
                         </Link>
                         <p className="text-sm text-muted-foreground">
-                          {format(new Date(order.created_at), 'dd/MM/yyyy HH:mm')}
+                          {format(
+                            new Date(order.created_at),
+                            "dd/MM/yyyy HH:mm",
+                          )}
                         </p>
                       </div>
                       <Badge className={getStatusColor(order.status)}>
@@ -421,9 +477,12 @@ export default function ContactDetail() {
                       </Badge>
                     </div>
                     <div className="text-right">
-                      <p className="font-bold">R$ {parseFloat(order.total.toString()).toFixed(2)}</p>
+                      <p className="font-bold">
+                        R$ {parseFloat(order.total.toString()).toFixed(2)}
+                      </p>
                       <p className="text-sm text-muted-foreground">
-                        {order.items?.length || 0} {order.items?.length === 1 ? 'item' : 'itens'}
+                        {order.items?.length || 0}{" "}
+                        {order.items?.length === 1 ? "item" : "itens"}
                       </p>
                     </div>
                   </div>
@@ -437,7 +496,9 @@ export default function ContactDetail() {
           {topProducts.length === 0 ? (
             <Card className="p-12 text-center">
               <Package className="w-12 h-12 mx-auto text-muted-foreground mb-4" />
-              <p className="text-muted-foreground">Nenhum produto comprado ainda</p>
+              <p className="text-muted-foreground">
+                Nenhum produto comprado ainda
+              </p>
             </Card>
           ) : (
             <div className="grid gap-4">
@@ -447,7 +508,8 @@ export default function ContactDetail() {
                     <div>
                       <p className="font-semibold">{data.name}</p>
                       <p className="text-sm text-muted-foreground">
-                        Comprado {data.total} {data.total === 1 ? 'vez' : 'vezes'}
+                        Comprado {data.total}{" "}
+                        {data.total === 1 ? "vez" : "vezes"}
                       </p>
                     </div>
                     <div className="text-right">

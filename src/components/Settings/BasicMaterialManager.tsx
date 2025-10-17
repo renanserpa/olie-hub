@@ -1,21 +1,51 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Plus, Edit2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { listConfigs, createConfig, updateConfig } from '@/lib/supabase/configs';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Plus, Edit2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  listConfigs,
+  createConfig,
+  updateConfig,
+} from "@/lib/supabase/configs";
 import {
   codigoSchema,
   jsonMetadataStringSchema,
@@ -24,18 +54,18 @@ import {
   parseJsonOrNull,
   stringifyJson,
   toNullableString,
-} from '@/lib/zod/configs';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+} from "@/lib/zod/configs";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
-const MATERIAL_UNITS = ['pc', 'm', 'cm', 'mm', 'g', 'kg', 'ml', 'l'] as const;
+const MATERIAL_UNITS = ["pc", "m", "cm", "mm", "g", "kg", "ml", "l"] as const;
 
 type MaterialUnit = (typeof MATERIAL_UNITS)[number];
 
-type StatusFilter = 'all' | 'active' | 'inactive';
+type StatusFilter = "all" | "active" | "inactive";
 
-type UnitFilter = 'all' | MaterialUnit;
+type UnitFilter = "all" | MaterialUnit;
 
-type GroupFilter = 'all' | string;
+type GroupFilter = "all" | string;
 
 interface SupplyGroupOption {
   id: string;
@@ -57,14 +87,14 @@ interface BasicMaterial {
 
 const formSchema = z.object({
   name: z
-    .string({ required_error: 'Nome é obrigatório' })
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(180, 'Nome muito longo'),
+    .string({ required_error: "Nome é obrigatório" })
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(180, "Nome muito longo"),
   codigo: codigoSchema,
-  unit: z.enum(MATERIAL_UNITS, { required_error: 'Unidade é obrigatória' }),
+  unit: z.enum(MATERIAL_UNITS, { required_error: "Unidade é obrigatória" }),
   default_cost: optionalNumberSchema.refine(
     (value) => value === undefined || value >= 0,
-    { message: 'Informe um valor maior ou igual a zero' },
+    { message: "Informe um valor maior ou igual a zero" },
   ),
   metadata: jsonMetadataStringSchema,
   supply_group_id: nullableTextSchema,
@@ -80,10 +110,10 @@ export function BasicMaterialManager() {
   const [materials, setMaterials] = useState<BasicMaterial[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [unitFilter, setUnitFilter] = useState<UnitFilter>('all');
-  const [groupFilter, setGroupFilter] = useState<GroupFilter>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [unitFilter, setUnitFilter] = useState<UnitFilter>("all");
+  const [groupFilter, setGroupFilter] = useState<GroupFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<BasicMaterial | null>(null);
   const [groups, setGroups] = useState<SupplyGroupOption[]>([]);
@@ -91,9 +121,9 @@ export function BasicMaterialManager() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      codigo: '',
-      unit: 'pc',
+      name: "",
+      codigo: "",
+      unit: "pc",
       default_cost: undefined,
       metadata: undefined,
       supply_group_id: null,
@@ -105,16 +135,20 @@ export function BasicMaterialManager() {
     setLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await listConfigs<BasicMaterial>('config_basic_materials', {
-      search: searchTerm,
-      searchColumns: ['name', 'codigo'],
-      filters: {
-        is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        unit: unitFilter === 'all' ? undefined : unitFilter,
-        supply_group_id: groupFilter === 'all' ? undefined : groupFilter,
+    const { data, error: fetchError } = await listConfigs<BasicMaterial>(
+      "config_basic_materials",
+      {
+        search: searchTerm,
+        searchColumns: ["name", "codigo"],
+        filters: {
+          is_active:
+            statusFilter === "all" ? undefined : statusFilter === "active",
+          unit: unitFilter === "all" ? undefined : unitFilter,
+          supply_group_id: groupFilter === "all" ? undefined : groupFilter,
+        },
+        order: { column: "updated_at", ascending: false },
       },
-      order: { column: 'updated_at', ascending: false },
-    });
+    );
 
     if (fetchError) {
       setError(fetchError);
@@ -132,11 +166,14 @@ export function BasicMaterialManager() {
 
   useEffect(() => {
     async function fetchGroups() {
-      const { data } = await listConfigs<SupplyGroupOption>('config_supply_groups', {
-        filters: { is_active: true },
-        searchColumns: ['name', 'codigo'],
-        order: { column: 'name', ascending: true },
-      });
+      const { data } = await listConfigs<SupplyGroupOption>(
+        "config_supply_groups",
+        {
+          filters: { is_active: true },
+          searchColumns: ["name", "codigo"],
+          order: { column: "name", ascending: true },
+        },
+      );
       setGroups(data);
     }
 
@@ -157,9 +194,9 @@ export function BasicMaterialManager() {
         });
       } else {
         form.reset({
-          name: '',
-          codigo: '',
-          unit: 'pc',
+          name: "",
+          codigo: "",
+          unit: "pc",
           default_cost: undefined,
           metadata: undefined,
           supply_group_id: null,
@@ -171,7 +208,7 @@ export function BasicMaterialManager() {
 
   const handleCreateClick = () => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem criar materiais');
+      toast.error("Apenas administradores podem criar materiais");
       return;
     }
 
@@ -181,7 +218,7 @@ export function BasicMaterialManager() {
 
   const handleEditClick = (material: BasicMaterial) => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem editar materiais');
+      toast.error("Apenas administradores podem editar materiais");
       return;
     }
 
@@ -191,7 +228,7 @@ export function BasicMaterialManager() {
 
   const onSubmit = async (values: FormValues) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar materiais');
+      toast.error("Você não tem permissão para alterar materiais");
       return;
     }
 
@@ -200,23 +237,32 @@ export function BasicMaterialManager() {
       codigo: values.codigo.trim(),
       unit: values.unit,
       default_cost: values.default_cost ?? null,
-      metadata: values.metadata && values.metadata.trim().length > 0
-        ? parseJsonOrNull<Record<string, unknown>>(values.metadata) ?? {}
-        : {},
+      metadata:
+        values.metadata && values.metadata.trim().length > 0
+          ? (parseJsonOrNull<Record<string, unknown>>(values.metadata) ?? {})
+          : {},
       supply_group_id: toNullableString(values.supply_group_id ?? undefined),
       is_active: values.is_active,
     } satisfies Partial<BasicMaterial>;
 
     const action = editing
-      ? await updateConfig<BasicMaterial>('config_basic_materials', editing.id, payload)
-      : await createConfig<BasicMaterial>('config_basic_materials', payload);
+      ? await updateConfig<BasicMaterial>(
+          "config_basic_materials",
+          editing.id,
+          payload,
+        )
+      : await createConfig<BasicMaterial>("config_basic_materials", payload);
 
     if (action.error) {
       toast.error(action.error);
       return;
     }
 
-    toast.success(editing ? 'Material atualizado com sucesso' : 'Material criado com sucesso');
+    toast.success(
+      editing
+        ? "Material atualizado com sucesso"
+        : "Material criado com sucesso",
+    );
     setDialogOpen(false);
     setEditing(null);
     loadMaterials();
@@ -224,39 +270,52 @@ export function BasicMaterialManager() {
 
   const handleToggleActive = async (material: BasicMaterial) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar materiais');
+      toast.error("Você não tem permissão para alterar materiais");
       return;
     }
 
-    if (material.is_active && !confirm('Tem certeza que deseja arquivar este material?')) {
+    if (
+      material.is_active &&
+      !confirm("Tem certeza que deseja arquivar este material?")
+    ) {
       return;
     }
 
-    const { error: toggleError } = await updateConfig<BasicMaterial>('config_basic_materials', material.id, {
-      is_active: !material.is_active,
-    });
+    const { error: toggleError } = await updateConfig<BasicMaterial>(
+      "config_basic_materials",
+      material.id,
+      {
+        is_active: !material.is_active,
+      },
+    );
 
     if (toggleError) {
       toast.error(toggleError);
       return;
     }
 
-    toast.success(material.is_active ? 'Material arquivado' : 'Material reativado');
+    toast.success(
+      material.is_active ? "Material arquivado" : "Material reativado",
+    );
     loadMaterials();
   };
 
   const emptyMessage = useMemo(() => {
     if (searchTerm.trim().length > 0) {
-      return 'Nenhum material encontrado com os filtros atuais';
+      return "Nenhum material encontrado com os filtros atuais";
     }
-    return 'Nenhum material cadastrado ainda';
+    return "Nenhum material cadastrado ainda";
   }, [searchTerm]);
 
-  const currencyFormatter = useMemo(() => new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }), []);
+  const currencyFormatter = useMemo(
+    () =>
+      new Intl.NumberFormat("pt-BR", {
+        style: "currency",
+        currency: "BRL",
+        minimumFractionDigits: 2,
+      }),
+    [],
+  );
 
   return (
     <div className="space-y-4">
@@ -267,16 +326,20 @@ export function BasicMaterialManager() {
             Cadastre matérias-primas e insumos com custos padrão e agrupamentos
           </p>
         </div>
-        <Button onClick={handleCreateClick} disabled={!canEdit || checkingAdmin}>
+        <Button
+          onClick={handleCreateClick}
+          disabled={!canEdit || checkingAdmin}
+        >
           <Plus className="mr-2 h-4 w-4" /> Novo Material
         </Button>
       </div>
 
-      {(!isAdmin && !checkingAdmin) && (
+      {!isAdmin && !checkingAdmin && (
         <Alert variant="default" className="border-dashed">
           <AlertTitle>Acesso de leitura</AlertTitle>
           <AlertDescription>
-            Você não possui permissões de administrador. É possível visualizar os materiais, mas não criar ou editar.
+            Você não possui permissões de administrador. É possível visualizar
+            os materiais, mas não criar ou editar.
           </AlertDescription>
         </Alert>
       )}
@@ -296,7 +359,10 @@ export function BasicMaterialManager() {
           className="md:w-80"
         />
         <div className="flex flex-wrap gap-2">
-          <Select value={unitFilter} onValueChange={(value: UnitFilter) => setUnitFilter(value)}>
+          <Select
+            value={unitFilter}
+            onValueChange={(value: UnitFilter) => setUnitFilter(value)}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Unidade" />
             </SelectTrigger>
@@ -309,7 +375,10 @@ export function BasicMaterialManager() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={groupFilter} onValueChange={(value: GroupFilter) => setGroupFilter(value)}>
+          <Select
+            value={groupFilter}
+            onValueChange={(value: GroupFilter) => setGroupFilter(value)}
+          >
             <SelectTrigger className="w-[200px]">
               <SelectValue placeholder="Grupo" />
             </SelectTrigger>
@@ -322,7 +391,10 @@ export function BasicMaterialManager() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: StatusFilter) => setStatusFilter(value)}
+          >
             <SelectTrigger className="w-[160px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -338,10 +410,13 @@ export function BasicMaterialManager() {
       <Card>
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando materiais...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando
+            materiais...
           </div>
         ) : materials.length === 0 ? (
-          <div className="py-10 text-center text-muted-foreground">{emptyMessage}</div>
+          <div className="py-10 text-center text-muted-foreground">
+            {emptyMessage}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -350,20 +425,28 @@ export function BasicMaterialManager() {
                 <TableHead className="hidden md:table-cell">Código</TableHead>
                 <TableHead>Unidade</TableHead>
                 <TableHead className="hidden md:table-cell">Grupo</TableHead>
-                <TableHead className="hidden md:table-cell">Custo padrão</TableHead>
-                <TableHead className="hidden md:table-cell">Atualizado em</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Custo padrão
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Atualizado em
+                </TableHead>
                 <TableHead className="w-[160px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {materials.map((material) => {
-                const groupName = groups.find((group) => group.id === material.supply_group_id)?.name;
+                const groupName = groups.find(
+                  (group) => group.id === material.supply_group_id,
+                )?.name;
 
                 return (
                   <TableRow key={material.id}>
                     <TableCell>
                       <div className="font-medium">{material.name}</div>
-                      <div className="text-xs text-muted-foreground md:hidden">Código: {material.codigo}</div>
+                      <div className="text-xs text-muted-foreground md:hidden">
+                        Código: {material.codigo}
+                      </div>
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                       {material.codigo}
@@ -374,20 +457,22 @@ export function BasicMaterialManager() {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                      {groupName || '—'}
+                      {groupName || "—"}
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                       {material.default_cost !== null
                         ? currencyFormatter.format(material.default_cost)
-                        : '—'}
+                        : "—"}
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                      {new Date(material.updated_at).toLocaleString('pt-BR')}
+                      {new Date(material.updated_at).toLocaleString("pt-BR")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={material.is_active ? 'default' : 'outline'}>
-                          {material.is_active ? 'Ativo' : 'Arquivado'}
+                        <Badge
+                          variant={material.is_active ? "default" : "outline"}
+                        >
+                          {material.is_active ? "Ativo" : "Arquivado"}
                         </Badge>
                         <Switch
                           checked={material.is_active}
@@ -416,7 +501,9 @@ export function BasicMaterialManager() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar material' : 'Novo material'}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Editar material" : "Novo material"}
+            </DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
@@ -429,7 +516,10 @@ export function BasicMaterialManager() {
                     <FormItem>
                       <FormLabel>Nome *</FormLabel>
                       <FormControl>
-                        <Input placeholder="Ex: Tecido Oxford Azul" {...field} />
+                        <Input
+                          placeholder="Ex: Tecido Oxford Azul"
+                          {...field}
+                        />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -458,7 +548,10 @@ export function BasicMaterialManager() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Unidade *</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione uma unidade" />
@@ -487,10 +580,12 @@ export function BasicMaterialManager() {
                         <Input
                           type="number"
                           step="0.01"
-                          value={field.value ?? ''}
+                          value={field.value ?? ""}
                           onChange={(event) => {
                             const value = event.target.value;
-                            field.onChange(value === '' ? undefined : Number(value));
+                            field.onChange(
+                              value === "" ? undefined : Number(value),
+                            );
                           }}
                         />
                       </FormControl>
@@ -507,8 +602,10 @@ export function BasicMaterialManager() {
                   <FormItem>
                     <FormLabel>Grupo de insumo</FormLabel>
                     <Select
-                      value={field.value ?? 'none'}
-                      onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                      value={field.value ?? "none"}
+                      onValueChange={(value) =>
+                        field.onChange(value === "none" ? null : value)
+                      }
                     >
                       <FormControl>
                         <SelectTrigger>
@@ -538,7 +635,7 @@ export function BasicMaterialManager() {
                     <FormControl>
                       <Textarea
                         placeholder='Ex: {"gramatura": 280, "fornecedor": "Acme"}'
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                         rows={4}
                       />
@@ -556,25 +653,33 @@ export function BasicMaterialManager() {
                     <div>
                       <FormLabel>Ativo</FormLabel>
                       <p className="text-sm text-muted-foreground">
-                        Materiais desativados ficam ocultos para usuários comuns.
+                        Materiais desativados ficam ocultos para usuários
+                        comuns.
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  type="button"
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {editing ? 'Salvar alterações' : 'Criar material'}
+                  {editing ? "Salvar alterações" : "Criar material"}
                 </Button>
               </DialogFooter>
             </form>

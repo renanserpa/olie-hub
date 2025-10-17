@@ -1,14 +1,14 @@
-import { useEffect, useState } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
-import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowLeft, ShoppingCart, Loader2, Upload } from 'lucide-react';
-import { SVGUploader } from '@/components/Configurator/SVGUploader';
-import { SVGColorTester } from '@/components/Configurator/SVGColorTester';
-import { toast } from 'sonner';
+import { useEffect, useState } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ArrowLeft, ShoppingCart, Loader2, Upload } from "lucide-react";
+import { SVGUploader } from "@/components/Configurator/SVGUploader";
+import { SVGColorTester } from "@/components/Configurator/SVGColorTester";
+import { toast } from "sonner";
 
 export default function ProductDetail() {
   const { slug, id } = useParams();
@@ -28,19 +28,21 @@ export default function ProductDetail() {
 
   async function checkAdminRole() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (!user) return;
 
       const { data } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', user.id)
-        .eq('role', 'admin')
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .eq("role", "admin")
         .single();
 
       setIsAdmin(!!data);
     } catch (error) {
-      console.error('Error checking admin role:', error);
+      console.error("Error checking admin role:", error);
     }
   }
 
@@ -51,38 +53,46 @@ export default function ProductDetail() {
   async function loadProduct() {
     try {
       // Detect if we're using ID (UUID) or slug (SKU/slug)
-      const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-      
-      let query = supabase.from('products').select('*').eq('is_active', true);
-      
+      const isUUID =
+        id &&
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          id,
+        );
+
+      let query = supabase.from("products").select("*").eq("is_active", true);
+
       if (isUUID) {
-        query = query.eq('id', id);
+        query = query.eq("id", id);
       } else if (slug) {
-        query = query.eq('sku', slug);
+        query = query.eq("sku", slug);
       } else if (id) {
         // Try slug field if it exists
-        query = query.eq('slug', id);
+        query = query.eq("slug", id);
       }
-      
+
       const { data, error } = await query.maybeSingle();
 
       if (error) throw error;
       if (!data) {
-        toast.error('Produto não encontrado');
-        navigate('/catalog');
+        toast.error("Produto não encontrado");
+        navigate("/catalog");
         return;
       }
       setProduct(data);
     } catch (error) {
-      console.error('Error loading product:', error);
-      toast.error('Produto não encontrado');
-      navigate('/catalog');
+      console.error("Error loading product:", error);
+      toast.error("Produto não encontrado");
+      navigate("/catalog");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleConfigChange(selectedColors: any, preview: string, price: number) {
+  function handleConfigChange(
+    selectedColors: any,
+    preview: string,
+    price: number,
+  ) {
     setConfig(selectedColors);
     setPreviewUrl(preview);
     setTotalPrice(price);
@@ -90,37 +100,40 @@ export default function ProductDetail() {
 
   async function handleAddToCart() {
     if (!product || !config) {
-      toast.error('Configure sua peça antes de adicionar ao carrinho');
+      toast.error("Configure sua peça antes de adicionar ao carrinho");
       return;
     }
 
     setAdding(true);
     try {
-      const { data, error } = await supabase.functions.invoke('sandbox-cart', {
-        method: 'POST',
+      const { data, error } = await supabase.functions.invoke("sandbox-cart", {
+        method: "POST",
         body: {
           productId: product.id,
           quantity,
           configJson: config,
           previewPngDataUrl: previewUrl,
-          priceDelta: totalPrice - basePrice
-        }
+          priceDelta: totalPrice - basePrice,
+        },
       });
-      
-      if (error || !data?.ok) throw new Error(data?.error || 'Erro ao adicionar ao carrinho');
 
-      toast.success('Produto adicionado ao carrinho!');
-      navigate('/cart');
+      if (error || !data?.ok)
+        throw new Error(data?.error || "Erro ao adicionar ao carrinho");
+
+      toast.success("Produto adicionado ao carrinho!");
+      navigate("/cart");
     } catch (error: any) {
-      console.error('Error adding to cart:', error);
-      toast.error(error.message || 'Erro ao adicionar ao carrinho');
+      console.error("Error adding to cart:", error);
+      toast.error(error.message || "Erro ao adicionar ao carrinho");
     } finally {
       setAdding(false);
     }
   }
 
   if (loading) {
-    return <div className="flex items-center justify-center h-64">Carregando...</div>;
+    return (
+      <div className="flex items-center justify-center h-64">Carregando...</div>
+    );
   }
 
   if (!product) {
@@ -132,7 +145,7 @@ export default function ProductDetail() {
 
   return (
     <div className="space-y-6">
-      <Button variant="ghost" onClick={() => navigate('/catalog')}>
+      <Button variant="ghost" onClick={() => navigate("/catalog")}>
         <ArrowLeft className="w-4 h-4 mr-2" />
         Voltar ao catálogo
       </Button>
@@ -181,18 +194,26 @@ export default function ProductDetail() {
 
               <div className="pt-4 border-t">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-sm text-muted-foreground">Preço base:</span>
+                  <span className="text-sm text-muted-foreground">
+                    Preço base:
+                  </span>
                   <span className="text-lg">R$ {basePrice.toFixed(2)}</span>
                 </div>
-                {(finalPrice - basePrice) > 0 && (
+                {finalPrice - basePrice > 0 && (
                   <div className="flex items-baseline gap-2">
-                    <span className="text-sm text-muted-foreground">Personalização:</span>
-                    <span className="text-lg">+ R$ {(finalPrice - basePrice).toFixed(2)}</span>
+                    <span className="text-sm text-muted-foreground">
+                      Personalização:
+                    </span>
+                    <span className="text-lg">
+                      + R$ {(finalPrice - basePrice).toFixed(2)}
+                    </span>
                   </div>
                 )}
                 <div className="flex items-baseline gap-2 mt-2">
                   <span className="text-sm text-muted-foreground">Total:</span>
-                  <span className="text-3xl font-bold">R$ {finalPrice.toFixed(2)}</span>
+                  <span className="text-3xl font-bold">
+                    R$ {finalPrice.toFixed(2)}
+                  </span>
                 </div>
               </div>
 
@@ -203,9 +224,15 @@ export default function ProductDetail() {
                 disabled={adding || !config || product.stock_quantity <= 0}
               >
                 {adding ? (
-                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Adicionando...</>
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />{" "}
+                    Adicionando...
+                  </>
                 ) : (
-                  <><ShoppingCart className="w-4 h-4 mr-2" /> Adicionar ao carrinho</>
+                  <>
+                    <ShoppingCart className="w-4 h-4 mr-2" /> Adicionar ao
+                    carrinho
+                  </>
                 )}
               </Button>
             </div>
@@ -234,7 +261,7 @@ export default function ProductDetail() {
                 <SVGUploader
                   productId={product.id}
                   onSaved={() => {
-                    toast.success('SVG salvo! Atualize a página para testar.');
+                    toast.success("SVG salvo! Atualize a página para testar.");
                   }}
                 />
               </TabsContent>

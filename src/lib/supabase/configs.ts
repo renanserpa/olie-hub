@@ -1,7 +1,14 @@
-import { PostgrestError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { PostgrestError } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
-type FilterValue = string | number | boolean | null | undefined | string[] | number[];
+type FilterValue =
+  | string
+  | number
+  | boolean
+  | null
+  | undefined
+  | string[]
+  | number[];
 
 interface ListConfigsOptions {
   search?: string;
@@ -26,22 +33,29 @@ export async function listConfigs<T = Record<string, unknown>>(
 ): Promise<{ data: T[]; error: string | null }> {
   const {
     search,
-    searchColumns = ['name', 'codigo'],
+    searchColumns = ["name", "codigo"],
     filters = {},
-    order = { column: 'updated_at', ascending: false },
+    order = { column: "updated_at", ascending: false },
     limit,
   } = options;
 
-  let query = supabase.from(table as any).select('*');
+  let query = supabase.from(table as any).select("*");
 
   if (search && search.trim().length > 0 && searchColumns.length > 0) {
     const normalized = search.trim();
-    const expressions = searchColumns.map((column) => `${column}.ilike.%${normalized}%`).join(',');
+    const expressions = searchColumns
+      .map((column) => `${column}.ilike.%${normalized}%`)
+      .join(",");
     query = query.or(expressions);
   }
 
   Object.entries(filters).forEach(([column, value]) => {
-    if (value === undefined || value === null || value === '' || value === 'all') {
+    if (
+      value === undefined ||
+      value === null ||
+      value === "" ||
+      value === "all"
+    ) {
       return;
     }
 
@@ -75,10 +89,17 @@ export async function createConfig<T = Record<string, unknown>>(
   table: string,
   payload: Partial<T>,
 ): Promise<{ data: T | null; error: string | null }> {
-  const { data, error } = await supabase.from(table as any).insert(payload as any).select().single();
+  const { data, error } = await supabase
+    .from(table as any)
+    .insert(payload as any)
+    .select()
+    .single();
 
   if (error) {
-    return { data: null, error: handleError(`Erro ao criar registro em ${table}`, error) };
+    return {
+      data: null,
+      error: handleError(`Erro ao criar registro em ${table}`, error),
+    };
   }
 
   return { data: (data as T) ?? null, error: null };
@@ -92,12 +113,15 @@ export async function updateConfig<T = Record<string, unknown>>(
   const { data, error } = await supabase
     .from(table as any)
     .update(payload as any)
-    .eq('id', id)
+    .eq("id", id)
     .select()
     .single();
 
   if (error) {
-    return { data: null, error: handleError(`Erro ao atualizar registro em ${table}`, error) };
+    return {
+      data: null,
+      error: handleError(`Erro ao atualizar registro em ${table}`, error),
+    };
   }
 
   return { data: (data as T) ?? null, error: null };

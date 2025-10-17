@@ -7,6 +7,27 @@ const root = path.resolve("src");
 
 let changed = 0;
 
+function processFile(p) {
+  let src = fs.readFileSync(p, "utf8");
+  const before = src;
+
+  // Remove qualquer genérico logo após <TableManager, aceitando espaços/linhas
+  // Ex: <TableManager   <Tipo>, <TableManager< Tipo >, com ou sem props depois
+  src = src.replace(
+    /<TableManager\s*<[\s\S]*?>/g,
+    (m) => m.replace(/<TableManager\s*<[\s\S]*?>/, "<TableManager"),
+  );
+
+  // Fallback: casos simples em linha única
+  src = src.replace(/<TableManager<[^>\s]+/g, "<TableManager");
+
+  if (src !== before) {
+    fs.writeFileSync(p, src, "utf8");
+    changed++;
+    console.log("[codemod] patched:", p);
+  }
+}
+
 function walk(dir) {
   for (const name of fs.readdirSync(dir)) {
     const p = path.join(dir, name);
@@ -14,16 +35,7 @@ function walk(dir) {
     if (stat.isDirectory()) {
       walk(p);
     } else if (exts.has(path.extname(p))) {
-      let src = fs.readFileSync(p, "utf8");
-      const before = src;
-      // remove genéricos imediatamente após o nome do componente
-      // <TableManager<QualquerCoisa ...  ->  <TableManager ...
-      src = src.replace(/<TableManager<[^>\s]+/g, "<TableManager");
-      if (src !== before) {
-        fs.writeFileSync(p, src, "utf8");
-        changed++;
-        console.log("[codemod] patched:", p);
-      }
+      processFile(p);
     }
   }
 }

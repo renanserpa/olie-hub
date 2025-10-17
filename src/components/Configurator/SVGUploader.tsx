@@ -4,13 +4,19 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
 interface SVGMapping {
   pathId: string;
-  type: 'fabric' | 'zipper' | 'lining' | 'bias';
+  type: "fabric" | "zipper" | "lining" | "bias";
   label: string;
 }
 
@@ -30,7 +36,7 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (!file.type.includes('svg')) {
+    if (!file.type.includes("svg")) {
       toast.error("Por favor, selecione um arquivo SVG");
       return;
     }
@@ -43,7 +49,9 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(text, "image/svg+xml");
     const paths = doc.querySelectorAll("[id]");
-    const ids = Array.from(paths).map(p => p.id).filter(Boolean);
+    const ids = Array.from(paths)
+      .map((p) => p.id)
+      .filter(Boolean);
     setPathIds(ids);
   };
 
@@ -51,7 +59,11 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
     setMappings([...mappings, { pathId: "", type: "fabric", label: "" }]);
   };
 
-  const updateMapping = (index: number, field: keyof SVGMapping, value: string) => {
+  const updateMapping = (
+    index: number,
+    field: keyof SVGMapping,
+    value: string,
+  ) => {
     const updated = [...mappings];
     updated[index] = { ...updated[index], [field]: value };
     setMappings(updated);
@@ -67,7 +79,7 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
       return;
     }
 
-    const invalidMappings = mappings.filter(m => !m.pathId || !m.label);
+    const invalidMappings = mappings.filter((m) => !m.pathId || !m.label);
     if (invalidMappings.length > 0) {
       toast.error("Complete todos os campos dos mapeamentos");
       return;
@@ -78,22 +90,22 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
       // Upload SVG para Storage
       const fileName = `${productId}-${Date.now()}.svg`;
       const { data: uploadData, error: uploadError } = await supabase.storage
-        .from('product-svgs')
+        .from("product-svgs")
         .upload(fileName, svgFile);
 
       if (uploadError) throw uploadError;
 
-      const { data: { publicUrl } } = supabase.storage
-        .from('product-svgs')
-        .getPublicUrl(fileName);
+      const {
+        data: { publicUrl },
+      } = supabase.storage.from("product-svgs").getPublicUrl(fileName);
 
       // Salvar mapeamento no banco
       const { error: dbError } = await supabase
-        .from('product_svg_maps')
+        .from("product_svg_maps")
         .insert({
           product_id: productId,
           svg_url: publicUrl,
-          svg_mapping: mappings as any
+          svg_mapping: mappings as any,
         });
 
       if (dbError) throw dbError;
@@ -129,7 +141,10 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
 
         {svgPreview && (
           <div className="border rounded p-4 bg-muted/50">
-            <div dangerouslySetInnerHTML={{ __html: svgPreview }} className="max-h-64 overflow-auto" />
+            <div
+              dangerouslySetInnerHTML={{ __html: svgPreview }}
+              className="max-h-64 overflow-auto"
+            />
           </div>
         )}
 
@@ -149,14 +164,18 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
                   <Label>ID do Path</Label>
                   <Select
                     value={mapping.pathId}
-                    onValueChange={(value) => updateMapping(index, 'pathId', value)}
+                    onValueChange={(value) =>
+                      updateMapping(index, "pathId", value)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue placeholder="Selecione..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {pathIds.map(id => (
-                        <SelectItem key={id} value={id}>{id}</SelectItem>
+                      {pathIds.map((id) => (
+                        <SelectItem key={id} value={id}>
+                          {id}
+                        </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
@@ -166,7 +185,9 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
                   <Label>Tipo</Label>
                   <Select
                     value={mapping.type}
-                    onValueChange={(value) => updateMapping(index, 'type', value as any)}
+                    onValueChange={(value) =>
+                      updateMapping(index, "type", value as any)
+                    }
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -184,7 +205,9 @@ export const SVGUploader = ({ productId, onSaved }: SVGUploaderProps) => {
                   <Label>Nome</Label>
                   <Input
                     value={mapping.label}
-                    onChange={(e) => updateMapping(index, 'label', e.target.value)}
+                    onChange={(e) =>
+                      updateMapping(index, "label", e.target.value)
+                    }
                     placeholder="Ex: Corpo Principal"
                   />
                 </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
   DndContext,
   DragOverlay,
@@ -10,13 +10,13 @@ import {
   useSensors,
   DragStartEvent,
   DragEndEvent,
-} from '@dnd-kit/core';
+} from "@dnd-kit/core";
 import {
   SortableContext,
   verticalListSortingStrategy,
-} from '@dnd-kit/sortable';
-import { Badge } from '@/components/ui/badge';
-import { cn } from '@/lib/utils';
+} from "@dnd-kit/sortable";
+import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 
 export interface KanbanColumn {
   id: string;
@@ -63,11 +63,11 @@ export function KanbanBoard({
         tolerance: 5,
       },
     }),
-    useSensor(KeyboardSensor)
+    useSensor(KeyboardSensor),
   );
 
   function getItemsForColumn(columnId: string) {
-    return items.filter(item => item.status === columnId);
+    return items.filter((item) => item.status === columnId);
   }
 
   function handleDragStart(event: DragStartEvent) {
@@ -77,7 +77,7 @@ export function KanbanBoard({
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
-    
+
     setActiveId(null);
     setIsDragging(false);
 
@@ -87,16 +87,18 @@ export function KanbanBoard({
     const overId = over.id as string;
 
     // Check if dropped on a column
-    const targetColumn = columns.find(col => col.id === overId);
+    const targetColumn = columns.find((col) => col.id === overId);
     if (targetColumn) {
-      const item = items.find(i => i.id === itemId);
+      const item = items.find((i) => i.id === itemId);
       if (item && item.status !== targetColumn.id) {
         await onStatusChange(itemId, targetColumn.id);
       }
     }
   }
 
-  const activeItem = activeId ? items.find(item => item.id === activeId) : null;
+  const activeItem = activeId
+    ? items.find((item) => item.id === activeId)
+    : null;
 
   if (loading) {
     return (
@@ -113,18 +115,18 @@ export function KanbanBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={cn('flex gap-4 overflow-x-auto pb-4', className)}>
-        {columns.map(column => {
+      <div className={cn("flex gap-4 overflow-x-auto pb-4", className)}>
+        {columns.map((column) => {
           const columnItems = getItemsForColumn(column.id);
-          const totalValue = columnItems.reduce((sum, item) => sum + (Number(item.total) || 0), 0);
+          const totalValue = columnItems.reduce(
+            (sum, item) => sum + (Number(item.total) || 0),
+            0,
+          );
 
           return (
-            <div
-              key={column.id}
-              className="flex-shrink-0 w-80 flex flex-col"
-            >
+            <div key={column.id} className="flex-shrink-0 w-80 flex flex-col">
               {/* Column Header */}
-              <div className={cn('rounded-t-lg p-3', column.color)}>
+              <div className={cn("rounded-t-lg p-3", column.color)}>
                 <div className="flex items-center justify-between mb-1">
                   <h3 className="font-semibold text-sm">{column.label}</h3>
                   <Badge variant="secondary" className="text-xs">
@@ -146,25 +148,25 @@ export function KanbanBoard({
               {/* Column Content - Droppable */}
               <SortableContext
                 id={column.id}
-                items={columnItems.map(item => item.id)}
+                items={columnItems.map((item) => item.id)}
                 strategy={verticalListSortingStrategy}
               >
                 <div
                   className={cn(
-                    'flex-1 bg-muted/30 rounded-b-lg p-2 space-y-2 min-h-[500px] transition-colors',
-                    isDragging && 'ring-2 ring-primary/20'
+                    "flex-1 bg-muted/30 rounded-b-lg p-2 space-y-2 min-h-[500px] transition-colors",
+                    isDragging && "ring-2 ring-primary/20",
                   )}
                   data-column-id={column.id}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.add('ring-2', 'ring-primary');
+                    e.currentTarget.classList.add("ring-2", "ring-primary");
                   }}
                   onDragLeave={(e) => {
-                    e.currentTarget.classList.remove('ring-2', 'ring-primary');
+                    e.currentTarget.classList.remove("ring-2", "ring-primary");
                   }}
                   onDrop={(e) => {
                     e.preventDefault();
-                    e.currentTarget.classList.remove('ring-2', 'ring-primary');
+                    e.currentTarget.classList.remove("ring-2", "ring-primary");
                   }}
                 >
                   {columnItems.length === 0 ? (
@@ -173,10 +175,8 @@ export function KanbanBoard({
                       <p className="text-xs mt-1">Arraste itens para cá</p>
                     </div>
                   ) : (
-                    columnItems.map(item => (
-                      <div key={item.id}>
-                        {renderCard(item)}
-                      </div>
+                    columnItems.map((item) => (
+                      <div key={item.id}>{renderCard(item)}</div>
                     ))
                   )}
                 </div>

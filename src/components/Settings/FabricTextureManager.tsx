@@ -1,21 +1,51 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Plus, Edit2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { listConfigs, createConfig, updateConfig } from '@/lib/supabase/configs';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Plus, Edit2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  listConfigs,
+  createConfig,
+  updateConfig,
+} from "@/lib/supabase/configs";
 import {
   codigoSchema,
   jsonObjectStringSchema,
@@ -23,16 +53,22 @@ import {
   parseJsonOrNull,
   stringifyJson,
   toNullableString,
-} from '@/lib/zod/configs';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+} from "@/lib/zod/configs";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
-const TEXTURE_TYPES = ['plain', 'pattern', 'leather', 'synthetic', 'other'] as const;
+const TEXTURE_TYPES = [
+  "plain",
+  "pattern",
+  "leather",
+  "synthetic",
+  "other",
+] as const;
 
 type TextureType = (typeof TEXTURE_TYPES)[number];
 
-type StatusFilter = 'all' | 'active' | 'inactive';
+type StatusFilter = "all" | "active" | "inactive";
 
-type TextureTypeFilter = 'all' | TextureType;
+type TextureTypeFilter = "all" | TextureType;
 
 interface FabricTexture {
   id: string;
@@ -57,11 +93,11 @@ interface ColorPaletteOption {
 
 const formSchema = z.object({
   name: z
-    .string({ required_error: 'Nome é obrigatório' })
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(150, 'Nome muito longo'),
+    .string({ required_error: "Nome é obrigatório" })
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(150, "Nome muito longo"),
   codigo: codigoSchema,
-  texture_type: z.enum(TEXTURE_TYPES, { required_error: 'Tipo é obrigatório' }),
+  texture_type: z.enum(TEXTURE_TYPES, { required_error: "Tipo é obrigatório" }),
   repeat_json: jsonObjectStringSchema,
   thumbnail_url: nullableTextSchema,
   tile_url: nullableTextSchema,
@@ -80,9 +116,9 @@ export function FabricTextureManager() {
   const [textures, setTextures] = useState<FabricTexture[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [typeFilter, setTypeFilter] = useState<TextureTypeFilter>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [typeFilter, setTypeFilter] = useState<TextureTypeFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<FabricTexture | null>(null);
   const [palettes, setPalettes] = useState<ColorPaletteOption[]>([]);
@@ -90,9 +126,9 @@ export function FabricTextureManager() {
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      codigo: '',
-      texture_type: 'plain',
+      name: "",
+      codigo: "",
+      texture_type: "plain",
       repeat_json: undefined,
       thumbnail_url: null,
       tile_url: null,
@@ -107,15 +143,19 @@ export function FabricTextureManager() {
     setLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await listConfigs<FabricTexture>('config_fabric_textures', {
-      search: searchTerm,
-      searchColumns: ['name', 'codigo'],
-      filters: {
-        is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        texture_type: typeFilter === 'all' ? undefined : typeFilter,
+    const { data, error: fetchError } = await listConfigs<FabricTexture>(
+      "config_fabric_textures",
+      {
+        search: searchTerm,
+        searchColumns: ["name", "codigo"],
+        filters: {
+          is_active:
+            statusFilter === "all" ? undefined : statusFilter === "active",
+          texture_type: typeFilter === "all" ? undefined : typeFilter,
+        },
+        order: { column: "updated_at", ascending: false },
       },
-      order: { column: 'updated_at', ascending: false },
-    });
+    );
 
     if (fetchError) {
       setError(fetchError);
@@ -133,11 +173,14 @@ export function FabricTextureManager() {
 
   useEffect(() => {
     async function fetchPalettes() {
-      const { data } = await listConfigs<ColorPaletteOption>('config_color_palettes', {
-        filters: { is_active: true },
-        searchColumns: ['name'],
-        order: { column: 'name', ascending: true },
-      });
+      const { data } = await listConfigs<ColorPaletteOption>(
+        "config_color_palettes",
+        {
+          filters: { is_active: true },
+          searchColumns: ["name"],
+          order: { column: "name", ascending: true },
+        },
+      );
       setPalettes(data);
     }
 
@@ -161,9 +204,9 @@ export function FabricTextureManager() {
         });
       } else {
         form.reset({
-          name: '',
-          codigo: '',
-          texture_type: 'plain',
+          name: "",
+          codigo: "",
+          texture_type: "plain",
           repeat_json: undefined,
           thumbnail_url: null,
           tile_url: null,
@@ -178,7 +221,7 @@ export function FabricTextureManager() {
 
   const handleCreateClick = () => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem criar texturas');
+      toast.error("Apenas administradores podem criar texturas");
       return;
     }
 
@@ -188,7 +231,7 @@ export function FabricTextureManager() {
 
   const handleEditClick = (texture: FabricTexture) => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem editar texturas');
+      toast.error("Apenas administradores podem editar texturas");
       return;
     }
 
@@ -198,13 +241,14 @@ export function FabricTextureManager() {
 
   const onSubmit = async (values: FormValues) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar texturas');
+      toast.error("Você não tem permissão para alterar texturas");
       return;
     }
 
     let repeatJson: Record<string, unknown> | null = null;
     if (values.repeat_json && values.repeat_json.trim().length > 0) {
-      repeatJson = parseJsonOrNull<Record<string, unknown>>(values.repeat_json) ?? null;
+      repeatJson =
+        parseJsonOrNull<Record<string, unknown>>(values.repeat_json) ?? null;
     }
 
     const payload = {
@@ -215,21 +259,29 @@ export function FabricTextureManager() {
       thumbnail_url: toNullableString(values.thumbnail_url ?? undefined),
       tile_url: toNullableString(values.tile_url ?? undefined),
       composition: toNullableString(values.composition ?? undefined),
-      care_instructions: toNullableString(values.care_instructions ?? undefined),
+      care_instructions: toNullableString(
+        values.care_instructions ?? undefined,
+      ),
       palette_id: toNullableString(values.palette_id ?? undefined),
       is_active: values.is_active,
     } satisfies Partial<FabricTexture>;
 
     const action = editing
-      ? await updateConfig<FabricTexture>('config_fabric_textures', editing.id, payload)
-      : await createConfig<FabricTexture>('config_fabric_textures', payload);
+      ? await updateConfig<FabricTexture>(
+          "config_fabric_textures",
+          editing.id,
+          payload,
+        )
+      : await createConfig<FabricTexture>("config_fabric_textures", payload);
 
     if (action.error) {
       toast.error(action.error);
       return;
     }
 
-    toast.success(editing ? 'Textura atualizada com sucesso' : 'Textura criada com sucesso');
+    toast.success(
+      editing ? "Textura atualizada com sucesso" : "Textura criada com sucesso",
+    );
     setDialogOpen(false);
     setEditing(null);
     loadTextures();
@@ -237,32 +289,41 @@ export function FabricTextureManager() {
 
   const handleToggleActive = async (texture: FabricTexture) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar texturas');
+      toast.error("Você não tem permissão para alterar texturas");
       return;
     }
 
-    if (texture.is_active && !confirm('Tem certeza que deseja arquivar esta textura?')) {
+    if (
+      texture.is_active &&
+      !confirm("Tem certeza que deseja arquivar esta textura?")
+    ) {
       return;
     }
 
-    const { error: toggleError } = await updateConfig<FabricTexture>('config_fabric_textures', texture.id, {
-      is_active: !texture.is_active,
-    });
+    const { error: toggleError } = await updateConfig<FabricTexture>(
+      "config_fabric_textures",
+      texture.id,
+      {
+        is_active: !texture.is_active,
+      },
+    );
 
     if (toggleError) {
       toast.error(toggleError);
       return;
     }
 
-    toast.success(texture.is_active ? 'Textura arquivada' : 'Textura reativada');
+    toast.success(
+      texture.is_active ? "Textura arquivada" : "Textura reativada",
+    );
     loadTextures();
   };
 
   const emptyMessage = useMemo(() => {
     if (searchTerm.trim().length > 0) {
-      return 'Nenhuma textura encontrada com os filtros atuais';
+      return "Nenhuma textura encontrada com os filtros atuais";
     }
-    return 'Nenhuma textura cadastrada ainda';
+    return "Nenhuma textura cadastrada ainda";
   }, [searchTerm]);
 
   return (
@@ -271,19 +332,24 @@ export function FabricTextureManager() {
         <div>
           <h3 className="text-lg font-semibold">Texturas de Tecido</h3>
           <p className="text-sm text-muted-foreground">
-            Centralize amostras de texturas com códigos, repetições e paletas associadas
+            Centralize amostras de texturas com códigos, repetições e paletas
+            associadas
           </p>
         </div>
-        <Button onClick={handleCreateClick} disabled={!canEdit || checkingAdmin}>
+        <Button
+          onClick={handleCreateClick}
+          disabled={!canEdit || checkingAdmin}
+        >
           <Plus className="mr-2 h-4 w-4" /> Nova Textura
         </Button>
       </div>
 
-      {(!isAdmin && !checkingAdmin) && (
+      {!isAdmin && !checkingAdmin && (
         <Alert variant="default" className="border-dashed">
           <AlertTitle>Acesso de leitura</AlertTitle>
           <AlertDescription>
-            Você não possui permissões de administrador. É possível visualizar as texturas, mas não criar ou editar.
+            Você não possui permissões de administrador. É possível visualizar
+            as texturas, mas não criar ou editar.
           </AlertDescription>
         </Alert>
       )}
@@ -303,7 +369,10 @@ export function FabricTextureManager() {
           className="md:w-80"
         />
         <div className="flex gap-2">
-          <Select value={typeFilter} onValueChange={(value: TextureTypeFilter) => setTypeFilter(value)}>
+          <Select
+            value={typeFilter}
+            onValueChange={(value: TextureTypeFilter) => setTypeFilter(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar tipo" />
             </SelectTrigger>
@@ -316,7 +385,10 @@ export function FabricTextureManager() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: StatusFilter) => setStatusFilter(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Filtrar status" />
             </SelectTrigger>
@@ -332,10 +404,13 @@ export function FabricTextureManager() {
       <Card>
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando texturas...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando
+            texturas...
           </div>
         ) : textures.length === 0 ? (
-          <div className="py-10 text-center text-muted-foreground">{emptyMessage}</div>
+          <div className="py-10 text-center text-muted-foreground">
+            {emptyMessage}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -344,19 +419,25 @@ export function FabricTextureManager() {
                 <TableHead className="hidden md:table-cell">Código</TableHead>
                 <TableHead>Tipo</TableHead>
                 <TableHead className="hidden md:table-cell">Paleta</TableHead>
-                <TableHead className="hidden md:table-cell">Atualizado em</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Atualizado em
+                </TableHead>
                 <TableHead className="w-[160px]">Status</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {textures.map((texture) => {
-                const paletteName = palettes.find((palette) => palette.id === texture.palette_id)?.name;
+                const paletteName = palettes.find(
+                  (palette) => palette.id === texture.palette_id,
+                )?.name;
 
                 return (
                   <TableRow key={texture.id}>
                     <TableCell>
                       <div className="font-medium">{texture.name}</div>
-                      <div className="text-xs text-muted-foreground md:hidden">Código: {texture.codigo}</div>
+                      <div className="text-xs text-muted-foreground md:hidden">
+                        Código: {texture.codigo}
+                      </div>
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                       {texture.codigo}
@@ -367,15 +448,17 @@ export function FabricTextureManager() {
                       </Badge>
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                      {paletteName || '—'}
+                      {paletteName || "—"}
                     </TableCell>
                     <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                      {new Date(texture.updated_at).toLocaleString('pt-BR')}
+                      {new Date(texture.updated_at).toLocaleString("pt-BR")}
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
-                        <Badge variant={texture.is_active ? 'default' : 'outline'}>
-                          {texture.is_active ? 'Ativa' : 'Arquivada'}
+                        <Badge
+                          variant={texture.is_active ? "default" : "outline"}
+                        >
+                          {texture.is_active ? "Ativa" : "Arquivada"}
                         </Badge>
                         <Switch
                           checked={texture.is_active}
@@ -404,7 +487,9 @@ export function FabricTextureManager() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar textura' : 'Nova textura'}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Editar textura" : "Nova textura"}
+            </DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
@@ -444,7 +529,10 @@ export function FabricTextureManager() {
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel>Tipo *</FormLabel>
-                      <Select value={field.value} onValueChange={field.onChange}>
+                      <Select
+                        value={field.value}
+                        onValueChange={field.onChange}
+                      >
                         <FormControl>
                           <SelectTrigger>
                             <SelectValue placeholder="Selecione um tipo" />
@@ -470,8 +558,10 @@ export function FabricTextureManager() {
                     <FormItem>
                       <FormLabel>Paleta associada</FormLabel>
                       <Select
-                        value={field.value ?? 'none'}
-                        onValueChange={(value) => field.onChange(value === 'none' ? null : value)}
+                        value={field.value ?? "none"}
+                        onValueChange={(value) =>
+                          field.onChange(value === "none" ? null : value)
+                        }
                       >
                         <FormControl>
                           <SelectTrigger>
@@ -503,8 +593,10 @@ export function FabricTextureManager() {
                       <FormControl>
                         <Input
                           placeholder="https://..."
-                          value={field.value ?? ''}
-                          onChange={(event) => field.onChange(event.target.value)}
+                          value={field.value ?? ""}
+                          onChange={(event) =>
+                            field.onChange(event.target.value)
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -521,8 +613,10 @@ export function FabricTextureManager() {
                       <FormControl>
                         <Input
                           placeholder="https://..."
-                          value={field.value ?? ''}
-                          onChange={(event) => field.onChange(event.target.value)}
+                          value={field.value ?? ""}
+                          onChange={(event) =>
+                            field.onChange(event.target.value)
+                          }
                         />
                       </FormControl>
                       <FormMessage />
@@ -540,7 +634,7 @@ export function FabricTextureManager() {
                     <FormControl>
                       <Textarea
                         placeholder="Detalhes da composição do tecido"
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                       />
                     </FormControl>
@@ -558,7 +652,7 @@ export function FabricTextureManager() {
                     <FormControl>
                       <Textarea
                         placeholder="Recomendações de cuidado e lavagem"
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                       />
                     </FormControl>
@@ -576,7 +670,7 @@ export function FabricTextureManager() {
                     <FormControl>
                       <Textarea
                         placeholder='Ex: {"width": 64, "height": 64}'
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                       />
                     </FormControl>
@@ -597,21 +691,28 @@ export function FabricTextureManager() {
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  type="button"
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {editing ? 'Salvar alterações' : 'Criar textura'}
+                  {editing ? "Salvar alterações" : "Criar textura"}
                 </Button>
               </DialogFooter>
             </form>

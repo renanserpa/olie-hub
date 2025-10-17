@@ -1,15 +1,19 @@
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Settings2 } from 'lucide-react';
-import { Label } from '@/components/ui/label';
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Settings2 } from "lucide-react";
+import { Label } from "@/components/ui/label";
 
 export interface PropertyDefinition {
   id: string;
   label: string;
-  type: 'text' | 'number' | 'date' | 'badge' | 'image';
+  type: "text" | "number" | "date" | "badge" | "image";
   defaultVisible: boolean;
 }
 
@@ -28,15 +32,15 @@ export function PropertySelector({
 
   const handleToggle = (propertyId: string) => {
     const newSelection = selectedProperties.includes(propertyId)
-      ? selectedProperties.filter(id => id !== propertyId)
+      ? selectedProperties.filter((id) => id !== propertyId)
       : [...selectedProperties, propertyId];
     onChange(newSelection);
   };
 
   const handleReset = () => {
     const defaults = availableProperties
-      .filter(p => p.defaultVisible)
-      .map(p => p.id);
+      .filter((p) => p.defaultVisible)
+      .map((p) => p.id);
     onChange(defaults);
   };
 
@@ -56,7 +60,7 @@ export function PropertySelector({
               Restaurar
             </Button>
           </div>
-          
+
           <ScrollArea className="h-[300px] pr-4">
             <div className="space-y-3">
               {availableProperties.map((property) => (

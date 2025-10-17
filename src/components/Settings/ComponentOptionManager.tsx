@@ -1,21 +1,51 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Card } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Plus, Edit2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { listConfigs, createConfig, updateConfig } from '@/lib/supabase/configs';
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { z } from "zod";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Switch } from "@/components/ui/switch";
+import {
+  Dialog,
+  DialogContent,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Loader2, Plus, Edit2 } from "lucide-react";
+import { toast } from "sonner";
+import {
+  listConfigs,
+  createConfig,
+  updateConfig,
+} from "@/lib/supabase/configs";
 import {
   codigoSchema,
   jsonArrayStringSchema,
@@ -24,26 +54,26 @@ import {
   parseJsonArrayOrEmpty,
   parseJsonOrNull,
   stringifyJson,
-} from '@/lib/zod/configs';
-import { useAdminAccess } from '@/hooks/useAdminAccess';
+} from "@/lib/zod/configs";
+import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 const COMPONENT_TYPES = [
-  'ziper',
-  'cursor_puxador',
-  'forro',
-  'tecido_externo',
-  'vies',
-  'alca',
-  'ferragem',
-  'etiqueta',
-  'outro',
+  "ziper",
+  "cursor_puxador",
+  "forro",
+  "tecido_externo",
+  "vies",
+  "alca",
+  "ferragem",
+  "etiqueta",
+  "outro",
 ] as const;
 
 type ComponentType = (typeof COMPONENT_TYPES)[number];
 
-type StatusFilter = 'all' | 'active' | 'inactive';
+type StatusFilter = "all" | "active" | "inactive";
 
-type TypeFilter = 'all' | ComponentType;
+type TypeFilter = "all" | ComponentType;
 
 interface ComponentOption {
   id: string;
@@ -60,11 +90,13 @@ interface ComponentOption {
 
 const formSchema = z.object({
   name: z
-    .string({ required_error: 'Nome é obrigatório' })
-    .min(2, 'Nome deve ter pelo menos 2 caracteres')
-    .max(180, 'Nome muito longo'),
+    .string({ required_error: "Nome é obrigatório" })
+    .min(2, "Nome deve ter pelo menos 2 caracteres")
+    .max(180, "Nome muito longo"),
   codigo: codigoSchema,
-  component_type: z.enum(COMPONENT_TYPES, { required_error: 'Tipo é obrigatório' }),
+  component_type: z.enum(COMPONENT_TYPES, {
+    required_error: "Tipo é obrigatório",
+  }),
   compatible_products_json: jsonArrayStringSchema,
   metadata: jsonMetadataStringSchema,
   insumo_id: nullableTextSchema,
@@ -80,18 +112,18 @@ export function ComponentOptionManager() {
   const [options, setOptions] = useState<ComponentOption[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>('active');
-  const [typeFilter, setTypeFilter] = useState<TypeFilter>('all');
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("active");
+  const [typeFilter, setTypeFilter] = useState<TypeFilter>("all");
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editing, setEditing] = useState<ComponentOption | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      codigo: '',
-      component_type: 'ziper',
+      name: "",
+      codigo: "",
+      component_type: "ziper",
       compatible_products_json: undefined,
       metadata: undefined,
       insumo_id: null,
@@ -103,15 +135,19 @@ export function ComponentOptionManager() {
     setLoading(true);
     setError(null);
 
-    const { data, error: fetchError } = await listConfigs<ComponentOption>('config_component_options', {
-      search: searchTerm,
-      searchColumns: ['name', 'codigo'],
-      filters: {
-        is_active: statusFilter === 'all' ? undefined : statusFilter === 'active',
-        component_type: typeFilter === 'all' ? undefined : typeFilter,
+    const { data, error: fetchError } = await listConfigs<ComponentOption>(
+      "config_component_options",
+      {
+        search: searchTerm,
+        searchColumns: ["name", "codigo"],
+        filters: {
+          is_active:
+            statusFilter === "all" ? undefined : statusFilter === "active",
+          component_type: typeFilter === "all" ? undefined : typeFilter,
+        },
+        order: { column: "updated_at", ascending: false },
       },
-      order: { column: 'updated_at', ascending: false },
-    });
+    );
 
     if (fetchError) {
       setError(fetchError);
@@ -134,16 +170,18 @@ export function ComponentOptionManager() {
           name: editing.name,
           codigo: editing.codigo,
           component_type: editing.component_type,
-          compatible_products_json: stringifyJson(editing.compatible_products_json ?? []),
+          compatible_products_json: stringifyJson(
+            editing.compatible_products_json ?? [],
+          ),
           metadata: stringifyJson(editing.metadata ?? {}),
           insumo_id: editing.insumo_id,
           is_active: editing.is_active,
         });
       } else {
         form.reset({
-          name: '',
-          codigo: '',
-          component_type: 'ziper',
+          name: "",
+          codigo: "",
+          component_type: "ziper",
           compatible_products_json: undefined,
           metadata: undefined,
           insumo_id: null,
@@ -155,7 +193,7 @@ export function ComponentOptionManager() {
 
   const handleCreateClick = () => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem criar opções');
+      toast.error("Apenas administradores podem criar opções");
       return;
     }
 
@@ -165,7 +203,7 @@ export function ComponentOptionManager() {
 
   const handleEditClick = (option: ComponentOption) => {
     if (!canEdit) {
-      toast.error('Apenas administradores podem editar opções');
+      toast.error("Apenas administradores podem editar opções");
       return;
     }
 
@@ -175,7 +213,7 @@ export function ComponentOptionManager() {
 
   const onSubmit = async (values: FormValues) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar opções');
+      toast.error("Você não tem permissão para alterar opções");
       return;
     }
 
@@ -183,26 +221,41 @@ export function ComponentOptionManager() {
       name: values.name.trim(),
       codigo: values.codigo.trim(),
       component_type: values.component_type,
-      compatible_products_json: values.compatible_products_json && values.compatible_products_json.trim().length > 0
-        ? parseJsonArrayOrEmpty(values.compatible_products_json)
-        : [],
-      metadata: values.metadata && values.metadata.trim().length > 0
-        ? parseJsonOrNull<Record<string, unknown>>(values.metadata) ?? {}
-        : {},
-      insumo_id: values.insumo_id && values.insumo_id.trim().length > 0 ? values.insumo_id.trim() : null,
+      compatible_products_json:
+        values.compatible_products_json &&
+        values.compatible_products_json.trim().length > 0
+          ? parseJsonArrayOrEmpty(values.compatible_products_json)
+          : [],
+      metadata:
+        values.metadata && values.metadata.trim().length > 0
+          ? (parseJsonOrNull<Record<string, unknown>>(values.metadata) ?? {})
+          : {},
+      insumo_id:
+        values.insumo_id && values.insumo_id.trim().length > 0
+          ? values.insumo_id.trim()
+          : null,
       is_active: values.is_active,
     } satisfies Partial<ComponentOption>;
 
     const action = editing
-      ? await updateConfig<ComponentOption>('config_component_options', editing.id, payload)
-      : await createConfig<ComponentOption>('config_component_options', payload);
+      ? await updateConfig<ComponentOption>(
+          "config_component_options",
+          editing.id,
+          payload,
+        )
+      : await createConfig<ComponentOption>(
+          "config_component_options",
+          payload,
+        );
 
     if (action.error) {
       toast.error(action.error);
       return;
     }
 
-    toast.success(editing ? 'Opção atualizada com sucesso' : 'Opção criada com sucesso');
+    toast.success(
+      editing ? "Opção atualizada com sucesso" : "Opção criada com sucesso",
+    );
     setDialogOpen(false);
     setEditing(null);
     loadOptions();
@@ -210,32 +263,39 @@ export function ComponentOptionManager() {
 
   const handleToggleActive = async (option: ComponentOption) => {
     if (!canEdit) {
-      toast.error('Você não tem permissão para alterar opções');
+      toast.error("Você não tem permissão para alterar opções");
       return;
     }
 
-    if (option.is_active && !confirm('Tem certeza que deseja arquivar esta opção?')) {
+    if (
+      option.is_active &&
+      !confirm("Tem certeza que deseja arquivar esta opção?")
+    ) {
       return;
     }
 
-    const { error: toggleError } = await updateConfig<ComponentOption>('config_component_options', option.id, {
-      is_active: !option.is_active,
-    });
+    const { error: toggleError } = await updateConfig<ComponentOption>(
+      "config_component_options",
+      option.id,
+      {
+        is_active: !option.is_active,
+      },
+    );
 
     if (toggleError) {
       toast.error(toggleError);
       return;
     }
 
-    toast.success(option.is_active ? 'Opção arquivada' : 'Opção reativada');
+    toast.success(option.is_active ? "Opção arquivada" : "Opção reativada");
     loadOptions();
   };
 
   const emptyMessage = useMemo(() => {
     if (searchTerm.trim().length > 0) {
-      return 'Nenhuma opção encontrada com os filtros atuais';
+      return "Nenhuma opção encontrada com os filtros atuais";
     }
-    return 'Nenhuma opção de componente cadastrada ainda';
+    return "Nenhuma opção de componente cadastrada ainda";
   }, [searchTerm]);
 
   return (
@@ -247,16 +307,20 @@ export function ComponentOptionManager() {
             Configure componentes padrão e compatibilidades com produtos
           </p>
         </div>
-        <Button onClick={handleCreateClick} disabled={!canEdit || checkingAdmin}>
+        <Button
+          onClick={handleCreateClick}
+          disabled={!canEdit || checkingAdmin}
+        >
           <Plus className="mr-2 h-4 w-4" /> Nova Opção
         </Button>
       </div>
 
-      {(!isAdmin && !checkingAdmin) && (
+      {!isAdmin && !checkingAdmin && (
         <Alert variant="default" className="border-dashed">
           <AlertTitle>Acesso de leitura</AlertTitle>
           <AlertDescription>
-            Você não possui permissões de administrador. É possível visualizar as opções, mas não criar ou editar.
+            Você não possui permissões de administrador. É possível visualizar
+            as opções, mas não criar ou editar.
           </AlertDescription>
         </Alert>
       )}
@@ -276,7 +340,10 @@ export function ComponentOptionManager() {
           className="md:w-80"
         />
         <div className="flex gap-2">
-          <Select value={typeFilter} onValueChange={(value: TypeFilter) => setTypeFilter(value)}>
+          <Select
+            value={typeFilter}
+            onValueChange={(value: TypeFilter) => setTypeFilter(value)}
+          >
             <SelectTrigger className="w-[220px]">
               <SelectValue placeholder="Tipo de componente" />
             </SelectTrigger>
@@ -289,7 +356,10 @@ export function ComponentOptionManager() {
               ))}
             </SelectContent>
           </Select>
-          <Select value={statusFilter} onValueChange={(value: StatusFilter) => setStatusFilter(value)}>
+          <Select
+            value={statusFilter}
+            onValueChange={(value: StatusFilter) => setStatusFilter(value)}
+          >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Status" />
             </SelectTrigger>
@@ -305,10 +375,13 @@ export function ComponentOptionManager() {
       <Card>
         {loading ? (
           <div className="flex items-center justify-center py-10 text-muted-foreground">
-            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando opções...
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Carregando
+            opções...
           </div>
         ) : options.length === 0 ? (
-          <div className="py-10 text-center text-muted-foreground">{emptyMessage}</div>
+          <div className="py-10 text-center text-muted-foreground">
+            {emptyMessage}
+          </div>
         ) : (
           <Table>
             <TableHeader>
@@ -316,9 +389,15 @@ export function ComponentOptionManager() {
                 <TableHead>Nome</TableHead>
                 <TableHead className="hidden md:table-cell">Código</TableHead>
                 <TableHead>Tipo</TableHead>
-                <TableHead className="hidden md:table-cell">Compatibilidade</TableHead>
-                <TableHead className="hidden md:table-cell">Metadados</TableHead>
-                <TableHead className="hidden md:table-cell">Atualizado em</TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Compatibilidade
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Metadados
+                </TableHead>
+                <TableHead className="hidden md:table-cell">
+                  Atualizado em
+                </TableHead>
                 <TableHead className="w-[160px]">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -327,7 +406,9 @@ export function ComponentOptionManager() {
                 <TableRow key={option.id}>
                   <TableCell>
                     <div className="font-medium">{option.name}</div>
-                    <div className="text-xs text-muted-foreground md:hidden">Código: {option.codigo}</div>
+                    <div className="text-xs text-muted-foreground md:hidden">
+                      Código: {option.codigo}
+                    </div>
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                     {option.codigo}
@@ -344,12 +425,12 @@ export function ComponentOptionManager() {
                     {JSON.stringify(option.metadata ?? {}, null, 0)}
                   </TableCell>
                   <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
-                    {new Date(option.updated_at).toLocaleString('pt-BR')}
+                    {new Date(option.updated_at).toLocaleString("pt-BR")}
                   </TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
-                      <Badge variant={option.is_active ? 'default' : 'outline'}>
-                        {option.is_active ? 'Ativo' : 'Arquivado'}
+                      <Badge variant={option.is_active ? "default" : "outline"}>
+                        {option.is_active ? "Ativo" : "Arquivado"}
                       </Badge>
                       <Switch
                         checked={option.is_active}
@@ -377,7 +458,9 @@ export function ComponentOptionManager() {
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
         <DialogContent className="max-w-3xl">
           <DialogHeader>
-            <DialogTitle>{editing ? 'Editar opção' : 'Nova opção de componente'}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Editar opção" : "Nova opção de componente"}
+            </DialogTitle>
           </DialogHeader>
 
           <Form {...form}>
@@ -446,7 +529,7 @@ export function ComponentOptionManager() {
                     <FormControl>
                       <Input
                         placeholder="UUID do insumo (opcional)"
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                       />
                     </FormControl>
@@ -464,7 +547,7 @@ export function ComponentOptionManager() {
                     <FormControl>
                       <Textarea
                         placeholder='Ex: ["mochila", "estojo"]'
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                         rows={4}
                       />
@@ -483,7 +566,7 @@ export function ComponentOptionManager() {
                     <FormControl>
                       <Textarea
                         placeholder='Ex: {"acabamento": "niquelado"}'
-                        value={field.value ?? ''}
+                        value={field.value ?? ""}
                         onChange={(event) => field.onChange(event.target.value)}
                         rows={4}
                       />
@@ -505,21 +588,28 @@ export function ComponentOptionManager() {
                       </p>
                     </div>
                     <FormControl>
-                      <Switch checked={field.value} onCheckedChange={field.onChange} />
+                      <Switch
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                      />
                     </FormControl>
                   </FormItem>
                 )}
               />
 
               <DialogFooter>
-                <Button variant="outline" onClick={() => setDialogOpen(false)} type="button">
+                <Button
+                  variant="outline"
+                  onClick={() => setDialogOpen(false)}
+                  type="button"
+                >
                   Cancelar
                 </Button>
                 <Button type="submit" disabled={form.formState.isSubmitting}>
                   {form.formState.isSubmitting && (
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   )}
-                  {editing ? 'Salvar alterações' : 'Criar opção'}
+                  {editing ? "Salvar alterações" : "Criar opção"}
                 </Button>
               </DialogFooter>
             </form>

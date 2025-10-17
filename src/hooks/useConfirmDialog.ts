@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState } from "react";
 
 interface ConfirmOptions {
   title: string;
@@ -10,15 +10,17 @@ interface ConfirmOptions {
 export function useConfirmDialog() {
   const [isOpen, setIsOpen] = useState(false);
   const [options, setOptions] = useState<ConfirmOptions>({
-    title: '',
-    description: '',
+    title: "",
+    description: "",
   });
-  const [resolveCallback, setResolveCallback] = useState<((value: boolean) => void) | null>(null);
+  const [resolveCallback, setResolveCallback] = useState<
+    ((value: boolean) => void) | null
+  >(null);
 
   const confirm = (opts: ConfirmOptions): Promise<boolean> => {
     setOptions(opts);
     setIsOpen(true);
-    
+
     return new Promise((resolve) => {
       setResolveCallback(() => resolve);
     });

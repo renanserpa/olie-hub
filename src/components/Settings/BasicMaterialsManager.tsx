@@ -275,7 +275,7 @@ export function BasicMaterialsManager({ readOnly = false, supplyGroupsVersion = 
         </div>
       )}
 
-      <TableManager<BasicMaterial>
+      <TableManager
         title="Materiais básicos (templates)"
         table="config_basic_materials"
         columns={columns}

@@ -12,7 +12,8 @@
     "build": "vite build",
     "preview": "vite preview --port 5173",
     "lint": "eslint .",
-    "test": "vitest"
+    "test": "vitest",
+    "preinstall": "node ./scripts/registry-check.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

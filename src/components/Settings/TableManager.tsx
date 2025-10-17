@@ -1,11 +1,30 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
-import type { PostgrestError } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
+import type { PostgrestError } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -13,15 +32,19 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Badge } from '@/components/ui/badge';
-import { Loader2, Lock, Pencil, Plus, RefreshCw, Search } from 'lucide-react';
-import { isPermission, isRelationMissing, humanize } from '@/lib/supabase/errors';
+} from "@/components/ui/pagination";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, Lock, Pencil, Plus, RefreshCw, Search } from "lucide-react";
+import {
+  isPermission,
+  isRelationMissing,
+  humanize,
+} from "@/lib/supabase/errors";
 
 const PAGE_SIZE = 20;
 
-type ColumnConfig<T> = {
+type ColumnConfig<T = any> = {
   key: keyof T | string;
   label: string;
   render?: (item: T) => ReactNode;
@@ -29,7 +52,7 @@ type ColumnConfig<T> = {
 };
 
 type SearchFilterConfig = {
-  type: 'search';
+  type: "search";
   placeholder?: string;
   fields: string[];
 };
@@ -41,7 +64,7 @@ type SelectFilterOption = {
 };
 
 type SelectFilterConfig = {
-  type: 'select';
+  type: "select";
   label: string;
   field: string;
   options: SelectFilterOption[];
@@ -67,14 +90,14 @@ export type TableManagerProps<T = any> = {
 function readDebugFlag(): boolean {
   const direct = import.meta.env.NEXT_PUBLIC_DEBUG_SUPABASE;
   if (direct) {
-    return direct === 'true';
+    return direct === "true";
   }
 
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     const w = window as any;
     const fromWindow = w.ENV?.NEXT_PUBLIC_DEBUG_SUPABASE;
     if (fromWindow) {
-      return fromWindow === 'true';
+      return fromWindow === "true";
     }
   }
 
@@ -96,25 +119,34 @@ export function TableManager<T = any>({
 }: TableManagerProps<T>) {
   const debugSupabase = useMemo(() => readDebugFlag(), []);
 
-  const searchFilter = useMemo(() => filters?.find((filter): filter is SearchFilterConfig => filter.type === 'search'), [
-    filters,
-  ]);
+  const searchFilter = useMemo(
+    () =>
+      filters?.find(
+        (filter): filter is SearchFilterConfig => filter.type === "search",
+      ),
+    [filters],
+  );
   const selectFilters = useMemo(
-    () => filters?.filter((filter): filter is SelectFilterConfig => filter.type === 'select') ?? [],
+    () =>
+      filters?.filter(
+        (filter): filter is SelectFilterConfig => filter.type === "select",
+      ) ?? [],
     [filters],
   );
 
   const initialSelectValues = useMemo(() => {
     const defaults: Record<string, string> = {};
     selectFilters.forEach((filter) => {
-      const defaultOption = filter.defaultValue ?? filter.options[0]?.value ?? 'all';
+      const defaultOption =
+        filter.defaultValue ?? filter.options[0]?.value ?? "all";
       defaults[filter.field] = defaultOption;
     });
     return defaults;
   }, [selectFilters]);
 
-  const [searchTerm, setSearchTerm] = useState('');
-  const [selectValues, setSelectValues] = useState<Record<string, string>>(initialSelectValues);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [selectValues, setSelectValues] =
+    useState<Record<string, string>>(initialSelectValues);
   const [data, setData] = useState<T[]>([]);
   const [error, setError] = useState<PostgrestError | null>(null);
   const [loading, setLoading] = useState(true);
@@ -134,11 +166,13 @@ export function TableManager<T = any>({
     setError(null);
 
     try {
-      let query = supabase.from(table as any).select('*', { count: 'exact' });
+      let query = supabase.from(table as any).select("*", { count: "exact" });
 
       if (searchFilter && searchTerm.trim().length > 0) {
         const sanitized = searchTerm.trim();
-        const orFilter = searchFilter.fields.map((field) => `${field}.ilike.%${sanitized}%`).join(',');
+        const orFilter = searchFilter.fields
+          .map((field) => `${field}.ilike.%${sanitized}%`)
+          .join(",");
         query = query.or(orFilter);
       }
 
@@ -149,7 +183,7 @@ export function TableManager<T = any>({
         const option = filter.options.find((opt) => opt.value === currentValue);
         const queryValue = option?.queryValue ?? option?.value;
 
-        if (queryValue === undefined || queryValue === 'all') {
+        if (queryValue === undefined || queryValue === "all") {
           return;
         }
 
@@ -163,11 +197,13 @@ export function TableManager<T = any>({
 
       const from = (page - 1) * PAGE_SIZE;
       const to = from + PAGE_SIZE - 1;
-      const { data, error, count } = await query.order('updated_at', { ascending: false }).range(from, to);
+      const { data, error, count } = await query
+        .order("updated_at", { ascending: false })
+        .range(from, to);
 
       if (error) {
         if (debugSupabase) {
-          console.debug('[TableManager] Supabase error', { table, error });
+          console.debug("[TableManager] Supabase error", { table, error });
         }
         setError(error);
         setData([]);
@@ -178,21 +214,29 @@ export function TableManager<T = any>({
       }
     } catch (err) {
       if (debugSupabase) {
-        console.debug('[TableManager] Unexpected error', err);
+        console.debug("[TableManager] Unexpected error", err);
       }
       setError({
-        code: 'unexpected',
-        details: '',
-        hint: '',
+        code: "unexpected",
+        details: "",
+        hint: "",
         message: err instanceof Error ? err.message : String(err),
-        name: 'UnexpectedError',
+        name: "UnexpectedError",
       } as any);
       setData([]);
       setTotalCount(0);
     } finally {
       setLoading(false);
     }
-  }, [debugSupabase, page, searchFilter, searchTerm, selectFilters, selectValues, table]);
+  }, [
+    debugSupabase,
+    page,
+    searchFilter,
+    searchTerm,
+    selectFilters,
+    selectValues,
+    table,
+  ]);
 
   useEffect(() => {
     fetchData();
@@ -233,7 +277,7 @@ export function TableManager<T = any>({
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
-              placeholder={searchFilter.placeholder ?? 'Buscar...'}
+              placeholder={searchFilter.placeholder ?? "Buscar..."}
               value={searchTerm}
               onChange={handleSearchChange}
               className="pl-9 w-64"
@@ -243,9 +287,15 @@ export function TableManager<T = any>({
 
         {selectFilters.map((filter) => (
           <div key={filter.field} className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">{filter.label}</span>
+            <span className="text-sm text-muted-foreground">
+              {filter.label}
+            </span>
             <Select
-              value={selectValues[filter.field] ?? filter.defaultValue ?? filter.options[0]?.value}
+              value={
+                selectValues[filter.field] ??
+                filter.defaultValue ??
+                filter.options[0]?.value
+              }
               onValueChange={(value) => handleSelectChange(filter.field, value)}
             >
               <SelectTrigger className="w-40">
@@ -274,7 +324,9 @@ export function TableManager<T = any>({
           <AlertTitle>Migrations pendentes</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
             <span>
-              Não encontramos a tabela solicitada (<code className="font-mono">{table}</code>). Aplique as migrations em
+              Não encontramos a tabela solicitada (
+              <code className="font-mono">{table}</code>). Aplique as migrations
+              em
               <strong> db/migrations</strong> e tente novamente.
             </span>
             <Button variant="outline" onClick={handleRetry} className="w-fit">
@@ -288,11 +340,15 @@ export function TableManager<T = any>({
 
     if (isPermission(error)) {
       return (
-        <Alert variant="default" className="border-amber-300 bg-amber-50 text-amber-900">
+        <Alert
+          variant="default"
+          className="border-amber-300 bg-amber-50 text-amber-900"
+        >
           <AlertTitle>Sem permissão para editar</AlertTitle>
           <AlertDescription className="flex flex-col gap-3">
             <span>
-              O Supabase retornou uma restrição de acesso (RLS). Entre com uma conta de administrador para realizar alterações.
+              O Supabase retornou uma restrição de acesso (RLS). Entre com uma
+              conta de administrador para realizar alterações.
             </span>
             <div className="flex gap-2">
               <Button variant="outline" onClick={handleRetry} className="w-fit">
@@ -340,7 +396,7 @@ export function TableManager<T = any>({
     if (data.length === 0) {
       return (
         <div className="rounded-lg border border-dashed border-muted-foreground/30 p-6 text-sm text-muted-foreground">
-          {emptyHelpText ?? 'Nenhum registro encontrado.'}
+          {emptyHelpText ?? "Nenhum registro encontrado."}
         </div>
       );
     }
@@ -351,22 +407,35 @@ export function TableManager<T = any>({
           <TableHeader>
             <TableRow>
               {columns.map((column) => (
-                <TableHead key={String(column.key)} className={column.className}>
+                <TableHead
+                  key={String(column.key)}
+                  className={column.className}
+                >
                   {column.label}
                 </TableHead>
               ))}
-              {onEdit && <TableHead className="w-20 text-right">Ações</TableHead>}
+              {onEdit && (
+                <TableHead className="w-20 text-right">Ações</TableHead>
+              )}
             </TableRow>
           </TableHeader>
           <TableBody>
             {data.map((item, index) => {
-              const itemWithId = item as { id?: string | number };
-              const rowKey = (itemWithId?.id ?? index) as React.Key;
+              const rowKey = ((item as any)?.id ?? index) as React.Key;
               return (
                 <TableRow key={rowKey}>
                   {columns.map((column) => (
-                    <TableCell key={String(column.key)} className={column.className}>
-                      {column.render ? column.render(item) : String((item as Record<string, unknown>)[column.key as string] ?? '—')}
+                    <TableCell
+                      key={String(column.key)}
+                      className={column.className}
+                    >
+                      {column.render
+                        ? column.render(item)
+                        : String(
+                            (item as Record<string, unknown>)[
+                              column.key as string
+                            ] ?? "—",
+                          )}
                     </TableCell>
                   ))}
                   {onEdit && (
@@ -377,7 +446,11 @@ export function TableManager<T = any>({
                         onClick={() => onEdit(item)}
                         disabled={readOnly}
                       >
-                        {readOnly ? <Lock className="h-4 w-4" /> : <Pencil className="h-4 w-4" />}
+                        {readOnly ? (
+                          <Lock className="h-4 w-4" />
+                        ) : (
+                          <Pencil className="h-4 w-4" />
+                        )}
                         <span className="sr-only">Editar</span>
                       </Button>
                     </TableCell>
@@ -399,7 +472,9 @@ export function TableManager<T = any>({
                     handlePreviousPage();
                   }}
                   aria-disabled={page === 1}
-                  className={page === 1 ? 'pointer-events-none opacity-50' : undefined}
+                  className={
+                    page === 1 ? "pointer-events-none opacity-50" : undefined
+                  }
                 />
               </PaginationItem>
 
@@ -426,7 +501,11 @@ export function TableManager<T = any>({
                     handleNextPage();
                   }}
                   aria-disabled={page === totalPages}
-                  className={page === totalPages ? 'pointer-events-none opacity-50' : undefined}
+                  className={
+                    page === totalPages
+                      ? "pointer-events-none opacity-50"
+                      : undefined
+                  }
                 />
               </PaginationItem>
             </PaginationContent>
@@ -436,7 +515,11 @@ export function TableManager<T = any>({
     );
   };
 
-  const createButtonLabel = onCreate ? (readOnly ? 'Somente leitura' : createLabel ?? 'Novo registro') : null;
+  const createButtonLabel = onCreate
+    ? readOnly
+      ? "Somente leitura"
+      : (createLabel ?? "Novo registro")
+    : null;
 
   return (
     <Card className="p-6 space-y-4">
@@ -451,11 +534,17 @@ export function TableManager<T = any>({
               </Badge>
             )}
           </div>
-          {helpText && <p className="text-sm text-muted-foreground">{helpText}</p>}
+          {helpText && (
+            <p className="text-sm text-muted-foreground">{helpText}</p>
+          )}
         </div>
         {onCreate && (
           <Button onClick={onCreate} disabled={readOnly}>
-            {readOnly ? <Lock className="mr-2 h-4 w-4" /> : <Plus className="mr-2 h-4 w-4" />}
+            {readOnly ? (
+              <Lock className="mr-2 h-4 w-4" />
+            ) : (
+              <Plus className="mr-2 h-4 w-4" />
+            )}
             {createButtonLabel}
           </Button>
         )}

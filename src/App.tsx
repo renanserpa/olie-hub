@@ -1,4 +1,6 @@
 // trigger lovable preview rebuild
+import { BUILD_TOUCH } from "./version";
+// console.log("preview:", BUILD_TOUCH); // apenas para mudar o bundle
 import React, { useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";

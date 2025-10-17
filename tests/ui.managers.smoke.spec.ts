@@ -4,8 +4,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 
 import { ColorPaletteManager } from '@/components/Settings/ColorPaletteManager';
 import { FabricTextureManager } from '@/components/Settings/FabricTextureManager';
-import { BasicMaterialManager } from '@/components/Settings/BasicMaterialManager';
-import { SupplyGroupManager } from '@/components/Settings/SupplyGroupManager';
+import { BasicMaterialsManager } from '@/components/Settings/BasicMaterialsManager';
+import { SupplyGroupsManager } from '@/components/Settings/SupplyGroupsManager';
 import { PackagingTypeManager } from '@/components/Settings/PackagingTypeManager';
 import { BondTypeManager } from '@/components/Settings/BondTypeManager';
 import { CustomizationComponentManager } from '@/components/Settings/CustomizationComponentManager';
@@ -60,16 +60,16 @@ const scenarios: ManagerScenario[] = [
     createLabel: 'Nova Textura',
   },
   {
-    name: 'BasicMaterialManager',
-    render: () => <BasicMaterialManager />,
+    name: 'BasicMaterialsManager',
+    render: () => <BasicMaterialsManager />,
     heading: 'Materiais Básicos',
     searchPlaceholder: 'Buscar por nome ou código',
     filterTexts: ['Unidade', 'Grupo', 'Status'],
     createLabel: 'Novo Material',
   },
   {
-    name: 'SupplyGroupManager',
-    render: () => <SupplyGroupManager />,
+    name: 'SupplyGroupsManager',
+    render: () => <SupplyGroupsManager />,
     heading: 'Grupos de Insumos',
     searchPlaceholder: 'Buscar por nome ou código',
     filterTexts: ['Status'],

@@ -1,16 +1,11 @@
-import path from "node:path";
-import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react";
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig({
   plugins: [react()],
-  server: { 
-    port: 8080,
-    hmr: { overlay: false } 
-  },
+  server: { hmr: { overlay: false }, port: 8080 },
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-    },
-  },
-});
+    alias: { '@': fileURLToPath(new URL('./src', import.meta.url)) }
+  }
+})

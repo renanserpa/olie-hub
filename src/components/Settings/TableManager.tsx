@@ -50,7 +50,7 @@ type SelectFilterConfig = {
 
 type FilterConfig = SearchFilterConfig | SelectFilterConfig;
 
-interface TableManagerProps<T extends { id?: string | number }> {
+interface TableManagerProps<T extends { id?: string | number } = any> {
   title: string;
   table: string;
   columns: ColumnConfig<T>[];
@@ -81,7 +81,7 @@ function readDebugFlag(): boolean {
   return false;
 }
 
-export function TableManager<T extends { id?: string | number }>({
+export function TableManager<T extends { id?: string | number } = any>({
   title,
   table,
   columns,

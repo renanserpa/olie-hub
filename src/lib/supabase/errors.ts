@@ -34,6 +34,13 @@ export function isPermission(
   );
 }
 
+export function isFkViolation(
+  error: SupabaseErrorLike | null | undefined,
+): boolean {
+  if (!error) return false;
+  return error.code === "23503";
+}
+
 export function humanize(error: SupabaseErrorLike | null | undefined): string {
   if (!error) return "Erro desconhecido";
 

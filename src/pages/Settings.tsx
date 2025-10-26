@@ -23,10 +23,13 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { CategoryManager } from "@/components/Settings/CategoryManager";
 import { StatusManager } from "@/components/Settings/StatusManager";
 import { ColorLibrary } from "@/components/Settings/ColorLibrary";
+import { ColorPaletteManager } from "@/components/Settings/ColorPaletteManager";
 import { ImportDialog } from "@/components/ImportExport/ImportDialog";
 import { ExportDialog } from "@/components/ImportExport/ExportDialog";
 import { SupplyGroupsManager } from "@/components/Settings/SupplyGroupsManager";
 import { BasicMaterialsManager } from "@/components/Settings/BasicMaterialsManager";
+import { SystemSettingsManager } from "@/components/Settings/SystemSettingsManager";
+import { MediaPicker } from "@/components/Media/MediaPicker";
 import { useAdminAccess } from "@/hooks/useAdminAccess";
 
 export default function Settings() {
@@ -153,14 +156,19 @@ export default function Settings() {
 
         {/* B) Catálogos & Personalização */}
         <TabsContent value="catalogs" className="space-y-6">
-          <Tabs defaultValue="categories">
-            <TabsList className="grid grid-cols-2 lg:grid-cols-5">
+          <Tabs defaultValue="palettes">
+            <TabsList className="grid grid-cols-2 lg:grid-cols-6">
+              <TabsTrigger value="palettes">Paletas</TabsTrigger>
               <TabsTrigger value="categories">Categorias</TabsTrigger>
               <TabsTrigger value="fabric">Cores Tecido</TabsTrigger>
               <TabsTrigger value="zipper">Cores Zíper</TabsTrigger>
               <TabsTrigger value="lining">Cores Forro</TabsTrigger>
               <TabsTrigger value="bias">Cores Viés</TabsTrigger>
             </TabsList>
+
+            <TabsContent value="palettes" className="mt-6">
+              <ColorPaletteManager />
+            </TabsContent>
 
             <TabsContent value="categories" className="mt-6">
               <CategoryManager />
@@ -243,38 +251,7 @@ export default function Settings() {
 
         {/* E) Sistema (preferências gerais) */}
         <TabsContent value="system" className="space-y-6">
-          <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Preferências Gerais</h3>
-
-            <div className="space-y-4">
-              <div>
-                <Label>Moeda</Label>
-                <Input value="BRL" disabled />
-              </div>
-
-              <div>
-                <Label>Timezone</Label>
-                <Input value="America/Sao_Paulo" disabled />
-              </div>
-
-              <div>
-                <Label>Prefixo de Pedido</Label>
-                <Input defaultValue="OLIE-" />
-              </div>
-
-              <div>
-                <Label>Lead Time de Produção (dias)</Label>
-                <Input type="number" defaultValue={7} />
-              </div>
-
-              <div>
-                <Label>SLA Atendimento (minutos)</Label>
-                <Input type="number" defaultValue={30} />
-              </div>
-            </div>
-
-            <Button className="mt-6">Salvar Preferências</Button>
-          </Card>
+          <SystemSettingsManager />
         </TabsContent>
 
         {/* F) Aparência */}
@@ -308,6 +285,36 @@ export default function Settings() {
                 </div>
               </div>
             </div>
+          </Card>
+
+          {/* Biblioteca de Mídia */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Biblioteca de Mídia</h3>
+            <p className="text-sm text-muted-foreground mb-4">
+              Gerencie imagens de produtos e amostras de materiais
+            </p>
+            <Tabs defaultValue="products">
+              <TabsList>
+                <TabsTrigger value="products">Produtos</TabsTrigger>
+                <TabsTrigger value="materials">Materiais</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="products" className="mt-4">
+                <MediaPicker 
+                  bucket="product-media" 
+                  allowUpload={isAdmin}
+                  allowDelete={isAdmin}
+                />
+              </TabsContent>
+
+              <TabsContent value="materials" className="mt-4">
+                <MediaPicker 
+                  bucket="material-media" 
+                  allowUpload={isAdmin}
+                  allowDelete={isAdmin}
+                />
+              </TabsContent>
+            </Tabs>
           </Card>
         </TabsContent>
 
